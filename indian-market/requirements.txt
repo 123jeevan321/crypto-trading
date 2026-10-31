@@ -1,0 +1,12 @@
+flask
+flask-cors
+yfinance
+pandas
+numpy
+requests
+beautifulsoup4
+lxml
+ta
+scipy
+feedparser
+pytz
