@@ -27,8 +27,29 @@ GST_RATE = 0.18
 
 # Global state
 AUTO_SCALP_ENABLED = True
+TRADING_MODE = "PAPER"  # "PAPER" or "LIVE"
 TRADE_LOGS = []
 CURRENT_PRICE = 77156.00
+
+sys.path.append(os.path.join(BASE_DIR, "trader-broker"))
+try:
+    import coinswitch as cs
+except Exception:
+    cs = None
+
+
+def get_real_coinswitch_inr():
+    """Fetch real CoinSwitch Pro INR unallocated wallet balance."""
+    if not cs:
+        return 0.0
+    try:
+        res = cs.get_real_portfolio()
+        for item in res.get("data", []):
+            if item.get("currency") == "INR":
+                return float(item.get("main_balance", 0.0))
+    except Exception as e:
+        print("[WARN] Error fetching CoinSwitch balance:", e)
+    return 0.0
 
 
 def log_message(msg):
@@ -254,11 +275,13 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode("utf-8"))
 
     def handle_status(self):
-        global CURRENT_PRICE, AUTO_SCALP_ENABLED, TRADE_LOGS
+        global CURRENT_PRICE, AUTO_SCALP_ENABLED, TRADE_LOGS, TRADING_MODE
         portfolio = read_json_file(
             os.path.join(TRADER_DIR, "portfolio.json"),
             {"currency": "INR", "cash_inr": 10000.0, "positions": [], "history": []}
         )
+
+        real_inr = get_real_coinswitch_inr()
 
         positions = portfolio.get("positions", [])
         enhanced_positions = []
@@ -289,6 +312,9 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
             "usd_inr_rate": USD_INR_RATE,
             "price_inr": round(CURRENT_PRICE * USD_INR_RATE, 2),
             "cash_inr": float(portfolio.get("cash_inr", 10000.0)),
+            "real_inr_balance": real_inr,
+            "real_connected": True,
+            "trading_mode": TRADING_MODE,
             "positions": enhanced_positions,
             "history": portfolio.get("history", [])[:10],
             "auto_scalp_enabled": AUTO_SCALP_ENABLED,

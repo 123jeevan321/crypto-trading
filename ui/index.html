@@ -3,170 +3,267 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CoinSwitch PRO - Auto-Scalper Terminal</title>
+  <title>CoinSwitch PRO - Futures Perpetual Trading Terminal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     body { background-color: #0b0e14; color: #d1d5db; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .cs-card { background-color: #131722; border: 1px solid #232733; }
-    .cs-input { background-color: #1a1f2c; border: 1px solid #2e3546; color: #fff; }
-    .cs-input:focus { border-color: #00d09c; outline: none; }
+    .cs-header { background-color: #12161f; border-bottom: 1px solid #1f2430; }
+    .cs-card { background-color: #171b26; border: 1px solid #232838; }
+    .cs-input { background-color: #131722; border: 1px solid #2c3245; color: #fff; }
+    .cs-input:focus { border-color: #2563eb; outline: none; }
+    .cs-scalper-modal { background-color: rgba(23, 27, 38, 0.94); border: 1px solid #2a3144; backdrop-filter: blur(8px); }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden select-none">
 
-  <!-- Top CoinSwitch Pro Clean Navbar -->
-  <header class="h-14 border-b border-gray-800 bg-[#131722] px-5 flex items-center justify-between shrink-0">
-    <div class="flex items-center space-x-6">
-      <!-- Brand -->
-      <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-[#00d09c] flex items-center justify-center font-black text-black text-xl shadow">CS</div>
-        <span class="text-white font-bold text-lg tracking-wide">CoinSwitch <span class="text-[#00d09c] font-black text-xs px-1.5 py-0.5 rounded bg-[#00d09c]/10 border border-[#00d09c]/30">PRO</span></span>
+  <!-- CoinSwitch PRO Official Top Header Bar -->
+  <header class="h-12 cs-header px-4 flex items-center justify-between shrink-0 text-xs font-sans">
+    <div class="flex items-center space-x-5">
+      <!-- CoinSwitch PRO Logo -->
+      <div class="flex items-center space-x-1.5">
+        <div class="w-6 h-6 rounded bg-[#00d09c] flex items-center justify-center font-black text-black text-sm">CS</div>
+        <span class="text-white font-extrabold text-base tracking-tight">coinswitch<span class="text-[#f59e0b] font-black uppercase text-xs ml-0.5">PRO</span></span>
       </div>
 
-      <!-- Live Symbol & Exact Prices -->
-      <div class="flex items-center space-x-3 bg-[#1e2330] px-3.5 py-1.5 rounded-lg border border-gray-700">
-        <span class="text-white font-bold text-sm">BTC/USDT Perp</span>
-        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-base transition-colors">$77,156.00</span>
-        <span id="livePriceInr" class="text-gray-300 font-mono text-xs font-semibold">(₹65,58,260)</span>
+      <div class="h-4 w-px bg-gray-700"></div>
+
+      <!-- Pair & Market Stats -->
+      <div class="flex items-center space-x-3">
+        <span class="text-white font-bold text-sm flex items-center gap-1">
+          <span>BTC,USDT</span>
+          <span class="text-red-400 font-normal text-xs">-1.47%</span>
+        </span>
+        <span class="text-gray-400 text-[11px]">Funding: <span class="text-gray-200 font-mono">0.0081% / 01:04:15</span></span>
       </div>
     </div>
 
-    <!-- Right Controls: Auto-Bot Switch & Wallet -->
-    <div class="flex items-center space-x-6">
+    <!-- Right Header Controls: Scalper Mode Toggle & Balances -->
+    <div class="flex items-center space-x-4">
       
-      <!-- Auto-Trading Loop Toggle Switch -->
-      <div class="flex items-center space-x-2.5 bg-[#1a1f2c] px-3 py-1.5 rounded-lg border border-gray-700">
-        <span class="text-xs font-bold text-gray-300 flex items-center gap-1.5">
-          <span id="autoBotDot" class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
-          <span>🤖 Auto-Scalp Loop:</span>
-        </span>
-        <button id="btnAutoToggle" onclick="toggleAutoScalp()" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-[#00d09c] text-black">
-          ON
+      <!-- Scalper Mode Gold Toggle -->
+      <div class="flex items-center space-x-2 bg-[#1c2230] px-3 py-1 rounded-full border border-amber-500/30">
+        <span class="text-amber-400 font-bold text-xs tracking-wide">Scalper Mode</span>
+        <button id="btnScalperToggle" onclick="toggleScalperModal()" class="w-8 h-4 rounded-full bg-amber-400 flex items-center p-0.5 transition cursor-pointer">
+          <div id="scalperToggleDot" class="w-3 h-3 rounded-full bg-black ml-auto shadow"></div>
         </button>
       </div>
 
-      <!-- Available Wallet Cash -->
-      <div class="text-right">
-        <div class="text-[11px] text-gray-400">Available Margin</div>
-        <div id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹4,926.25</div>
+      <span class="text-gray-300 font-medium">INR <span class="text-blue-400">Main Account ▾</span></span>
+
+      <div class="flex items-center space-x-3 font-mono text-[11px] text-gray-300 bg-[#161a24] px-2.5 py-1 rounded border border-gray-800">
+        <span>$ USDT Price</span>
+        <span class="text-gray-600">|</span>
+        <span>₹ INR Margin</span>
       </div>
 
-      <button onclick="resetBalance()" class="text-xs text-gray-400 hover:text-white px-2 py-1 bg-gray-800 rounded border border-gray-700" title="Reset wallet to ₹10,000">
-        Reset ₹10k
-      </button>
+      <!-- Real Live CoinSwitch Balance -->
+      <div class="flex items-center space-x-2 bg-[#1a2130] px-3 py-1 rounded border border-emerald-500/30">
+        <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
+        <span class="text-gray-400">Bal:</span>
+        <strong id="headerWalletBal" class="text-white font-mono font-bold text-sm">₹1,000.51</strong>
+      </div>
     </div>
   </header>
 
-  <!-- Main Trading Area -->
+  <!-- Main Trading Desk -->
   <div class="flex-1 flex overflow-hidden">
     
-    <!-- Left 70%: TradingView Candlestick Chart with On-Chart Order Badges -->
-    <div class="flex-1 flex flex-col min-w-0">
+    <!-- Left: TradingView Candlestick Chart + Floating Scalper Modal -->
+    <div class="flex-1 relative bg-[#0b0e14] overflow-hidden">
       
-      <div class="flex-1 relative bg-[#0b0e14]" id="chart_wrapper">
-        <!-- TradingView Chart Container -->
-        <div class="w-full h-full" id="chart_container"></div>
+      <!-- TradingView Candlestick Chart -->
+      <div class="w-full h-full" id="chart_container"></div>
 
-        <!-- Clean, Non-Cluttered Chart Badges Overlay -->
-        <div id="chartOverlay" class="absolute top-4 left-4 z-10 flex flex-col space-y-2 pointer-events-none">
-          <div class="pointer-events-auto bg-[#131722]/90 border border-gray-700 rounded-lg px-3 py-1.5 text-xs font-mono shadow-xl flex items-center space-x-4">
-            <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 TP: <strong id="overlayTpText" class="text-white">$77,521.63</strong> (+400 pts)</span>
-            <span class="text-blue-400 font-bold flex items-center gap-1">🔵 Entry: <strong id="overlayEntryText" class="text-white">$77,121.63</strong></span>
-            <span class="text-red-400 font-bold flex items-center gap-1">🛡️ SL: <strong id="overlaySlText" class="text-white">$76,961.63</strong> (-160 pts)</span>
+      <!-- Floating CoinSwitch Pro Scalper Modal (Center over Chart) -->
+      <div id="scalperFloatingModal" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] cs-scalper-modal rounded-xl shadow-2xl p-5 z-20 space-y-4 border border-gray-700">
+        
+        <!-- Modal Top Bar -->
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center space-x-1.5 bg-[#121622] p-0.5 rounded-lg border border-gray-800">
+            <button class="px-3 py-1 rounded bg-gray-800 text-white font-bold">Market</button>
+            <button class="px-3 py-1 rounded text-gray-400 hover:text-white">Limit</button>
+          </div>
+
+          <!-- Leverage Selector -->
+          <div class="flex items-center space-x-2 bg-[#121622] px-2.5 py-1 rounded-lg border border-gray-800">
+            <span class="text-gray-400">Lev:</span>
+            <select id="modalLevSelect" onchange="setLeverage(this.value)" class="bg-transparent text-white font-bold font-mono focus:outline-none cursor-pointer">
+              <option value="10">10x</option>
+              <option value="25" selected>25x</option>
+              <option value="50">50x</option>
+              <option value="62">62x</option>
+              <option value="100">100x</option>
+            </select>
+          </div>
+
+          <button onclick="toggleScalperModal()" class="text-gray-400 hover:text-white font-bold text-base px-1">✕</button>
+        </div>
+
+        <!-- Leverage Slider -->
+        <div class="space-y-1">
+          <input type="range" id="modalLevSlider" min="1" max="100" value="25" class="w-full accent-blue-500 cursor-pointer" oninput="setLeverage(this.value)">
+          <div class="flex justify-between text-[10px] text-gray-500 font-mono">
+            <span>1x</span>
+            <span id="lblCurrentLev" class="text-blue-400 font-bold">25x</span>
+            <span>100x</span>
           </div>
         </div>
+
+        <!-- Buy Mkt | Value | Sell Mkt Row -->
+        <div class="grid grid-cols-3 gap-3 items-center">
+          <!-- Buy Mkt Button (Blue) -->
+          <button onclick="executeOrder('BUY')" class="h-14 rounded-lg bg-[#2563eb] hover:bg-blue-600 text-white font-extrabold text-sm shadow-lg flex flex-col items-center justify-center transition cursor-pointer">
+            <span>Buy Mkt</span>
+            <span class="text-[10px] text-blue-200 font-normal">Long Scalp</span>
+          </button>
+
+          <!-- Center Value Input -->
+          <div class="text-center space-y-1">
+            <div class="text-[11px] text-gray-400 font-mono">Value (INR)</div>
+            <div class="relative">
+              <input type="number" id="inpScalperValue" value="500" step="100" class="w-full cs-input py-2 px-2 text-center rounded-lg font-mono text-white font-bold text-sm" oninput="recalcModal()">
+            </div>
+          </div>
+
+          <!-- Sell Mkt Button (Red) -->
+          <button onclick="executeOrder('SELL')" class="h-14 rounded-lg bg-[#dc2626] hover:bg-red-600 text-white font-extrabold text-sm shadow-lg flex flex-col items-center justify-center transition cursor-pointer">
+            <span>Sell Mkt</span>
+            <span class="text-[10px] text-red-200 font-normal">Short Scalp</span>
+          </button>
+        </div>
+
+        <!-- Bottom Modal Margin & Balance Footer -->
+        <div class="grid grid-cols-3 text-center text-[11px] font-mono border-t border-gray-800/80 pt-3 text-gray-400">
+          <div>
+            <div>Margin <span id="lblBuyMargin" class="text-white font-semibold">₹500.00</span></div>
+            <div class="text-[10px] text-gray-500">Liq: <span id="lblBuyLiq" class="text-gray-400">74,210 USDT</span></div>
+          </div>
+          <div>
+            <div class="text-gray-300 font-semibold">Bal <span id="lblModalBal" class="text-[#00d09c] font-bold">₹1,000.51</span></div>
+            <div class="text-[10px] text-[#00d09c]">Real Wallet ✅</div>
+          </div>
+          <div>
+            <div>Margin <span id="lblSellMargin" class="text-white font-semibold">₹500.00</span></div>
+            <div class="text-[10px] text-gray-500">Liq: <span id="lblSellLiq" class="text-gray-400">79,980 USDT</span></div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Bottom Panel: Execution Log & Completed Trades -->
-      <div class="h-48 cs-card border-t border-gray-800 flex flex-col shrink-0">
-        <div class="flex items-center justify-between border-b border-gray-800 px-4 py-2 bg-[#171b26] text-xs font-bold uppercase tracking-wider">
-          <div class="flex space-x-6">
-            <button class="text-[#00d09c] border-b-2 border-[#00d09c] pb-1">Automated Scalp Activity Log</button>
-            <button class="text-gray-400 hover:text-white pb-1" onclick="refreshStatus()">Trade History</button>
-          </div>
-          <span class="text-[11px] text-gray-400 font-mono">Auto TP & SL Engine Active</span>
+      <!-- Bottom Position Bar (When position is open) -->
+      <div id="bottomPositionBar" class="absolute bottom-3 left-4 right-4 bg-[#171b26]/95 border border-gray-800 rounded-lg p-3 z-10 backdrop-blur shadow-2xl flex items-center justify-between text-xs font-mono">
+        <div class="flex items-center space-x-4">
+          <span class="px-2 py-0.5 rounded font-extrabold text-[11px] bg-emerald-950 text-[#00d09c] border border-emerald-700/60" id="barPosBadge">
+            🟢 BTC,USDT LONG 25x
+          </span>
+          <span>Margin: <strong id="barPosMargin" class="text-white">₹500.00</strong></span>
+          <span>Entry: <strong id="barPosEntry" class="text-blue-400">$77,341.70</strong></span>
+          <span>Mark: <strong id="barPosMark" class="text-[#00d09c]">$77,341.70</strong></span>
         </div>
 
-        <div class="flex-1 overflow-auto p-3 text-xs font-mono space-y-1" id="logContainer">
-          <div class="text-gray-500">Connecting to automated execution feed...</div>
+        <div class="flex items-center space-x-6">
+          <span class="flex items-center gap-1.5">
+            <span class="text-gray-400">Unrealized P&L:</span>
+            <strong id="barPosPnl" class="text-[#00d09c] font-black text-sm">+₹0.00 (+0.0%)</strong>
+          </span>
+          <button onclick="flattenPosition()" class="px-3 py-1 bg-red-900/50 hover:bg-red-800 text-red-200 font-bold rounded border border-red-700/60 transition cursor-pointer">
+            ⚡ Market Close (Flatten)
+          </button>
         </div>
       </div>
 
     </div>
 
-    <!-- Right 30%: Clean Scalper Card & Controls -->
-    <div class="w-[360px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-5 space-y-4">
+    <!-- Right 320px: CoinSwitch Pro Standard Order Desk -->
+    <div class="w-[320px] cs-card border-l border-gray-800 flex flex-col shrink-0 p-4 space-y-4 overflow-y-auto">
       
-      <!-- Current Active Position Card -->
-      <div id="activePositionCard" class="p-4 rounded-xl bg-[#1a1f2c] border border-gray-700 shadow-xl space-y-3">
-        
-        <div class="flex justify-between items-center border-b border-gray-800 pb-2.5">
-          <span class="px-2.5 py-0.5 rounded font-extrabold text-xs bg-emerald-950 text-[#00d09c] border border-emerald-700/60" id="cardSideBadge">
-            🟢 LONG 25x ACTIVE
-          </span>
-          <span class="text-xs text-gray-400 font-mono">₹5,000 Margin</span>
-        </div>
-
-        <!-- Main Live P&L Display -->
-        <div class="text-center py-2 bg-[#131722] rounded-lg border border-gray-800">
-          <div class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Live Net Unrealized P&L</div>
-          <div id="cardNetPnl" class="text-2xl font-black font-mono text-[#00d09c] mt-0.5">+₹54.20 (+1.08%)</div>
-          <div class="text-[10px] text-gray-400 mt-0.5">₹73.75 Fee Already Deducted</div>
-        </div>
-
-        <!-- Exact Target and Stop Levels Grid -->
-        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-          <div class="p-2.5 rounded-lg bg-emerald-950/25 border border-emerald-900/50 space-y-0.5">
-            <div class="text-[#00d09c] font-bold text-[11px]">🎯 TAKE PROFIT</div>
-            <div id="cardTpPrice" class="text-sm font-bold text-white">$77,521.63</div>
-            <div id="cardTpGain" class="text-[10px] text-emerald-400 font-bold">+₹500.83 Net (+10.0%)</div>
-            <div class="text-[9px] text-gray-400">Trigger: Closes automatically</div>
-          </div>
-
-          <div class="p-2.5 rounded-lg bg-red-950/25 border border-red-900/50 space-y-0.5">
-            <div class="text-[#f6465d] font-bold text-[11px]">🛡️ STOP LOSS</div>
-            <div id="cardSlPrice" class="text-sm font-bold text-white">$76,961.63</div>
-            <div id="cardSlLoss" class="text-[10px] text-red-400 font-bold">-₹406.83 Net (-8.1%)</div>
-            <div class="text-[9px] text-gray-400">Trigger: Closes automatically</div>
-          </div>
-        </div>
-
-        <!-- Position Details -->
-        <div class="text-[11px] font-mono text-gray-400 space-y-1 bg-[#131722] p-2.5 rounded-lg border border-gray-800">
-          <div class="flex justify-between">
-            <span>Entry Fill Price:</span>
-            <strong id="cardEntryPrice" class="text-white">$77,121.63</strong>
-          </div>
-          <div class="flex justify-between">
-            <span>Current Mark Price:</span>
-            <strong id="cardMarkPrice" class="text-[#00d09c]">$77,156.00</strong>
-          </div>
-          <div class="flex justify-between">
-            <span>Total Exposure:</span>
-            <span class="text-gray-300">₹1,25,000.00 (25x)</span>
-          </div>
-        </div>
-
-        <!-- Manual Close / Flatten Button -->
-        <button onclick="flattenPosition()" class="w-full py-2.5 bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700/60 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer">
-          <span>⚡ Close / Flatten Position Now</span>
-        </button>
-
+      <div class="flex justify-between items-center text-xs border-b border-gray-800 pb-2">
+        <span class="text-white font-bold text-sm">BTC,USDT</span>
+        <span class="text-gray-400">Perpetual</span>
       </div>
 
-      <!-- Auto-Scalp Bot Status Info -->
-      <div class="p-3.5 rounded-xl bg-[#1a1f2c] border border-gray-700 text-xs space-y-2">
-        <div class="flex items-center justify-between font-bold text-white">
-          <span class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
-            <span>Continuous Auto-Trading Loop</span>
-          </span>
-          <span id="lblAutoLoopStatus" class="text-[#00d09c] font-mono">ACTIVE</span>
+      <!-- Top Buy/Sell Price Banner -->
+      <div class="grid grid-cols-2 text-center text-xs font-mono rounded-lg overflow-hidden border border-gray-800">
+        <div class="bg-[#1e293b] p-2 border-r border-gray-800">
+          <div class="text-blue-400 text-[10px] font-bold">Buy</div>
+          <div id="deskBuyRate" class="text-white font-bold">77,341.7</div>
         </div>
-        <p class="text-gray-400 text-[11px] leading-relaxed">
-          When this position hits the target or stop loss, it will <strong>automatically close, book the profit/loss into your wallet</strong>, and immediately analyze the next candle to take another scalp automatically!
-        </p>
+        <div class="bg-[#1e293b] p-2">
+          <div class="text-red-400 text-[10px] font-bold">Sell</div>
+          <div id="deskSellRate" class="text-white font-bold">77,341.6</div>
+        </div>
+      </div>
+
+      <!-- Market / Limit Switcher -->
+      <div class="flex border-b border-gray-800 text-xs font-semibold">
+        <button class="pb-2 border-b-2 border-white text-white flex-1 text-center">Market</button>
+        <button class="pb-2 text-gray-500 hover:text-gray-300 flex-1 text-center">Limit</button>
+      </div>
+
+      <!-- Price & Ticks -->
+      <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+        <div>
+          <label class="text-gray-400 block text-[10px] mb-1">Price (USDT)</label>
+          <input type="text" id="deskPrice" value="77341.7" readonly class="w-full cs-input px-2.5 py-1.5 rounded text-white text-xs">
+        </div>
+        <div>
+          <label class="text-gray-400 block text-[10px] mb-1">Ticks</label>
+          <input type="text" value="Ask - 109" readonly class="w-full cs-input px-2.5 py-1.5 rounded text-gray-400 text-xs">
+        </div>
+      </div>
+
+      <!-- BTC Qty & Margin INR -->
+      <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+        <div>
+          <label class="text-gray-400 block text-[10px] mb-1">BTC Qty</label>
+          <input type="number" id="deskQty" value="0.0016" step="0.0001" class="w-full cs-input px-2.5 py-1.5 rounded text-white text-xs font-bold" oninput="syncFromQty()">
+        </div>
+        <div>
+          <label class="text-gray-400 block text-[10px] mb-1">Margin (₹)</label>
+          <input type="number" id="deskMargin" value="500" step="50" class="w-full cs-input px-2.5 py-1.5 rounded text-white text-xs font-bold" oninput="syncFromMargin()">
+        </div>
+      </div>
+
+      <!-- Exits Section (TP and SL Ticks) -->
+      <div class="space-y-2 border-t border-gray-800 pt-3 text-xs font-mono">
+        <span class="text-gray-400 text-[11px] block font-semibold">Exits (Auto Brackets)</span>
+        
+        <!-- TP -->
+        <div class="p-2 rounded bg-emerald-950/20 border border-emerald-900/40 space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-1.5 text-emerald-400 font-semibold cursor-pointer">
+              <input type="checkbox" checked class="accent-[#00d09c]">
+              <span>Take Profit</span>
+            </label>
+            <span class="text-[10px] text-gray-400">75 ticks (+350 pts)</span>
+          </div>
+          <input type="number" id="deskTpPrice" value="77691.70" class="w-full cs-input px-2 py-1 rounded text-emerald-300 text-xs">
+        </div>
+
+        <!-- SL -->
+        <div class="p-2 rounded bg-red-950/20 border border-red-900/40 space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-1.5 text-red-400 font-semibold cursor-pointer">
+              <input type="checkbox" checked class="accent-[#f6465d]">
+              <span>Stop Loss</span>
+            </label>
+            <span class="text-[10px] text-gray-400">25 ticks (-150 pts)</span>
+          </div>
+          <input type="number" id="deskSlPrice" value="77191.70" class="w-full cs-input px-2 py-1 rounded text-red-300 text-xs">
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <div class="pt-2">
+        <button onclick="executeOrder('BUY')" class="w-full py-3 bg-[#2563eb] hover:bg-blue-600 text-white font-extrabold text-xs rounded-lg shadow-lg flex flex-col items-center justify-center transition cursor-pointer">
+          <span>Buy 0.0016 BTC,USDT</span>
+          <span class="text-[10px] font-normal text-blue-200">25x Leverage • ₹500 Margin</span>
+        </button>
+      </div>
+
+      <div class="text-[10px] text-gray-500 font-mono text-center pt-1">
+        Fees: 0.05% Taker + GST (~₹7.38)
       </div>
 
     </div>
@@ -174,22 +271,23 @@
   </div>
 
   <script>
-    let currentLivePrice = 77156.00;
-    const USD_INR_RATE = 85.0;
-    let autoScalpActive = true;
+    let liveBtcPrice = 77341.70;
+    let currentLeverage = 25;
+    let realBalanceInr = 1000.51;
+    let scalperModalOpen = true;
 
-    // 1. Initialize TradingView 1m Scalp Chart
+    // 1. TradingView Widget
     function initTradingView() {
       new TradingView.widget({
         "container_id": "chart_container",
         "autosize": true,
         "symbol": "BINANCE:BTCUSDT",
-        "interval": "1",
+        "interval": "5",
         "timezone": "Asia/Kolkata",
         "theme": "dark",
         "style": "1",
         "locale": "en",
-        "toolbar_bg": "#131722",
+        "toolbar_bg": "#12161f",
         "enable_publishing": false,
         "hide_side_toolbar": false,
         "allow_symbol_change": true,
@@ -200,14 +298,14 @@
       });
     }
 
-    // 2. Connect Binance WebSocket for Instant Real-Time Ticks
+    // 2. Real-Time Price Stream via Binance WebSocket
     function connectBinanceWs() {
       try {
         const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data && data.c) {
-            updateTick(parseFloat(data.c));
+            updateLivePrice(parseFloat(data.c));
           }
         };
         ws.onerror = () => setTimeout(connectBinanceWs, 5000);
@@ -216,129 +314,145 @@
       }
     }
 
-    function updateTick(price) {
-      currentLivePrice = price;
-      document.getElementById('livePriceHeader').innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-      document.getElementById('livePriceInr').innerText = `(₹${Math.round(price * USD_INR_RATE).toLocaleString('en-IN')})`;
-      document.getElementById('cardMarkPrice').innerText = `$${price.toFixed(2)}`;
+    function updateLivePrice(price) {
+      liveBtcPrice = price;
+      document.getElementById('deskBuyRate').innerText = price.toFixed(1);
+      document.getElementById('deskSellRate').innerText = (price - 0.1).toFixed(1);
+      document.getElementById('deskPrice').value = price.toFixed(1);
+      recalcModal();
     }
 
-    // 3. Regular Status Poll (Updates Position, P&L, Auto Triggers, and Logs)
+    // 3. Toggle Scalper Modal (Gold button)
+    function toggleScalperModal() {
+      scalperModalOpen = !scalperModalOpen;
+      const modal = document.getElementById('scalperFloatingModal');
+      const dot = document.getElementById('scalperToggleDot');
+      const btn = document.getElementById('btnScalperToggle');
+
+      if (scalperModalOpen) {
+        modal.style.display = 'block';
+        dot.className = "w-3 h-3 rounded-full bg-black ml-auto shadow";
+        btn.className = "w-8 h-4 rounded-full bg-amber-400 flex items-center p-0.5 transition cursor-pointer";
+      } else {
+        modal.style.display = 'none';
+        dot.className = "w-3 h-3 rounded-full bg-black mr-auto shadow";
+        btn.className = "w-8 h-4 rounded-full bg-gray-600 flex items-center p-0.5 transition cursor-pointer";
+      }
+    }
+
+    function setLeverage(lev) {
+      currentLeverage = parseInt(lev);
+      document.getElementById('modalLevSelect').value = currentLeverage;
+      document.getElementById('modalLevSlider').value = currentLeverage;
+      document.getElementById('lblCurrentLev').innerText = `${currentLeverage}x`;
+      recalcModal();
+    }
+
+    function recalcModal() {
+      const margin = parseFloat(document.getElementById('inpScalperValue').value) || 500;
+      document.getElementById('lblBuyMargin').innerText = `₹${margin.toFixed(2)}`;
+      document.getElementById('lblSellMargin').innerText = `₹${margin.toFixed(2)}`;
+
+      const buyLiq = liveBtcPrice * (1 - (1.0 / currentLeverage) * 0.90);
+      const sellLiq = liveBtcPrice * (1 + (1.0 / currentLeverage) * 0.90);
+
+      document.getElementById('lblBuyLiq').innerText = `${buyLiq.toFixed(2)} USDT`;
+      document.getElementById('lblSellLiq').innerText = `${sellLiq.toFixed(2)} USDT`;
+
+      // Update Desk inputs
+      document.getElementById('deskMargin').value = margin;
+      const exposureUsd = (margin * currentLeverage) / 85.0;
+      const qty = exposureUsd / liveBtcPrice;
+      document.getElementById('deskQty').value = qty.toFixed(4);
+
+      document.getElementById('deskTpPrice').value = (liveBtcPrice + 350).toFixed(2);
+      document.getElementById('deskSlPrice').value = (liveBtcPrice - 150).toFixed(2);
+    }
+
+    function syncFromMargin() {
+      const m = parseFloat(document.getElementById('deskMargin').value) || 500;
+      document.getElementById('inpScalperValue').value = m;
+      recalcModal();
+    }
+
+    function syncFromQty() {
+      const q = parseFloat(document.getElementById('deskQty').value) || 0.001;
+      const exposureUsd = q * liveBtcPrice;
+      const margin = (exposureUsd * 85.0) / currentLeverage;
+      document.getElementById('deskMargin').value = Math.round(margin);
+      document.getElementById('inpScalperValue').value = Math.round(margin);
+      recalcModal();
+    }
+
+    // 4. Execute Order
+    async function executeOrder(side) {
+      const margin = parseFloat(document.getElementById('inpScalperValue').value) || 500;
+      const btn = side === "BUY" ? "Buy Mkt" : "Sell Mkt";
+
+      try {
+        const resp = await fetch('/api/order', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            symbol: "BTCUSDT",
+            side: side,
+            margin_inr: margin,
+            leverage: currentLeverage,
+            points_target: 350,
+            points_stop: 150
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'ok') {
+          alert(`⚡ ${side} Scalp Order Placed!\nMargin: ₹${margin} (${currentLeverage}x Leverage)\nTarget: +350 pts | Stop: -150 pts`);
+          fetchStatus();
+        } else {
+          alert("Order Error: " + res.message);
+        }
+      } catch (e) {
+        alert("Network error: " + e);
+      }
+    }
+
+    // 5. Fetch Status & Update Position Bar
     async function fetchStatus() {
       try {
         const resp = await fetch('/api/status');
         const data = await resp.json();
 
-        if (data.price_usd) updateTick(data.price_usd);
-
-        // Wallet
-        document.getElementById('walletCashInr').innerText = `₹${data.cash_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-        // Auto Toggle Status
-        autoScalpActive = data.auto_scalp_enabled;
-        const btnAuto = document.getElementById('btnAutoToggle');
-        const dotAuto = document.getElementById('autoBotDot');
-        const lblAuto = document.getElementById('lblAutoLoopStatus');
-        if (autoScalpActive) {
-          btnAuto.className = "px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-[#00d09c] text-black";
-          btnAuto.innerText = "ON";
-          dotAuto.className = "w-2 h-2 rounded-full bg-[#00d09c] animate-pulse";
-          lblAuto.innerText = "ACTIVE";
-          lblAuto.className = "text-[#00d09c] font-mono";
-        } else {
-          btnAuto.className = "px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-gray-700 text-gray-300";
-          btnAuto.innerText = "OFF";
-          dotAuto.className = "w-2 h-2 rounded-full bg-gray-500";
-          lblAuto.innerText = "PAUSED";
-          lblAuto.className = "text-gray-400 font-mono";
+        if (data.real_inr_balance) {
+          realBalanceInr = data.real_inr_balance;
+          document.getElementById('headerWalletBal').innerText = `₹${realBalanceInr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
+          document.getElementById('lblModalBal').innerText = `₹${realBalanceInr.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
         }
 
-        // Active Position UI
+        const bar = document.getElementById('bottomPositionBar');
         const pos = (data.positions && data.positions.length > 0) ? data.positions[0] : null;
-        renderPositionCard(pos);
 
-        // Logs
-        renderLogs(data.logs || []);
+        if (!pos) {
+          bar.style.display = 'none';
+        } else {
+          bar.style.display = 'flex';
+          document.getElementById('barPosBadge').innerText = `🟢 ${pos.side} ${pos.leverage}x`;
+          document.getElementById('barPosMargin').innerText = `₹${pos.margin_inr.toFixed(2)}`;
+          document.getElementById('barPosEntry').innerText = `$${pos.entry_price.toFixed(2)}`;
+          document.getElementById('barPosMark').innerText = `$${data.price_usd.toFixed(2)}`;
 
-      } catch (err) {
-        console.error("Status error:", err);
-      }
+          const pnl = pos.net_pnl_inr || 0;
+          const roi = pos.roi_pct || 0;
+          const pnlColor = pnl >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
+          const pnlSign = pnl >= 0 ? "+" : "";
+
+          document.getElementById('barPosPnl').innerText = `${pnlSign}₹${pnl.toFixed(2)} (${pnlSign}${roi.toFixed(1)}%)`;
+          document.getElementById('barPosPnl').className = `${pnlColor} font-black text-sm`;
+        }
+
+      } catch (err) {}
     }
 
-    function renderPositionCard(p) {
-      const card = document.getElementById('activePositionCard');
-      const overlay = document.getElementById('chartOverlay');
-
-      if (!p) {
-        card.innerHTML = `
-          <div class="text-center py-8 space-y-2">
-            <div class="text-3xl">🤖</div>
-            <div class="text-white font-bold text-sm">Auto-Scalp Bot Scanning...</div>
-            <div class="text-xs text-gray-400">Position closed. Next 25X scalp entry will be taken automatically.</div>
-          </div>
-        `;
-        overlay.style.display = 'none';
-        return;
-      }
-
-      overlay.style.display = 'flex';
-
-      // Update overlay texts
-      document.getElementById('overlayTpText').innerText = `$${p.tp_price.toFixed(2)}`;
-      document.getElementById('overlayEntryText').innerText = `$${p.entry_price.toFixed(2)}`;
-      document.getElementById('overlaySlText').innerText = `$${p.sl_price.toFixed(2)}`;
-
-      // Live Net PnL Calculation
-      const entry = p.entry_price;
-      const mark = currentLivePrice;
-      const pctMove = p.side === "LONG" ? ((mark - entry) / entry) : ((entry - mark) / entry);
-      const grossPnl = pctMove * p.exposure_inr;
-      const netPnl = grossPnl - (p.entry_fee_inr || 73.75);
-      const roi = (netPnl / p.margin_inr) * 100;
-
-      const pnlColor = netPnl >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
-      const pnlSign = netPnl >= 0 ? "+" : "";
-
-      document.getElementById('cardNetPnl').innerText = `${pnlSign}₹${netPnl.toFixed(2)} (${pnlSign}${roi.toFixed(2)}%)`;
-      document.getElementById('cardNetPnl').className = `text-2xl font-black font-mono ${pnlColor} mt-0.5`;
-
-      document.getElementById('cardTpPrice').innerText = `$${p.tp_price.toFixed(2)}`;
-      document.getElementById('cardSlPrice').innerText = `$${p.sl_price.toFixed(2)}`;
-      document.getElementById('cardEntryPrice').innerText = `$${p.entry_price.toFixed(2)}`;
-      document.getElementById('cardMarkPrice').innerText = `$${mark.toFixed(2)}`;
-      document.getElementById('cardSideBadge').innerText = `🟢 ${p.side} ${p.leverage}x ACTIVE`;
-    }
-
-    function renderLogs(logs) {
-      const container = document.getElementById('logContainer');
-      if (logs.length === 0) return;
-
-      container.innerHTML = logs.map(l => {
-        const isTp = l.includes("TARGET HIT");
-        const isSl = l.includes("STOP LOSS");
-        const isEntry = l.includes("Auto-Scalp Bot: Entered");
-        const color = isTp ? "text-[#00d09c] font-bold" : isSl ? "text-[#f6465d] font-bold" : isEntry ? "text-blue-300" : "text-gray-300";
-        return `<div class="${color}">${l}</div>`;
-      }).join('');
-    }
-
-    // 4. Toggle Auto-Trading Loop
-    async function toggleAutoScalp() {
-      await fetch('/api/toggle_auto', {method: 'POST'});
-      fetchStatus();
-    }
-
-    // 5. Flatten / Manual Close
     async function flattenPosition() {
-      if (!confirm("Close position at current market price?")) return;
+      if (!confirm("Close and flatten position at market price?")) return;
       await fetch('/api/flatten', {method: 'POST'});
-      fetchStatus();
-    }
-
-    // 6. Reset Balance
-    async function resetBalance() {
-      if (!confirm("Reset Paper Margin to ₹10,000.00 INR?")) return;
-      await fetch('/api/reset', {method: 'POST'});
       fetchStatus();
     }
 
@@ -346,7 +460,8 @@
       initTradingView();
       connectBinanceWs();
       fetchStatus();
-      setInterval(fetchStatus, 2000); // 2-second background poll
+      recalcModal();
+      setInterval(fetchStatus, 2000);
     };
   </script>
 </body>
