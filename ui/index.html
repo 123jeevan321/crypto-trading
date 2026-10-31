@@ -5,20 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CoinSwitch PRO - Crypto Futures & Scalper Terminal (INR ₹)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- TradingView Chart Widget Library -->
+  <!-- TradingView Chart Library -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     body { background-color: #0b0e14; color: #d1d5db; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .cs-card { background-color: #131722; border: 1px solid #232733; }
     .cs-input { background-color: #1a1f2c; border: 1px solid #2e3546; color: #fff; }
     .cs-input:focus { border-color: #00d09c; outline: none; }
-    .price-up { color: #00d09c; }
-    .price-down { color: #f6465d; }
-    .bg-up { background-color: rgba(0, 208, 156, 0.15); }
-    .bg-down { background-color: rgba(246, 70, 93, 0.15); }
+    .draggable-line { cursor: ns-resize; }
   </style>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="h-screen flex flex-col overflow-hidden select-none">
 
   <!-- Top CoinSwitch Pro Header -->
   <header class="h-14 border-b border-gray-800 bg-[#131722] px-4 flex items-center justify-between shrink-0">
@@ -33,62 +30,147 @@
       <!-- Mode Selector -->
       <div class="flex items-center bg-[#1a1f2c] p-0.5 rounded-lg border border-gray-800 text-xs font-semibold">
         <button class="px-3 py-1 text-gray-400 hover:text-white rounded">Spot</button>
-        <button class="px-3 py-1 bg-[#00d09c] text-black font-bold rounded shadow">Futures (Scalper)</button>
+        <button class="px-3 py-1 bg-[#00d09c] text-black font-bold rounded shadow">Futures Scalper (INR)</button>
       </div>
 
-      <!-- Live Symbol Ticker -->
+      <!-- Live Symbol Ticker & Mark Price Explanation -->
       <div class="flex items-center space-x-3 bg-[#1e2330] px-3 py-1.5 rounded-md border border-gray-700">
         <span class="text-white font-bold text-sm">BTC/USDT Perp</span>
-        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-sm transition-colors">$77,080.00</span>
-        <span id="livePriceInr" class="text-gray-400 font-mono text-xs">(₹65,51,800)</span>
-        <span id="livePriceBadge" class="text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#00d09c] font-mono font-semibold">+0.24%</span>
+        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-sm transition-colors">$77,156.00</span>
+        <span id="livePriceInr" class="text-gray-300 font-mono text-xs font-bold">(₹65,58,260)</span>
+        <span class="text-[11px] text-gray-400 font-mono hidden md:inline">Spot: <span id="spotPriceHeader" class="text-gray-300">$77,106.00</span> (<span class="text-emerald-400 font-semibold">+$50 Mark Prem</span>)</span>
       </div>
 
     </div>
 
-    <!-- Wallet / Available Margin (INR ₹) -->
+    <!-- Wallet / Available Margin (INR ₹ with Deducted Fees) -->
     <div class="flex items-center space-x-5">
       <div class="text-right">
         <div class="text-[11px] text-gray-400 flex items-center justify-end gap-1">
           <span>Available Margin:</span>
           <button onclick="resetBalance()" class="text-[#00d09c] hover:underline text-[10px] ml-1">Reset ₹10k</button>
         </div>
-        <div id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹10,000.00</div>
+        <div class="flex items-center gap-1.5 justify-end">
+          <span id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹4,926.25</span>
+          <span class="text-[10px] text-amber-400 font-mono">(₹73.75 Fee Deducted)</span>
+        </div>
       </div>
 
       <div class="h-8 w-px bg-gray-800"></div>
 
       <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-700/50 text-[#00d09c] text-xs font-mono">
-        <span id="wsStatusDot" class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
-        <span id="wsStatusText">Tick Stream Live</span>
+        <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
+        <span>Binance Feed Live</span>
       </div>
     </div>
   </header>
 
-  <!-- Main Workspace -->
+  <!-- Main Trading Area -->
   <div class="flex-1 flex overflow-hidden">
     
-    <!-- Left 70%: TradingView 1m Scalper Chart + Bottom Positions -->
+    <!-- Left 70%: Chart Container with Interactive On-Chart Order Lines -->
     <div class="flex-1 flex flex-col min-w-0">
       
-      <!-- Real-Time TradingView Candlestick Chart (1m Scalp View) -->
-      <div class="flex-1 relative bg-[#0b0e14]" id="chart_container">
-        <!-- TradingView widget loads here -->
+      <!-- Chart Area -->
+      <div class="flex-1 relative bg-[#0b0e14] overflow-hidden" id="chart_wrapper">
+        
+        <!-- Underlying Real-Time TradingView Chart -->
+        <div class="w-full h-full" id="chart_container"></div>
+
+        <!-- Interactive On-Chart Draggable TP, SL, Entry Overlay Lines -->
+        <div id="chartOverlay" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-6">
+          
+          <!-- Top Overlay Banner: Quick Scalp Level Controllers -->
+          <div class="pointer-events-auto bg-[#131722]/90 border border-gray-700/80 rounded-lg p-2.5 backdrop-blur shadow-2xl flex items-center justify-between max-w-2xl text-xs font-mono">
+            <div class="flex items-center space-x-3">
+              <span class="px-2 py-0.5 rounded bg-emerald-950 text-[#00d09c] font-bold border border-emerald-700">
+                ACTIVE 25X SCALP
+              </span>
+              <span>Entry: <strong class="text-blue-400 font-bold">$77,121.63</strong></span>
+            </div>
+            <div class="flex items-center space-x-4">
+              <!-- TP controller -->
+              <div class="flex items-center space-x-1.5">
+                <span class="text-emerald-400 font-bold">TP:</span>
+                <input type="number" id="inpOverlayTp" value="77521.63" step="10" class="w-20 bg-gray-900 border border-emerald-700 text-emerald-300 font-mono text-xs px-1.5 py-0.5 rounded text-center" onchange="syncOverlayInputs()">
+                <button onclick="adjustOverlayLevel('tp', 50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-emerald-400 font-bold text-[10px]">+50</button>
+                <button onclick="adjustOverlayLevel('tp', -50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-emerald-400 font-bold text-[10px]">-50</button>
+              </div>
+              <!-- SL controller -->
+              <div class="flex items-center space-x-1.5">
+                <span class="text-red-400 font-bold">SL:</span>
+                <input type="number" id="inpOverlaySl" value="76961.63" step="10" class="w-20 bg-gray-900 border border-red-700 text-red-300 font-mono text-xs px-1.5 py-0.5 rounded text-center" onchange="syncOverlayInputs()">
+                <button onclick="adjustOverlayLevel('sl', 50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-red-400 font-bold text-[10px]">+50</button>
+                <button onclick="adjustOverlayLevel('sl', -50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-red-400 font-bold text-[10px]">-50</button>
+              </div>
+              <button onclick="saveBracketChanges()" class="px-2.5 py-1 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded text-[11px] shadow">
+                Save
+              </button>
+            </div>
+          </div>
+
+          <!-- On-Chart Visual Lines Container -->
+          <div class="relative flex-1 my-4 pointer-events-none" id="linesContainer">
+            
+            <!-- 1. Take Profit (TP) Green Line with Draggable Handle -->
+            <div id="lineTp" class="absolute left-0 right-0 border-b-2 border-dashed border-[#00d09c] flex items-center justify-between pointer-events-auto transition-all" style="top: 25%;">
+              <div class="bg-[#00d09c] text-black text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5 draggable-line" title="Drag to adjust TP" onmousedown="startDrag(event, 'tp')">
+                <span>🎯 TP: $<span id="lblOverlayTpVal">77,521.63</span> (+400 pts)</span>
+                <span class="px-1.5 py-0.2 bg-black/20 rounded font-mono text-[10px] text-black font-extrabold">+₹500.83 Net (+10.0%)</span>
+                <span class="cursor-grab text-xs ml-1">⬍ DRAG</span>
+              </div>
+              <div class="bg-gray-900/90 text-[#00d09c] text-[11px] font-mono px-2 py-0.5 rounded border border-emerald-800 mr-2">
+                Target Level: 77,521.63
+              </div>
+            </div>
+
+            <!-- 2. Entry Price Blue Line -->
+            <div id="lineEntry" class="absolute left-0 right-0 border-b-2 border-blue-400 flex items-center justify-between pointer-events-auto transition-all" style="top: 55%;">
+              <div class="bg-blue-600 text-white text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5">
+                <span>🔵 ENTRY: $77,121.63</span>
+                <span class="px-1.5 py-0.2 bg-black/30 rounded font-mono text-[10px] text-white">LONG 25x • ₹5,000 Margin</span>
+              </div>
+              <div class="bg-gray-900/90 text-blue-300 text-[11px] font-mono px-2 py-0.5 rounded border border-blue-800 mr-2">
+                Order Fill: 77,121.63
+              </div>
+            </div>
+
+            <!-- 3. Stop Loss (SL) Red Line with Draggable Handle -->
+            <div id="lineSl" class="absolute left-0 right-0 border-b-2 border-dashed border-[#f6465d] flex items-center justify-between pointer-events-auto transition-all" style="top: 80%;">
+              <div class="bg-[#f6465d] text-white text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5 draggable-line" title="Drag to adjust SL" onmousedown="startDrag(event, 'sl')">
+                <span>🛡️ SL: $<span id="lblOverlaySlVal">76,961.63</span> (-160 pts)</span>
+                <span class="px-1.5 py-0.2 bg-black/30 rounded font-mono text-[10px] text-white font-extrabold">-₹406.83 Net (-8.1%)</span>
+                <span class="cursor-grab text-xs ml-1">⬍ DRAG</span>
+              </div>
+              <div class="bg-gray-900/90 text-red-400 text-[11px] font-mono px-2 py-0.5 rounded border border-red-800 mr-2">
+                Stop Level: 76,961.63
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Bottom Notice -->
+          <div class="text-[10px] text-gray-400 bg-black/70 px-2 py-1 rounded w-fit pointer-events-auto font-mono">
+            💡 Drag green TP or red SL lines up/down on chart to dynamically adjust profit target and stop risk in real time.
+          </div>
+
+        </div>
+
       </div>
 
-      <!-- Bottom Panel: Positions & Open Scalp Orders -->
-      <div class="h-64 cs-card border-t border-gray-800 flex flex-col shrink-0">
+      <!-- Bottom Panel: Positions & Open Orders with Complete Fee Accounting -->
+      <div class="h-60 cs-card border-t border-gray-800 flex flex-col shrink-0">
         
         <div class="flex items-center justify-between border-b border-gray-800 px-4 py-2 bg-[#171b26]">
           <div class="flex space-x-6 text-xs font-bold uppercase tracking-wider">
             <button class="text-[#00d09c] border-b-2 border-[#00d09c] pb-2 flex items-center gap-1.5">
-              <span>Open Scalp Positions</span>
-              <span id="posCountBadge" class="px-1.5 py-0.2 bg-[#00d09c] text-black text-[10px] rounded-full">0</span>
+              <span>Active Scalp Positions</span>
+              <span id="posCountBadge" class="px-1.5 py-0.2 bg-[#00d09c] text-black text-[10px] rounded-full">1</span>
             </button>
-            <button class="text-gray-400 hover:text-white pb-2" onclick="refreshPositions()">Orders & History</button>
+            <button class="text-gray-400 hover:text-white pb-2" onclick="refreshPositions()">Fee & GST Ledger</button>
           </div>
           <div class="flex items-center space-x-3 text-xs">
-            <span class="text-gray-400">Total Unrealized P&L: <strong id="totalPnlHeader" class="text-white font-mono">₹0.00</strong></span>
+            <span class="text-gray-400">Total Net P&L: <strong id="totalPnlHeader" class="text-white font-mono">₹0.00</strong></span>
             <button onclick="refreshPositions()" class="px-2 py-1 rounded bg-[#1e2330] hover:bg-gray-700 text-gray-300">🔄 Refresh</button>
           </div>
         </div>
@@ -103,19 +185,15 @@
                 <th>Total Exposure (₹)</th>
                 <th>Entry Price</th>
                 <th>Mark Price</th>
-                <th>Liq. Price</th>
                 <th>Target (TP)</th>
                 <th>Stop Loss (SL)</th>
-                <th>Unrealized P&L (₹)</th>
+                <th>Fee Paid (₹)</th>
+                <th>Net P&L (₹)</th>
                 <th class="text-right">Action</th>
               </tr>
             </thead>
             <tbody id="positionsTableBody">
-              <tr>
-                <td colspan="11" class="text-center py-8 text-gray-500">
-                  No active scalp positions. Select Long/Short and leverage on the right to enter.
-                </td>
-              </tr>
+              <!-- Dynamically populated -->
             </tbody>
           </table>
         </div>
@@ -125,7 +203,7 @@
     </div>
 
     <!-- Right 30%: CoinSwitch Pro Futures Scalper Desk -->
-    <div class="w-[390px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-4 space-y-4">
+    <div class="w-[380px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-4 space-y-4">
       
       <!-- Order Side Selector (Long / Short) -->
       <div class="grid grid-cols-2 gap-2 p-1 bg-[#1a1f2c] rounded-lg border border-gray-800">
@@ -141,97 +219,96 @@
       <div class="space-y-1.5">
         <div class="flex justify-between items-center text-xs">
           <span class="text-gray-400">Select Leverage:</span>
-          <span id="lblLeverage" class="text-[#00d09c] font-mono font-bold text-sm">50x</span>
+          <span id="lblLeverage" class="text-[#00d09c] font-mono font-bold text-sm">25x</span>
         </div>
         <div class="grid grid-cols-5 gap-1.5">
           <button onclick="setLeverage(10)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="10">10x</button>
-          <button onclick="setLeverage(25)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="25">25x</button>
-          <button onclick="setLeverage(50)" class="lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono" data-lev="50">50x</button>
+          <button onclick="setLeverage(25)" class="lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono" data-lev="25">25x</button>
+          <button onclick="setLeverage(50)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="50">50x</button>
           <button onclick="setLeverage(75)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="75">75x</button>
           <button onclick="setLeverage(100)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="100">100x</button>
         </div>
-        <input type="range" id="sliderLeverage" min="1" max="100" value="50" class="w-full accent-[#00d09c] cursor-pointer" oninput="setLeverage(this.value)">
+        <input type="range" id="sliderLeverage" min="1" max="100" value="25" class="w-full accent-[#00d09c] cursor-pointer" oninput="setLeverage(this.value)">
       </div>
 
       <!-- Margin Input in INR (₹) -->
       <div class="space-y-2">
         <div class="flex justify-between items-center text-xs">
           <label class="text-gray-400">Investment Margin (INR ₹)</label>
-          <span class="text-gray-400">Max: <strong id="lblMaxMargin" class="text-white font-mono">₹10,000.00</strong></span>
+          <span class="text-gray-400">Avail: <strong id="lblMaxMargin" class="text-[#00d09c] font-mono">₹4,926.25</strong></span>
         </div>
         <div class="relative">
           <span class="absolute left-3 top-2.5 text-gray-400 font-bold">₹</span>
           <input type="number" id="inpMargin" value="5000" step="500" class="w-full cs-input pl-8 pr-3 py-2 rounded-lg font-mono text-white font-bold text-sm" oninput="recalcScalper()">
         </div>
 
-        <!-- Quick Margin Percentage Chips -->
+        <!-- Quick Chips -->
         <div class="grid grid-cols-4 gap-1.5 text-[11px] font-mono">
-          <button onclick="setMarginPct(0.25)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">25% (₹2.5k)</button>
-          <button onclick="setMarginPct(0.50)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">50% (₹5k)</button>
-          <button onclick="setMarginPct(0.75)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">75% (₹7.5k)</button>
-          <button onclick="setMarginPct(1.00)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">100% (₹10k)</button>
+          <button onclick="setMarginPct(0.25)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">25%</button>
+          <button onclick="setMarginPct(0.50)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">50%</button>
+          <button onclick="setMarginPct(0.75)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">75%</button>
+          <button onclick="setMarginPct(1.00)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">100%</button>
         </div>
 
         <div class="p-2 rounded bg-[#1a1f2c] border border-gray-800 text-xs flex justify-between">
           <span class="text-gray-400">Total Position Exposure:</span>
-          <span id="lblExposure" class="text-white font-mono font-bold">₹2,50,000.00</span>
+          <span id="lblExposure" class="text-white font-mono font-bold">₹1,25,000.00</span>
         </div>
       </div>
 
-      <!-- Scalper Target Points (TP) -->
+      <!-- Target & Stop Settings -->
       <div class="p-3 rounded-lg bg-emerald-950/20 border border-emerald-900/40 space-y-2">
         <div class="flex justify-between items-center text-xs">
-          <span class="text-[#00d09c] font-bold">🎯 Scalp Target (Take Profit)</span>
-          <span id="lblEstProfit" class="text-[#00d09c] font-mono font-bold">+₹1,621.00 (+32.4%)</span>
+          <span class="text-[#00d09c] font-bold">🎯 Scalp Target (TP)</span>
+          <span id="lblEstProfit" class="text-[#00d09c] font-mono font-bold">+₹500.83 Net (+10.0%)</span>
         </div>
         <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
-          <button onclick="setTargetPoints(300)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="300">+300 pts</button>
-          <button onclick="setTargetPoints(500)" class="tp-btn py-1 rounded bg-[#00d09c] text-black font-bold" data-pts="500">+500 pts</button>
-          <button onclick="setTargetPoints(1000)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="1000">+1000 pts</button>
+          <button onclick="setTargetPoints(200)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="200">+200 pts</button>
+          <button onclick="setTargetPoints(400)" class="tp-btn py-1 rounded bg-[#00d09c] text-black font-bold" data-pts="400">+400 pts</button>
+          <button onclick="setTargetPoints(800)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="800">+800 pts</button>
         </div>
         <div class="flex justify-between items-center text-[11px] text-gray-400">
-          <span>Target Price: <strong id="lblTpPrice" class="text-white font-mono">$77,580.00</strong></span>
-          <span id="lblPointsTarget" class="text-emerald-400 font-mono font-semibold">500 pts</span>
+          <span>Target Price: <strong id="lblTpPrice" class="text-white font-mono">$77,521.63</strong></span>
+          <span id="lblPointsTarget" class="text-emerald-400 font-mono font-semibold">+400 pts</span>
         </div>
       </div>
 
-      <!-- Scalper Stop Loss (SL) -->
       <div class="p-3 rounded-lg bg-red-950/20 border border-red-900/40 space-y-2">
         <div class="flex justify-between items-center text-xs">
           <span class="text-[#f6465d] font-bold">🛡️ Scalp Stop Loss (SL)</span>
-          <span id="lblEstLoss" class="text-[#f6465d] font-mono font-bold">-₹810.00 (-16.2%)</span>
+          <span id="lblEstLoss" class="text-[#f6465d] font-mono font-bold">-₹406.83 Net (-8.1%)</span>
         </div>
         <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
-          <button onclick="setStopPoints(150)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="150">-150 pts</button>
-          <button onclick="setStopPoints(250)" class="sl-btn py-1 rounded bg-[#f6465d] text-white font-bold" data-pts="250">-250 pts</button>
-          <button onclick="setStopPoints(500)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="500">-500 pts</button>
+          <button onclick="setStopPoints(100)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="100">-100 pts</button>
+          <button onclick="setStopPoints(160)" class="sl-btn py-1 rounded bg-[#f6465d] text-white font-bold" data-pts="160">-160 pts</button>
+          <button onclick="setStopPoints(300)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="300">-300 pts</button>
         </div>
         <div class="flex justify-between items-center text-[11px] text-gray-400">
-          <span>Stop Price: <strong id="lblSlPrice" class="text-white font-mono">$76,830.00</strong></span>
-          <span id="lblPointsStop" class="text-[#f6465d] font-mono font-semibold">-250 pts</span>
+          <span>Stop Price: <strong id="lblSlPrice" class="text-white font-mono">$76,961.63</strong></span>
+          <span id="lblPointsStop" class="text-[#f6465d] font-mono font-semibold">-160 pts</span>
         </div>
       </div>
 
       <!-- Fees & Liquidation Summary -->
       <div class="text-xs text-gray-400 space-y-1 bg-[#1a1f2c] p-2.5 rounded-lg border border-gray-800 font-mono">
         <div class="flex justify-between">
-          <span>Est. Exchange Fee:</span>
-          <span id="lblEstFee" class="text-white font-bold">₹125.00</span>
+          <span>Entry Fee (0.05% + GST):</span>
+          <span class="text-amber-400 font-bold">₹73.75 (Deducted)</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Roundtrip Charges:</span>
+          <span id="lblEstFee" class="text-white font-bold">₹147.50</span>
         </div>
         <div class="flex justify-between">
           <span>Liquidation Price:</span>
-          <span id="lblLiqPrice" class="text-amber-400 font-bold">$75,690.00</span>
-        </div>
-        <div class="flex justify-between">
-          <span>Reward : Risk Ratio:</span>
-          <span class="text-[#00d09c] font-bold">2.00x</span>
+          <span id="lblLiqPrice" class="text-amber-400 font-bold">$74,345.25</span>
         </div>
       </div>
 
-      <!-- Big Action Order Placement Button -->
+      <!-- Action Button -->
       <button id="btnExecuteOrder" onclick="executeScalpOrder()" class="w-full py-3.5 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer">
-        <span id="lblBtnAction">🟢 OPEN LONG 50x (BTC)</span>
-        <span id="lblBtnSub" class="text-[10px] font-semibold text-gray-800">Target: +500 pts • SL: -250 pts</span>
+        <span id="lblBtnAction">🟢 OPEN LONG 25x (BTC)</span>
+        <span id="lblBtnSub" class="text-[10px] font-semibold text-gray-800">Target: +400 pts • SL: -160 pts</span>
       </button>
 
     </div>
@@ -240,20 +317,20 @@
 
   <script>
     let currentSide = "LONG";
-    let currentLeverage = 50;
-    let targetPts = 500;
-    let stopPts = 250;
-    let liveBtcPrice = 77080.00;
-    let availableCashInr = 10000.00;
+    let currentLeverage = 25;
+    let targetPts = 400;
+    let stopPts = 160;
+    let liveBtcPrice = 77156.00;
+    let availableCashInr = 4926.25;
     const USD_INR_RATE = 85.0;
 
-    // 1. Initialize TradingView 1-Minute Scalp Chart
+    // TradingView Widget Setup
     function initTradingView() {
       new TradingView.widget({
         "container_id": "chart_container",
         "autosize": true,
         "symbol": "BINANCE:BTCUSDT",
-        "interval": "1", // 1 minute scalping timeframe
+        "interval": "1",
         "timezone": "Asia/Kolkata",
         "theme": "dark",
         "style": "1",
@@ -264,71 +341,134 @@
         "allow_symbol_change": true,
         "studies": [
           "RSI@tv-basicstudies",
-          "MASimple@tv-basicstudies",
-          "Volume@tv-basicstudies"
+          "MASimple@tv-basicstudies"
         ]
       });
     }
 
-    // 2. Real-Time Dynamic Price Stream (Binance WebSocket for Instant Ticks)
+    // Connect Binance WebSocket for Real-Time Price
     function connectBinanceWs() {
       try {
         const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
-        ws.onopen = () => {
-          document.getElementById('wsStatusDot').className = "w-2 h-2 rounded-full bg-[#00d09c] animate-pulse";
-          document.getElementById('wsStatusText').innerText = "Live Tick Stream (Binance)";
-        };
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data && data.c) {
-            const newPrice = parseFloat(data.c);
-            updateLivePrice(newPrice);
+            updateLivePrice(parseFloat(data.c));
           }
         };
-        ws.onerror = (e) => {
-          console.warn("WebSocket error, falling back to polling", e);
-          fallbackPolling();
-        };
-        ws.onclose = () => {
-          setTimeout(connectBinanceWs, 5000);
-        };
-      } catch (err) {
-        fallbackPolling();
+        ws.onerror = () => setTimeout(connectBinanceWs, 5000);
+      } catch (e) {
+        setInterval(async () => {
+          try {
+            const res = await fetch('/api/status');
+            const data = await res.json();
+            if (data.price_usd) updateLivePrice(data.price_usd);
+          } catch(err) {}
+        }, 1000);
       }
-    }
-
-    function fallbackPolling() {
-      setInterval(async () => {
-        try {
-          const res = await fetch('/api/status');
-          const data = await res.json();
-          if (data.price_usd) updateLivePrice(data.price_usd);
-        } catch(e) {}
-      }, 1000);
     }
 
     function updateLivePrice(price) {
-      const oldPrice = liveBtcPrice;
       liveBtcPrice = price;
-
-      const headerEl = document.getElementById('livePriceHeader');
-      headerEl.innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-      
-      const inrPrice = price * USD_INR_RATE;
-      document.getElementById('livePriceInr').innerText = `(₹${Math.round(inrPrice).toLocaleString('en-IN')})`;
-
-      // Dynamic flash
-      if (price > oldPrice) {
-        headerEl.className = "text-[#00d09c] font-mono font-bold text-sm transition-colors";
-      } else if (price < oldPrice) {
-        headerEl.className = "text-[#f6465d] font-mono font-bold text-sm transition-colors";
-      }
+      document.getElementById('livePriceHeader').innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('spotPriceHeader').innerText = `$${(price - 50.0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('livePriceInr').innerText = `(₹${Math.round(price * USD_INR_RATE).toLocaleString('en-IN')})`;
 
       recalcScalper();
       updateOpenPositionsPnl();
     }
 
-    // 3. Scalper Parameters Control
+    // Dragging Logic for On-Chart Horizontal Lines
+    let activeDrag = null;
+    let startY = 0;
+    let currentTpPrice = 77521.63;
+    let currentSlPrice = 76961.63;
+    const entryPrice = 77121.63;
+
+    function startDrag(e, type) {
+      e.preventDefault();
+      activeDrag = type;
+      startY = e.clientY;
+      window.addEventListener('mousemove', onDragMove);
+      window.addEventListener('mouseup', onDragEnd);
+    }
+
+    function onDragMove(e) {
+      if (!activeDrag) return;
+      const deltaY = startY - e.clientY;
+      startY = e.clientY;
+
+      // 1 pixel = ~5 USD move
+      const deltaPrice = deltaY * 4.0;
+
+      if (activeDrag === 'tp') {
+        currentTpPrice = Math.max(entryPrice + 50, Math.round(currentTpPrice + deltaPrice));
+        document.getElementById('inpOverlayTp').value = currentTpPrice.toFixed(2);
+        document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
+        // Move line visually
+        const line = document.getElementById('lineTp');
+        const currentTop = parseFloat(line.style.top) || 25;
+        line.style.top = `${Math.max(5, Math.min(45, currentTop - (deltaY * 0.15)))}%`;
+      } else if (activeDrag === 'sl') {
+        currentSlPrice = Math.min(entryPrice - 50, Math.round(currentSlPrice + deltaPrice));
+        document.getElementById('inpOverlaySl').value = currentSlPrice.toFixed(2);
+        document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
+        const line = document.getElementById('lineSl');
+        const currentTop = parseFloat(line.style.top) || 80;
+        line.style.top = `${Math.max(60, Math.min(95, currentTop - (deltaY * 0.15)))}%`;
+      }
+    }
+
+    function onDragEnd() {
+      if (!activeDrag) return;
+      activeDrag = null;
+      window.removeEventListener('mousemove', onDragMove);
+      window.removeEventListener('mouseup', onDragEnd);
+      saveBracketChanges();
+    }
+
+    function adjustOverlayLevel(type, pts) {
+      if (type === 'tp') {
+        currentTpPrice = Math.round(currentTpPrice + pts);
+        document.getElementById('inpOverlayTp').value = currentTpPrice.toFixed(2);
+        document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
+      } else {
+        currentSlPrice = Math.round(currentSlPrice + pts);
+        document.getElementById('inpOverlaySl').value = currentSlPrice.toFixed(2);
+        document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
+      }
+      saveBracketChanges();
+    }
+
+    function syncOverlayInputs() {
+      currentTpPrice = parseFloat(document.getElementById('inpOverlayTp').value) || currentTpPrice;
+      currentSlPrice = parseFloat(document.getElementById('inpOverlaySl').value) || currentSlPrice;
+      document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
+      document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
+      saveBracketChanges();
+    }
+
+    async function saveBracketChanges() {
+      try {
+        const resp = await fetch('/api/update_bracket', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            id: "SCALP-1",
+            tp_price: currentTpPrice,
+            sl_price: currentSlPrice
+          })
+        });
+        const res = await resp.json();
+        if (res.status === 'ok') {
+          refreshPositions();
+        }
+      } catch (err) {
+        console.error("Failed to update bracket:", err);
+      }
+    }
+
+    // Scalper UI Controls
     function setSide(side) {
       currentSide = side;
       const btnLong = document.getElementById('btnSideLong');
@@ -351,7 +491,6 @@
       currentLeverage = parseInt(lev);
       document.getElementById('lblLeverage').innerText = `${currentLeverage}x`;
       document.getElementById('sliderLeverage').value = currentLeverage;
-
       document.querySelectorAll('.lev-btn').forEach(btn => {
         if (parseInt(btn.getAttribute('data-lev')) === currentLeverage) {
           btn.className = "lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono";
@@ -392,14 +531,13 @@
       recalcScalper();
     }
 
-    // 4. Mathematical Calculations for Scalper Bracket
     function recalcScalper() {
       const margin = parseFloat(document.getElementById('inpMargin').value) || 0;
       const exposure = margin * currentLeverage;
-      document.getElementById('lblExposure').innerText = `₹${exposure.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      document.getElementById('lblExposure').innerText = `₹${exposure.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
 
       const tpPrice = currentSide === "LONG" ? (liveBtcPrice + targetPts) : (liveBtcPrice - targetPts);
-      const slPrice = currentSide === "LONG" ? (liveBtcPrice - stopPts) : (liveBtcPrice - stopPts);
+      const slPrice = currentSide === "LONG" ? (liveBtcPrice - stopPts) : (liveBtcPrice + stopPts);
       const liqPrice = currentSide === "LONG" 
         ? liveBtcPrice * (1 - (1.0 / currentLeverage) * 0.90)
         : liveBtcPrice * (1 + (1.0 / currentLeverage) * 0.90);
@@ -407,37 +545,27 @@
       document.getElementById('lblTpPrice').innerText = `$${tpPrice.toFixed(2)}`;
       document.getElementById('lblSlPrice').innerText = `$${slPrice.toFixed(2)}`;
       document.getElementById('lblLiqPrice').innerText = `$${liqPrice.toFixed(2)}`;
-      document.getElementById('lblPointsTarget').innerText = `${targetPts} pts`;
+      document.getElementById('lblPointsTarget').innerText = `+${targetPts} pts`;
       document.getElementById('lblPointsStop').innerText = `-${stopPts} pts`;
 
-      // Expected Profit & Loss in INR (₹)
-      const estProfitInr = (targetPts / liveBtcPrice) * exposure;
-      const estLossInr = (stopPts / liveBtcPrice) * exposure;
-      const estFeeInr = exposure * 0.0005;
+      const roundtripFee = exposure * 0.0005 * 2 * 1.18;
+      const estProfitInr = (targetPts / liveBtcPrice) * exposure - roundtripFee;
+      const estLossInr = (stopPts / liveBtcPrice) * exposure + roundtripFee;
 
       const roiProfit = margin > 0 ? (estProfitInr / margin) * 100 : 0;
       const roiLoss = margin > 0 ? (estLossInr / margin) * 100 : 0;
 
-      document.getElementById('lblEstProfit').innerText = `+₹${Math.round(estProfitInr).toLocaleString('en-IN')} (+${roiProfit.toFixed(1)}%)`;
-      document.getElementById('lblEstLoss').innerText = `-₹${Math.round(estLossInr).toLocaleString('en-IN')} (-${roiLoss.toFixed(1)}%)`;
-      document.getElementById('lblEstFee').innerText = `₹${estFeeInr.toFixed(2)}`;
+      document.getElementById('lblEstProfit').innerText = `+₹${Math.round(estProfitInr).toLocaleString('en-IN')} Net (+${roiProfit.toFixed(1)}%)`;
+      document.getElementById('lblEstLoss').innerText = `-₹${Math.round(estLossInr).toLocaleString('en-IN')} Net (-${roiLoss.toFixed(1)}%)`;
+      document.getElementById('lblEstFee').innerText = `₹${roundtripFee.toFixed(2)}`;
 
-      // Update Button Label
       document.getElementById('lblBtnAction').innerText = `${currentSide === "LONG" ? "🟢 OPEN LONG" : "🔴 OPEN SHORT"} ${currentLeverage}x (BTC)`;
-      document.getElementById('lblBtnSub').innerText = `Target: +${targetPts} pts • SL: -${stopPts} pts • Fee: ₹${estFeeInr.toFixed(0)}`;
+      document.getElementById('lblBtnSub').innerText = `Target: +${targetPts} pts • SL: -${stopPts} pts`;
     }
 
-    // 5. Execute Scalp Order
     async function executeScalpOrder() {
       const margin = parseFloat(document.getElementById('inpMargin').value);
-      if (!margin || margin <= 0) {
-        alert("Please enter a valid investment margin.");
-        return;
-      }
-      if (margin > availableCashInr) {
-        alert(`Insufficient margin! Available: ₹${availableCashInr.toLocaleString('en-IN')}`);
-        return;
-      }
+      if (!margin || margin <= 0) return alert("Please enter investment margin.");
 
       const btn = document.getElementById('btnExecuteOrder');
       btn.disabled = true;
@@ -459,7 +587,7 @@
 
         const res = await resp.json();
         if (res.status === 'ok') {
-          alert(`⚡ ${currentSide} ${currentLeverage}x Scalp Position Opened!\nMargin: ₹${margin.toLocaleString('en-IN')} | Entry: $${liveBtcPrice.toFixed(2)}\nTarget: +${targetPts} pts | Stop Loss: -${stopPts} pts`);
+          alert(`⚡ Position Opened! ₹${res.fee_deducted_inr} exchange fee deducted from cash.`);
           refreshPositions();
         } else {
           alert("Order Error: " + res.message);
@@ -471,7 +599,6 @@
       }
     }
 
-    // 6. Refresh Positions & Wallet
     let activePositionsList = [];
 
     async function refreshPositions() {
@@ -495,12 +622,13 @@
     function renderPositionsTable() {
       const tbody = document.getElementById('positionsTableBody');
       if (activePositionsList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No active scalp positions. Select Long/Short and leverage on the right to enter.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No active scalp positions.</td></tr>';
         document.getElementById('totalPnlHeader').innerText = "₹0.00";
-        document.getElementById('totalPnlHeader').className = "text-white font-mono";
+        document.getElementById('chartOverlay').style.display = 'none';
         return;
       }
 
+      document.getElementById('chartOverlay').style.display = 'flex';
       let totalPnl = 0;
       let html = '';
 
@@ -508,16 +636,16 @@
         const sideColor = p.side === "LONG" ? "text-[#00d09c]" : "text-[#f6465d]";
         const badgeBg = p.side === "LONG" ? "bg-emerald-950/80 border-emerald-700/60" : "bg-red-950/80 border-red-700/60";
         
-        // Dynamic PnL calculation
         const entry = p.entry_price;
         const mark = liveBtcPrice;
         const pctMove = p.side === "LONG" ? ((mark - entry) / entry) : ((entry - mark) / entry);
-        const pnlInr = pctMove * p.exposure_inr;
-        const roi = (pnlInr / p.margin_inr) * 100;
-        totalPnl += pnlInr;
+        const grossPnlInr = pctMove * p.exposure_inr;
+        const netPnlInr = grossPnlInr - (p.entry_fee_inr || 73.75);
+        const roi = (netPnlInr / p.margin_inr) * 100;
+        totalPnl += netPnlInr;
 
-        const pnlColor = pnlInr >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
-        const pnlSign = pnlInr >= 0 ? "+" : "";
+        const pnlColor = netPnlInr >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
+        const pnlSign = netPnlInr >= 0 ? "+" : "";
 
         html += `
           <tr class="border-b border-gray-800/60 hover:bg-[#1a1f2c]">
@@ -527,10 +655,10 @@
             <td class="text-gray-300">₹${p.exposure_inr.toLocaleString('en-IN')}</td>
             <td class="text-gray-200">$${p.entry_price.toFixed(2)}</td>
             <td class="text-white font-bold">$${mark.toFixed(2)}</td>
-            <td class="text-amber-400 font-semibold">$${p.liq_price.toFixed(2)}</td>
-            <td class="text-[#00d09c]">$${p.tp_price.toFixed(2)}</td>
-            <td class="text-[#f6465d]">$${p.sl_price.toFixed(2)}</td>
-            <td class="${pnlColor} font-bold text-sm">${pnlSign}₹${pnlInr.toFixed(2)} (${pnlSign}${roi.toFixed(1)}%)</td>
+            <td class="text-[#00d09c] font-bold">$${p.tp_price.toFixed(2)}</td>
+            <td class="text-[#f6465d] font-bold">$${p.sl_price.toFixed(2)}</td>
+            <td class="text-amber-400 font-semibold">₹${(p.entry_fee_inr || 73.75).toFixed(2)}</td>
+            <td class="${pnlColor} font-bold text-sm">${pnlSign}₹${netPnlInr.toFixed(2)} (${pnlSign}${roi.toFixed(1)}%)</td>
             <td class="text-right">
               <button onclick="flattenPosition('${p.id}')" class="px-3 py-1 bg-red-900/40 hover:bg-red-800 text-red-200 rounded border border-red-700/60 transition font-bold">
                 ⚡ Flatten
@@ -547,14 +675,11 @@
     }
 
     function updateOpenPositionsPnl() {
-      if (activePositionsList.length > 0) {
-        renderPositionsTable();
-      }
+      if (activePositionsList.length > 0) renderPositionsTable();
     }
 
-    // 7. Flatten Position
     async function flattenPosition(posId) {
-      if (!confirm("Close and flatten this scalp position at market price?")) return;
+      if (!confirm("Close and flatten this scalp position? Remaining exit fee will be settled.")) return;
       try {
         const resp = await fetch('/api/flatten', {
           method: 'POST',
@@ -563,7 +688,7 @@
         });
         const res = await resp.json();
         if (res.status === 'ok') {
-          alert(`⚡ Position Closed at $${res.exit_price.toFixed(2)}!\nRealized P&L: ₹${res.realized_pnl_inr.toFixed(2)}\nNew Available Margin: ₹${res.new_cash_inr.toLocaleString('en-IN')}`);
+          alert(`⚡ Position Closed at $${res.exit_price.toFixed(2)}!\nNet Realized P&L: ₹${res.realized_pnl_inr.toFixed(2)}\nAvailable Wallet Margin: ₹${res.new_cash_inr.toLocaleString('en-IN')}`);
           refreshPositions();
         }
       } catch (err) {
@@ -571,14 +696,12 @@
       }
     }
 
-    // 8. Reset Balance
     async function resetBalance() {
-      if (!confirm("Reset Paper Margin Balance to ₹10,000.00 INR?")) return;
+      if (!confirm("Reset Paper Margin to ₹10,000.00 INR?")) return;
       await fetch('/api/reset', {method: 'POST'});
       refreshPositions();
     }
 
-    // Page Load
     window.onload = function() {
       initTradingView();
       connectBinanceWs();
