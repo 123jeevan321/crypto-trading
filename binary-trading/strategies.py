@@ -131,17 +131,11 @@ def eval_strategy_3_support_resistance_wick(data):
     return None
 
 
+import smc_orderflow as smc
+
+
 def eval_strategy_4_macd_momentum(data):
-    """Strategy 4: MACD Line & Signal Crossover with Moving Average Filter.
-
-    CALL Rule:
-    - MACD > Signal Line (Positive Histogram)
-    - Price > EMA 50 (Macro bullish filter)
-
-    PUT Rule:
-    - MACD < Signal Line (Negative Histogram)
-    - Price < EMA 50 (Macro bearish filter)
-    """
+    """Strategy 4: MACD Line & Signal Crossover with Moving Average Filter."""
     price = data["price"]
     ema50 = data["ema50"]
     macd = data["macd"]
@@ -167,11 +161,7 @@ def eval_strategy_4_macd_momentum(data):
 
 
 def eval_strategy_5_news_filter(news_status):
-    """Strategy 5: High-Impact Economic News Safety Filter.
-
-    If high-impact news (Red Folder) is scheduled within ±15 minutes,
-    binary trading on that currency should be PAUSED to avoid random wicks.
-    """
+    """Strategy 5: High-Impact Economic News Safety Filter."""
     if news_status.get("is_high_impact_active"):
         return {
             "name": "Economic News Filter",
@@ -186,16 +176,22 @@ def eval_strategy_5_news_filter(news_status):
 
 
 def analyze_confluence(market_data, news_status=None):
-    """Aggregates all 5 strategies to compute the final Confluence Probability Score."""
+    """Aggregates all 5 strategies, SMC / ICT order flow, and Time-Safety into the final Confluence Score."""
     if not market_data:
         return None
 
+    timing = smc.get_timing_risk_assessment()
     news_filter = eval_strategy_5_news_filter(news_status or {})
 
+    # Evaluate Traditional Strategies
     strat1 = eval_strategy_1_ema_trend_pullback(market_data)
     strat2 = eval_strategy_2_bb_rsi_reversal(market_data)
     strat3 = eval_strategy_3_support_resistance_wick(market_data)
     strat4 = eval_strategy_4_macd_momentum(market_data)
+
+    # Evaluate Institutional SMC & Order Flow
+    candles = market_data.get("candles", [])
+    smc_result = smc.evaluate_smc_order_flow(candles)
 
     call_weight = 0
     put_weight = 0
@@ -213,6 +209,16 @@ def analyze_confluence(market_data, news_status=None):
                 agreeing_strategies.append(strat["name"])
                 triggering_reasons.append(strat["reason"])
 
+    # SMC Order Flow Boost (+15 weight if aligned with institutional sweeps/FVG/OB)
+    if smc_result["smc_bias"] == "CALL":
+        call_weight += 15
+        agreeing_strategies.append("SMC / ICT Order Flow")
+        triggering_reasons.extend(smc_result["patterns_detected"])
+    elif smc_result["smc_bias"] == "PUT":
+        put_weight += 15
+        agreeing_strategies.append("SMC / ICT Order Flow")
+        triggering_reasons.extend(smc_result["patterns_detected"])
+
     # Determine dominant consensus
     if call_weight > put_weight and call_weight >= 35:
         signal = "CALL"
@@ -224,17 +230,17 @@ def analyze_confluence(market_data, news_status=None):
         signal = "NEUTRAL (WAIT)"
         confidence_pct = 50
 
-    # Determine recommended expiry based on agreeing strategies
-    if "EMA 20/50 Trend-Pullback" in agreeing_strategies or "Bollinger Bands + RSI Reversal" in agreeing_strategies:
+    # Determine recommended expiry
+    if "SMC / ICT Order Flow" in agreeing_strategies or "S/R Price Action Wick Rejection" in agreeing_strategies:
+        rec_expiry = "5 to 15 Minutes"
+    elif "EMA 20/50 Trend-Pullback" in agreeing_strategies or "Bollinger Bands + RSI Reversal" in agreeing_strategies:
         rec_expiry = "5 Minutes"
-    elif "S/R Price Action Wick Rejection" in agreeing_strategies or "MACD Momentum Filter" in agreeing_strategies:
-        rec_expiry = "15 Minutes"
     else:
         rec_expiry = "5 Minutes"
 
     # Assign Quality Tier
-    if confidence_pct >= 88:
-        quality_tier = "A+ (90%+ HIGH WIN-RATE)"
+    if confidence_pct >= 90:
+        quality_tier = "A+ (90%–95%+ INSTITUTIONAL CONFLUENCE)"
         badge_color = "#00d09c"
     elif confidence_pct >= 75:
         quality_tier = "A (MODERATE CONFIDENCE)"
@@ -255,6 +261,8 @@ def analyze_confluence(market_data, news_status=None):
         "agreeing_count": len(agreeing_strategies),
         "agreeing_strategies": agreeing_strategies,
         "triggering_reasons": triggering_reasons,
+        "smc_details": smc_result,
+        "timing_risk": timing,
         "safe_from_news": news_filter["safe_to_trade"],
         "news_warning": news_filter["warning"],
         "indicators_summary": {

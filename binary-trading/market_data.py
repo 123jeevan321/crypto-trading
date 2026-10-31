@@ -201,5 +201,6 @@ def analyze_market_snapshot(pair_config):
         "candle_body": round(body, 5),
         "upper_wick": round(upper_wick, 5),
         "lower_wick": round(lower_wick, 5),
-        "is_bullish_candle": last_candle["close"] >= last_candle["open"]
+        "is_bullish_candle": last_candle["close"] >= last_candle["open"],
+        "candles": candles
     }
