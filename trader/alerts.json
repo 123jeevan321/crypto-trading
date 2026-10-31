@@ -1,0 +1,29 @@
+{
+  "rules": [
+    {
+      "id": "btc-usd-plan-stop",
+      "symbol": "BTC-USD",
+      "type": "stop",
+      "price": 77169.07,
+      "note": "plan stop: opening-range midpoint",
+      "date": "2026-10-31"
+    },
+    {
+      "id": "btc-usd-plan-target",
+      "symbol": "BTC-USD",
+      "type": "target",
+      "price": 77413.72,
+      "note": "plan target: 2R (two times the risk)",
+      "date": "2026-10-31"
+    },
+    {
+      "id": "btc-usd-flat-by",
+      "symbol": "BTC-USD",
+      "type": "time",
+      "at": "15:55",
+      "label": "flat by close",
+      "before_close": true,
+      "date": "2026-10-31"
+    }
+  ]
+}

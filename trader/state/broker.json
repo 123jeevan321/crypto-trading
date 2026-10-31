@@ -1,0 +1,21 @@
+{
+  "orders": [
+    {
+      "at": "2026-10-30T22:42:25-04:00",
+      "date": "2026-10-30",
+      "index": 1,
+      "fingerprint": "28ffb075b920eb4a",
+      "symbol": "BTC-USD",
+      "side": "buy",
+      "qty": "0.0485",
+      "kind": "entry",
+      "max_loss": 3.96,
+      "stop": 77169.07,
+      "plain": "BUY 0.0485 BTC-USD, market, good for today / stop-loss 77169.07 / take-profit 77413.72 / max loss about $3.96 if the stop fills at 77169.07 (it can fill worse in a fast market)",
+      "status": "approved",
+      "reply": "yes",
+      "paper": true,
+      "broker": "alpaca"
+    }
+  ]
+}

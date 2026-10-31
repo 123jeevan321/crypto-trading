@@ -1,0 +1,28 @@
+{
+  "created_by": "trader-exit",
+  "symbol": "BTC-USD",
+  "side": "buy",
+  "date": "2026-10-31",
+  "setup": "orb",
+  "entry": 77250.62,
+  "entry_time": "12:20 AM",
+  "entry_bar": 3,
+  "interval": "5m",
+  "opening_range": {
+    "high": 77223.38,
+    "low": 77114.76,
+    "minutes": 15
+  },
+  "stop": 77169.07,
+  "stop_rule": "or_mid",
+  "stop_label": "opening-range midpoint",
+  "target": 77413.72,
+  "target_r": 2.0,
+  "target_label": "2R (two times the risk)",
+  "risk_per_share": 81.55,
+  "reward_risk": 2.0,
+  "flat_by": "15:55",
+  "stop_detail": "($77,223.38 + $77,114.76) / 2 = $77169.07",
+  "created_at": "2026-10-31T02:33:17Z",
+  "note": "A stop is a plan, not a guarantee: a gap or a fast market can fill past it."
+}

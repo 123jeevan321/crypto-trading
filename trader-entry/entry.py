@@ -156,23 +156,28 @@ def iso(utc):
     return utc.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def parse_now(text):
+def parse_now(text, crypto=False):
     """--now -> naive UTC. "2026-10-19 10:15" (or ...T10:15, or just 10:15 for
-    today) is New York time; an offset or Z makes it absolute."""
+    today) is New York time for equities or UTC for crypto; an offset or Z makes it absolute."""
     if not text:
         return utc_now()
     t = text.strip()
     if t.upper().endswith(" ET"):
         t = t[:-3].strip()
+        crypto = False
+    elif t.upper().endswith(" UTC"):
+        t = t[:-4].strip()
+        crypto = True
     if re.match(r"^\d{1,2}:\d{2}$", t):
-        t = "%s %s" % (to_eastern(utc_now()).date().isoformat(), t.zfill(5))
+        today_date = utc_now().date().isoformat() if crypto else to_eastern(utc_now()).date().isoformat()
+        t = "%s %s" % (today_date, t.zfill(5))
     t = t.replace("Z", "+00:00")
     try:
         dt = datetime.datetime.fromisoformat(t)
     except ValueError:
-        raise EntryError('--now wants a New York time like "2026-10-19 10:15" (or ...Z for UTC)')
+        raise EntryError('--now wants a time like "2026-10-19 10:15" (or ...Z for UTC)')
     if dt.tzinfo is None:
-        return eastern_to_utc(dt)
+        return dt if crypto else eastern_to_utc(dt)
     return (dt - dt.utcoffset()).replace(tzinfo=None)
 
 
@@ -198,8 +203,38 @@ def ampm(t):
     return "%d:%02d %s" % (h, t.minute, "AM" if t.hour < 12 else "PM")
 
 
-def trading_day(d):
+# ---------------------------------------------------------------- Crypto & Markets
+
+COMMON_CRYPTO = {
+    "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "DOT",
+    "NEAR", "SUI", "LTC", "BCH", "APT", "ATOM", "UNI", "XLM", "RENDER", "FET"
+}
+
+
+def is_crypto(sym, cfg=None):
+    if cfg and cfg.get("market") == "crypto":
+        return True
+    if not sym:
+        return False
+    s = str(sym).upper().strip()
+    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT") or s.endswith("USD"):
+        return True
+    if s in COMMON_CRYPTO:
+        return True
+    return False
+
+
+def yahoo_symbol(sym):
+    s = sym.upper().replace(".", "-")
+    if s in COMMON_CRYPTO:
+        return s + "-USD"
+    return s
+
+
+def trading_day(d, sym=None):
     """(is_trading_day, reason). Weekends and the NYSE holiday list."""
+    if is_crypto(sym):
+        return True, ""
     if d.weekday() >= 5:
         return False, "weekend"
     name = NYSE_HOLIDAYS.get(d.isoformat())
@@ -208,15 +243,19 @@ def trading_day(d):
     return True, ""
 
 
-def session(d):
+def session(d, sym=None):
     """(open_time, close_time) in New York time, or None if closed all day."""
-    ok, _ = trading_day(d)
+    if is_crypto(sym):
+        return datetime.time(0, 0), datetime.time(23, 59)
+    ok, _ = trading_day(d, sym)
     if not ok:
         return None
     return OPEN, (EARLY if d.isoformat() in NYSE_EARLY_CLOSE else CLOSE)
 
 
-def next_open(d):
+def next_open(d, sym=None):
+    if is_crypto(sym):
+        return "%s 00:00" % (d + datetime.timedelta(days=1)).isoformat()
     nd = d + datetime.timedelta(days=1)
     for _ in range(15):
         if session(nd):
@@ -226,9 +265,6 @@ def next_open(d):
 
 
 # ---------------------------------------------------------------- Yahoo
-
-def yahoo_symbol(sym):
-    return sym.upper().replace(".", "-")
 
 
 def chart_path(sym, rng, interval):
@@ -419,35 +455,55 @@ def evaluate(chart, now_utc, setup="orb", or_minutes=15, interval="5m", level=No
     if setup == "level" and level is None:
         raise EntryError("--setup level needs --level PRICE (for example a 20-day high)")
     n_or = or_minutes * 60 // step
-    local = to_eastern(now_utc)
-    day = local.date()
+    crypto = is_crypto(chart.get("symbol"), cfg)
+    if crypto:
+        local = now_utc
+        tz_name = "UTC"
+        day = local.date()
+        ok, why = True, ""
+        o, c = datetime.time(0, 0), datetime.time(23, 59)
+        open_dt = datetime.datetime.combine(day, o)
+        close_dt = datetime.datetime.combine(day, datetime.time(23, 59, 59))
+        neb = cfg.get("no_entries_before")
+        if neb in (None, "09:45"):
+            neb = "00:15"
+        nea = cfg.get("no_entries_after")
+        if nea in (None, "15:30"):
+            nea = "23:30"
+        before = datetime.datetime.combine(day, parse_hhmm(neb, "no_entries_before"))
+        cutoff = datetime.datetime.combine(day, parse_hhmm(nea, "no_entries_after"))
+    else:
+        local = to_eastern(now_utc)
+        tz_name = "ET"
+        day = local.date()
+        ok, why = trading_day(day, chart.get("symbol"))
+        o, c = session(day, chart.get("symbol")) if ok else (OPEN, CLOSE)
+        open_dt = datetime.datetime.combine(day, o)
+        close_dt = datetime.datetime.combine(day, c)
+        before = datetime.datetime.combine(day, parse_hhmm(cfg["no_entries_before"], "no_entries_before"))
+        cutoff = early_cutoff(day, parse_hhmm(cfg["no_entries_after"], "no_entries_after"), close_dt)
+
     res = {"symbol": chart["symbol"], "setup": setup, "side": "buy", "date": day.isoformat(),
            "interval": interval, "or_minutes": or_minutes, "now": local.strftime("%Y-%m-%d %H:%M:%S"), "status": "waiting",
            "phase": "", "reason": "", "opening_range": None, "level": None, "trigger": None,
-           "last": None, "forming": None, "min_volume_x": min_volume_x,
+           "last": None, "forming": None, "min_volume_x": min_volume_x, "tz": tz_name,
            "prev_close": chart.get("prev_close"), "calendar_known": day.year in CALENDAR_YEARS, "_bars": []}
     dt = chart.get("data_time")
-    res["data_time"] = to_eastern(utc_of(dt)).strftime("%Y-%m-%d %H:%M:%S") if dt else None
-    ok, why = trading_day(day)
+    res["data_time"] = (utc_of(dt) if crypto else to_eastern(utc_of(dt))).strftime("%Y-%m-%d %H:%M:%S") if dt else None
     if not ok:
         res.update(status="no-data", phase="closed", reason="the NYSE is closed today (%s)" % why,
-                   next_open=next_open(day))
+                   next_open=next_open(day, chart.get("symbol")))
         return res
-    o, c = session(day)
-    open_dt = datetime.datetime.combine(day, o)
-    close_dt = datetime.datetime.combine(day, c)
-    early = c != CLOSE
-    before = datetime.datetime.combine(day, parse_hhmm(cfg["no_entries_before"], "no_entries_before"))
-    cutoff = early_cutoff(day, parse_hhmm(cfg["no_entries_after"], "no_entries_after"), close_dt)
+    early = c != CLOSE if not crypto else False
     or_end = open_dt + datetime.timedelta(minutes=or_minutes)
-    res.update(opens=hm(o), closes=hm(c), early_close=NYSE_EARLY_CLOSE.get(day.isoformat()),
+    res.update(opens=hm(o), closes=hm(c), early_close=NYSE_EARLY_CLOSE.get(day.isoformat()) if not crypto else None,
                no_entries_before=hm(before), no_entries_after=hm(cutoff))
 
     by_slot = {}
     for b in chart["bars"]:
         if b["t"] % step:
             continue                       # Yahoo's live tick (10:49:45) is not a bar
-        et = to_eastern(utc_of(b["t"]))
+        et = utc_of(b["t"]) if crypto else to_eastern(utc_of(b["t"]))
         if et.date() != day or not (open_dt <= et < close_dt):
             continue
         slot = int((et - open_dt).total_seconds()) // step
@@ -466,16 +522,18 @@ def evaluate(chart, now_utc, setup="orb", or_minutes=15, interval="5m", level=No
             else:
                 pending = b
                 res["forming"] = {"bar_start": hm(b["et"]), "closes": ampm(b["end"]), "price": r2(b["c"])}
+                lag_time = (utc_of(dt) if crypto else to_eastern(utc_of(dt))).strftime("%H:%M:%S")
                 res["lag_note"] = ("Yahoo's last trade is %s, before the %s bar's close: it counts once Yahoo "
-                                   "catches up (a minute at most)" % (to_eastern(utc_of(dt)).strftime("%H:%M:%S"),
-                                                                       short(b["et"])))
+                                   "catches up (a minute at most)" % (lag_time, short(b["et"])))
         elif b["et"] <= local:
             res["forming"] = {"bar_start": hm(b["et"]), "closes": ampm(b["end"]), "price": r2(b["c"])}
     res["_bars"] = bars
     res["bars_closed"] = len(bars)
 
     if local < open_dt:
-        res.update(phase="pre-open", reason="the NYSE opens at 9:30%s" % (
+        market_open_msg = "the Crypto session opens at 00:00 UTC" if crypto else "the NYSE opens at 9:30"
+        res.update(phase="pre-open", reason="%s%s" % (
+            market_open_msg,
             " and the %d-minute range is set at %s" % (or_minutes, short(or_end)) if setup == "orb" else ""))
         return res
 
@@ -595,8 +653,9 @@ def describe(res):
     """Plain lines for a person."""
     when = datetime.datetime.strptime(res["now"], "%Y-%m-%d %H:%M:%S")
     bars = "5-minute" if res["interval"] == "5m" else "1-minute"
-    head = "%s  %s %s ET  %s on %s bars (Yahoo, free, can lag)" % (
-        res["symbol"], when.strftime("%a %Y-%m-%d"), when.strftime("%H:%M"), setup_name(res), bars)
+    tz = res.get("tz", "ET")
+    head = "%s  %s %s %s  %s on %s bars (Yahoo, free, can lag)" % (
+        res["symbol"], when.strftime("%a %Y-%m-%d"), when.strftime("%H:%M"), tz, setup_name(res), bars)
     if res.get("data_time") and res["data_time"] <= res["now"] and res["data_time"][:10] == res["date"]:
         head += ", data to %s" % res["data_time"][11:]
     out = [head]
@@ -794,21 +853,24 @@ def _opts(a, cfg):
             "min_volume_x": a.min_volume_x, "cfg": cfg}
 
 
-def _load(a, sym, now):
+def _load(a, sym, now, cfg=None):
     """(chart, now). An offline file without --now is read as of its own time."""
-    real_today = to_eastern(utc_now()).date()
+    crypto = is_crypto(sym, cfg)
+    real_today = utc_now().date() if crypto else to_eastern(utc_now()).date()
     if a.offline and now is None:
         ch = get_chart(sym, a.interval, offline=a.offline)
         return ch, (utc_of(ch["data_time"]) if ch.get("data_time") else utc_now())
     now = now or utc_now()
-    return get_chart(sym, a.interval, to_eastern(now).date(), a.offline, real_today), now
+    day = now.date() if crypto else to_eastern(now).date()
+    return get_chart(sym, a.interval, day, a.offline, real_today), now
 
 
 def cmd_check(a):
     cfg = read_config(a.config)
     opts = _opts(a, cfg)
     sym = a.symbol.upper()
-    chart, now = _load(a, sym, parse_now(a.now) if a.now else None)
+    crypto = is_crypto(sym, cfg)
+    chart, now = _load(a, sym, parse_now(a.now, crypto) if a.now else None, cfg)
     res = evaluate(chart, now, **opts)
     if a.write:
         write_json(a.write, entry_doc(res, now))
@@ -826,20 +888,22 @@ def cmd_watch(a):
     cfg = read_config(a.config)
     opts = _opts(a, cfg)
     sym = a.symbol.upper()
+    crypto = is_crypto(sym, cfg)
     if a.every <= 0:
         raise EntryError("--every must be above 0 seconds")
-    start = parse_now(a.now) if a.now else None
+    start = parse_now(a.now, crypto) if a.now else None
     if a.offline or start is not None:
         if start is None:
-            start = _load(a, sym, None)[1]
+            start = _load(a, sym, None, cfg)[1]
         clock = SimClock(start)
         now_fn, sleep_fn = clock.now, clock.sleep
     else:
         now_fn, sleep_fn = utc_now, _sleep
-    real_today = to_eastern(utc_now()).date()
+    real_today = utc_now().date() if crypto else to_eastern(utc_now()).date()
 
     def provider(now):
-        return get_chart(sym, a.interval, to_eastern(now).date(), a.offline, real_today)
+        day = now.date() if crypto else to_eastern(now).date()
+        return get_chart(sym, a.interval, day, a.offline, real_today)
 
     until = None
     if a.until:

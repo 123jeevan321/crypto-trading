@@ -96,6 +96,21 @@ CLOSE = datetime.time(16, 0)
 EARLY = datetime.time(13, 0)
 
 
+COMMON_CRYPTO = {
+    "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "DOT",
+    "NEAR", "SUI", "LTC", "BCH", "APT", "ATOM", "UNI", "XLM", "RENDER", "FET"
+}
+
+
+def is_crypto(sym):
+    if not sym:
+        return False
+    s = str(sym).upper().strip()
+    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT") or s.endswith("USD"):
+        return True
+    return s in COMMON_CRYPTO
+
+
 class AlertError(Exception):
     pass
 
@@ -316,13 +331,14 @@ def get_quotes(symbols, source="yahoo", offline=None, pause=PAUSE):
     for i, sym in enumerate(symbols):
         sym = sym.upper()
         try:
+            use_src = "yahoo" if is_crypto(sym) else source
             if offline:
-                text = _offline_text(offline, source, sym)
+                text = _offline_text(offline, use_src, sym)
             else:
                 if i and pause:
                     _sleep(pause)
-                text = fetch(stooq_url(sym)) if source == "stooq" else fetch_yahoo(sym)
-            quotes[sym] = parse_stooq(text, sym) if source == "stooq" else parse_yahoo(text, sym)
+                text = fetch(stooq_url(sym)) if use_src == "stooq" else fetch_yahoo(sym)
+            quotes[sym] = parse_stooq(text, sym) if use_src == "stooq" else parse_yahoo(text, sym)
         except AlertError as e:
             errors.append(str(e))
     return quotes, errors
@@ -592,7 +608,8 @@ def cmd_check(a):
     rules = doc["rules"]
     now = parse_now(a.now)
     status = market_status(now)
-    watched = [r for r in rules if active(r, status["date"])]
+    utc_date = now.date().isoformat()
+    watched = [r for r in rules if active(r, utc_date if is_crypto(r.get("symbol")) else status["date"])]
     syms = _dedupe([str(r.get("symbol", "")).upper() for r in watched if r.get("type") not in NO_QUOTE])
     quotes, errors = (get_quotes(syms, a.source, a.offline) if syms else ({}, []))
     state = _read(a.state, {})

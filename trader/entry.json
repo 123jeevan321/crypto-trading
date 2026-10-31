@@ -1,0 +1,22 @@
+{
+  "created_by": "trader-entry",
+  "symbol": "BTC-USD",
+  "setup": "orb",
+  "side": "buy",
+  "date": "2026-10-31",
+  "status": "triggered",
+  "time": "12:20 AM",
+  "bar_start": "00:15",
+  "bar_index": 3,
+  "price": 77250.62,
+  "level": 77223.38,
+  "interval": "5m",
+  "opening_range": {
+    "high": 77223.38,
+    "low": 77114.76,
+    "minutes": 15
+  },
+  "source": "yahoo",
+  "checked_at": "2026-10-31T02:29:56Z",
+  "reason": "the 0:15 bar closed above the range high"
+}

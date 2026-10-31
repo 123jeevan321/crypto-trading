@@ -91,6 +91,23 @@ FRESH_MINUTES = 15
 REF_WORDS = {"plan": "the plan's entry", "price": "the latest price", "limit": "the limit price",
              "stop price": "the stop price", "stale price": "an old price"}
 
+COMMON_CRYPTO = {
+    "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "DOT",
+    "NEAR", "SUI", "LTC", "BCH", "APT", "ATOM", "UNI", "XLM", "RENDER", "FET"
+}
+
+
+def is_crypto(sym, cfg=None):
+    if cfg and cfg.get("market") == "crypto":
+        return True
+    if not sym:
+        return False
+    s = str(sym).upper().strip()
+    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT") or s.endswith("USD"):
+        return True
+    return s in COMMON_CRYPTO
+
+
 NYSE_HOLIDAYS = {
     "2026-01-01": "New Year's Day",
     "2026-01-19": "Martin Luther King, Jr. Day",
@@ -210,23 +227,32 @@ def _shift(t, hours):
     return dt.time()
 
 
-def window_check(now_et, c):
-    """Reasons an entry cannot be placed now (New York time). Empty when the window is off."""
+def window_check(now_dt, c, sym=None):
+    """Reasons an entry cannot be placed now. Empty when the window is off."""
+    crypto = is_crypto(sym, c)
     before = hhmm(c.get("no_entries_before"), "no_entries_before")
     after = hhmm(c.get("no_entries_after"), "no_entries_after")
     if before is None and after is None:
         return [], []
     warns = []
-    d, t = now_et.date(), now_et.time().replace(second=0, microsecond=0)
+    d, t = now_dt.date(), now_dt.time().replace(second=0, microsecond=0)
+    if crypto:
+        stamp = now_dt.strftime("%a %Y-%m-%d %H:%M UTC")
+        if before is not None and t < before:
+            return ["window: no new entries before %s UTC (it is %s)" % (before.strftime("%H:%M"), t.strftime("%H:%M"))], warns
+        if after is not None and t > after:
+            return ["window: no new entries after %s UTC (it is %s)" % (after.strftime("%H:%M"), t.strftime("%H:%M"))], warns
+        return [], warns
+
     if d.year not in CALENDAR_YEARS:
         warns.append("the holiday list covers %s only: check nyse.com for %s"
                      % (" and ".join(map(str, CALENDAR_YEARS)), d.isoformat()))
     ok, why = trading_day(d)
-    stamp = now_et.strftime("%a %Y-%m-%d %H:%M")
+    stamp = now_dt.strftime("%a %Y-%m-%d %H:%M")
     if not ok:
         return ["window: the market is closed today (%s, %s New York)" % (why, stamp)], warns
     close = EARLY if d.isoformat() in NYSE_EARLY_CLOSE else CLOSE
-    if t < OPEN or now_et.time() >= close:
+    if t < OPEN or now_dt.time() >= close:
         return ["window: the market is closed (%s New York; the session is %s to %s)"
                 % (stamp, OPEN.strftime("%H:%M"), close.strftime("%H:%M"))], warns
     if close == EARLY and after is not None:
@@ -462,7 +488,8 @@ def check(orders, cfg, portfolio=None, prices=None, state=None, today=None, now=
             if notional is not None:
                 reasons.append("format: a bracket order needs a whole-share qty, not a notional amount")
             elif _f(qty) is not None and abs(_f(qty) - round(_f(qty))) > 1e-9:
-                reasons.append("format: a bracket order takes whole shares only, got qty %r" % qty)
+                if not (is_crypto(sym, c) or c.get("fractional")):
+                    reasons.append("format: a bracket order takes whole shares only, got qty %r" % qty)
             if tif not in ("day", "gtc"):
                 reasons.append("format: a bracket order needs time_in_force day or gtc, got %r" % tif)
             if o.get("take_profit_limit_price") is None or o.get("stop_loss_stop_price") is None:
@@ -479,6 +506,8 @@ def check(orders, cfg, portfolio=None, prices=None, state=None, today=None, now=
                                "(\"allow_options\": false)" % sym)
             else:
                 warns.append("option order: options can lose 100%% of what you pay")
+        elif sym and is_crypto(sym, c):
+            pass
         elif sym and ("/" in sym or not TICKER.match(sym)):
             reasons.append("asset: %s does not look like a US stock or ETF ticker; "
                            "this pack trades stocks and ETFs only" % sym)
@@ -623,7 +652,11 @@ def check(orders, cfg, portfolio=None, prices=None, state=None, today=None, now=
             if cap_t and len(entries_today) + batch_entries >= cap_t:
                 later.append("trades: %d entries placed today plus %d passed earlier in this batch, your limit "
                              "is %d a day" % (len(entries_today), batch_entries, cap_t))
-            later.extend(win_reasons)
+            if is_crypto(sym, c):
+                order_win_reasons, order_win_warns = window_check(now_utc, c, sym)
+                later.extend(order_win_reasons)
+            else:
+                later.extend(win_reasons)
             if c.get("pdt_guard") and pdt_n >= 3:
                 later.append("pdt: %d day trades in the last 5 business days (%s); a 4th trips the "
                              "pattern-day-trader rule your broker applies (\"pdt_guard\": true)"

@@ -184,8 +184,27 @@ def ampm(t):
     return "%d:%02d %s" % (h, t.minute, "AM" if t.hour < 12 else "PM")
 
 
-def session(d):
+COMMON_CRYPTO = {
+    "BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "ADA", "AVAX", "LINK", "DOT",
+    "NEAR", "SUI", "LTC", "BCH", "APT", "ATOM", "UNI", "XLM", "RENDER", "FET"
+}
+
+
+def is_crypto(sym, cfg=None):
+    if cfg and cfg.get("market") == "crypto":
+        return True
+    if not sym:
+        return False
+    s = str(sym).upper().strip()
+    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT") or s.endswith("USD"):
+        return True
+    return s in COMMON_CRYPTO
+
+
+def session(d, sym=None):
     """(open_time, close_time) in New York time, or None if closed all day."""
+    if is_crypto(sym):
+        return datetime.time(0, 0), datetime.time(23, 59)
     if d.weekday() >= 5 or d.isoformat() in NYSE_HOLIDAYS:
         return None
     return OPEN, (EARLY if d.isoformat() in NYSE_EARLY_CLOSE else CLOSE)
@@ -502,12 +521,14 @@ def read_config(path):
     return cfg
 
 
-def resolve_flat_by(day, explicit, cfg, entry_time):
-    """(HH:MM, note). The config's flat-by moves up with a 1:00 p.m. early close."""
-    t = parse_hhmm(explicit or cfg.get("flat_by") or DEFAULTS["flat_by"], "--flat-by" if explicit else "flat_by")
+def resolve_flat_by(day, explicit, cfg, entry_time, sym=None):
+    """(HH:MM, note). The config's flat-by moves up with a 1:00 p.m. early close for equities."""
+    crypto = is_crypto(sym, cfg)
+    default_flat = "23:55" if crypto else DEFAULTS["flat_by"]
+    t = parse_hhmm(explicit or cfg.get("flat_by") or default_flat, "--flat-by" if explicit else "flat_by")
     note = ""
-    s = session(day) if day else None
-    if s:
+    s = session(day, sym) if day else None
+    if s and not crypto:
         close_dt = datetime.datetime.combine(day, s[1])
         at = datetime.datetime.combine(day, t)
         if at >= close_dt:
@@ -518,7 +539,7 @@ def resolve_flat_by(day, explicit, cfg, entry_time):
                 raise PlanError("flat_by %s in the config is at or after the close" % hm(t))
             t = moved.time()
             note = "moved up for the 1:00 p.m. early close (%s)" % NYSE_EARLY_CLOSE.get(day.isoformat(), "")
-    if entry_time and entry_time >= t:
+    if entry_time and entry_time >= t and not crypto:
         raise PlanError("the entry at %s is at or after your flat-by %s: there is no time left to hold it"
                         % (ampm(entry_time), hm(t)))
     return hm(t), note
@@ -592,7 +613,7 @@ def build_plan(a, now_utc):
         atr, atr_n = atr_of(bars)
     c = compute(info["entry"], stop_rule, stop_param, target_rule, target_param, info["or_high"], info["or_low"],
                 atr, atr_n)
-    flat_by, flat_note = resolve_flat_by(day, a.flat_by, cfg, entry_time)
+    flat_by, flat_note = resolve_flat_by(day, a.flat_by, cfg, entry_time, info["symbol"])
     orr = None
     if info["or_high"] is not None and info["or_low"] is not None:
         orr = {"high": float(cents(info["or_high"])), "low": float(cents(info["or_low"])),
@@ -618,7 +639,7 @@ def build_plan(a, now_utc):
                             % (ratio(c["reward_risk"]), num(D(mrr))))
     except PlanError:
         pass
-    today = to_eastern(now_utc).date()
+    today = utc_now().date() if is_crypto(info["symbol"], cfg) else to_eastern(now_utc).date()
     if day != today:
         warnings.append("This plan is for %s, not today (%s)." % (day.isoformat(), today.isoformat()))
     return plan, warnings
@@ -635,6 +656,7 @@ def describe(plan):
         when = " at %s" % plan["entry_time"]
         if plan.get("entry_bar") is not None:
             when += " (bar %d)" % plan["entry_bar"]
+    tz_label = "UTC" if is_crypto(plan["symbol"]) else "ET"
     out = ["Exit plan: %s long, %s, %s on %s bars" % (
         plan["symbol"], day.strftime("%a %Y-%m-%d"), setup, "5-minute" if plan["interval"] == "5m" else "1-minute")]
     out.append("  Entry         %s%s" % (money(plan["entry"]), when))
@@ -643,7 +665,7 @@ def describe(plan):
     out.append("  Target        %s  %s" % (money(plan["target"]), plan["target_label"]))
     out.append("  Risk a share  %s (%s%% of the entry)" % (money(plan["risk_per_share"]), pct))
     out.append("  Reward:risk   %s" % ratio(plan["reward_risk"]))
-    out.append("  Flat by       %s ET, win or lose: no overnight hold" % plan["flat_by"])
+    out.append("  Flat by       %s %s, win or lose: no overnight hold" % (plan["flat_by"], tz_label))
     out.append("Set before the entry. If price hits the stop, you are out; never move it further away.")
     out.append(NOTE)
     return out
