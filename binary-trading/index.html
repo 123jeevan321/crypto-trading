@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quotex Binary Options Signal Terminal - 20 Pairs Scanner</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #0c0f17; color: #d1d5db; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .card { background-color: #141923; border: 1px solid #1f2737; }
+    .card-accent { background-color: #18202f; border: 1px solid #28354d; }
+    .badge-call { background-color: rgba(0, 208, 156, 0.15); color: #00d09c; border: 1px solid rgba(0, 208, 156, 0.4); }
+    .badge-put { background-color: rgba(246, 70, 93, 0.15); color: #f6465d; border: 1px solid rgba(246, 70, 93, 0.4); }
+    .badge-wait { background-color: rgba(156, 163, 175, 0.15); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.3); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- Top Bar -->
+  <header class="h-14 bg-[#10141d] border-b border-gray-800 px-6 flex items-center justify-between shrink-0">
+    <div class="flex items-center space-x-4">
+      <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-black text-black text-base shadow-md">
+        QX
+      </div>
+      <div>
+        <h1 class="text-white font-black text-sm tracking-wide flex items-center gap-2">
+          <span>QUOTEX BINARY SIGNALS</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 font-mono">5-STRATEGY CONFLUENCE</span>
+        </h1>
+        <p class="text-[11px] text-gray-400 font-mono">20-Pair Scanner • 80%–90%+ Payouts • 5m/15m/1h Expirations</p>
+      </div>
+    </div>
+
+    <!-- Active Sessions & IST Time -->
+    <div class="flex items-center space-x-5 text-xs font-mono">
+      <div class="flex items-center space-x-2 bg-[#171d2b] px-3 py-1.5 rounded-lg border border-gray-800">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="text-gray-400">Session:</span>
+        <strong id="lblActiveSession" class="text-emerald-300">Loading...</strong>
+      </div>
+      <div class="text-gray-300 bg-[#171d2b] px-3 py-1.5 rounded-lg border border-gray-800">
+        <span id="lblTimeIST">--:--:-- IST</span>
+      </div>
+      <button onclick="refreshSignals()" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center gap-1.5 shadow">
+        <span>🔄 Refresh Scan</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 p-6 max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- Top Summary Banner: Market Session Clock + Guidelines -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <!-- Session Details -->
+      <div class="card p-4 rounded-xl space-y-2">
+        <div class="flex items-center justify-between text-xs font-semibold">
+          <span class="text-gray-400">GLOBAL FOREX SESSIONS</span>
+          <span class="text-emerald-400 text-[10px]">REAL-TIME</span>
+        </div>
+        <div id="sessionPills" class="flex flex-wrap gap-2 pt-1">
+          <!-- Session pills injected here -->
+        </div>
+        <p id="lblSessionRec" class="text-[11px] text-gray-400 pt-1 leading-relaxed">Checking session recommendations...</p>
+      </div>
+
+      <!-- Confluence Rule Card -->
+      <div class="card p-4 rounded-xl space-y-2">
+        <div class="flex items-center justify-between text-xs font-semibold">
+          <span class="text-gray-400">CONFLUENCE CRITERIA</span>
+          <span class="text-amber-400 text-[10px]">TOP 5 STRATEGIES</span>
+        </div>
+        <ul class="text-[11px] text-gray-300 space-y-1 font-mono">
+          <li>1. <span class="text-blue-400">EMA 20/50</span> Pullback (5m Trend)</li>
+          <li>2. <span class="text-purple-400">Bollinger + RSI</span> Extreme Reversal</li>
+          <li>3. <span class="text-emerald-400">S/R Wick Rejection</span> at Round Levels</li>
+          <li>4. <span class="text-pink-400">MACD</span> Momentum Zero-Line Cross</li>
+          <li>5. <span class="text-amber-400">News Safety Filter</span> (No red folder)</li>
+        </ul>
+      </div>
+
+      <!-- Quick Action Guide for Quotex -->
+      <div class="card p-4 rounded-xl space-y-2">
+        <div class="flex items-center justify-between text-xs font-semibold">
+          <span class="text-gray-400">HOW TO TRADE ON QUOTEX</span>
+          <span class="text-blue-400 text-[10px]">MANUAL STEP</span>
+        </div>
+        <div class="text-[11px] text-gray-300 space-y-1">
+          <p>1. Open <strong class="text-white">Quotex</strong> & find the highlighted Pair.</p>
+          <p>2. Set Expiry to <strong class="text-emerald-400">5 Minutes</strong> (or recommended).</p>
+          <p>3. If signal is <strong class="text-[#00d09c]">CALL ⬆️</strong>, click Green (UP).</p>
+          <p>4. If signal is <strong class="text-[#f6465d]">PUT ⬇️</strong>, click Red (DOWN).</p>
+          <p class="text-[10px] text-gray-500 pt-1">Always risk only 2%–3% of your capital per trade.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Active Actionable Signals Section -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-white font-bold text-base flex items-center gap-2">
+          <span>⚡ High-Probability Actionable Signals</span>
+          <span id="badgeActionCount" class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">0 Signals</span>
+        </h2>
+        <span class="text-xs text-gray-400 font-mono">Confluence Score ≥ 75% Required</span>
+      </div>
+
+      <div id="signalsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card p-8 rounded-xl text-center text-gray-500 col-span-full">
+          Scanning 20 Quotex currency pairs for high-probability setups...
+        </div>
+      </div>
+    </section>
+
+    <!-- 20-Pair Full Market Heatmap -->
+    <section class="space-y-3 pt-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-white font-bold text-base">📊 All 20 Quotex Currency Pairs Status</h2>
+        <span class="text-xs text-gray-400 font-mono">Payouts 82%–90%+</span>
+      </div>
+
+      <div class="card rounded-xl overflow-hidden border border-gray-800">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-[#121622] text-gray-400 uppercase text-[10px] border-b border-gray-800">
+              <tr>
+                <th class="py-3 px-4">Pair</th>
+                <th class="py-3 px-4">Payout</th>
+                <th class="py-3 px-4">Live Price</th>
+                <th class="py-3 px-4">RSI (14)</th>
+                <th class="py-3 px-4">Trend (EMA 20/50)</th>
+                <th class="py-3 px-4">Confluence</th>
+                <th class="py-3 px-4">Action</th>
+                <th class="py-3 px-4">Rec. Expiry</th>
+              </tr>
+            </thead>
+            <tbody id="pairsTableBody" class="divide-y divide-gray-800/60">
+              <tr>
+                <td colspan="8" class="py-6 text-center text-gray-500">Loading live data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    async function loadData() {
+      try {
+        const resp = await fetch('/api/scan');
+        const data = await resp.json();
+
+        // 1. Update Session & Clock
+        if (data.session) {
+          document.getElementById('lblTimeIST').innerText = data.session.time_ist;
+          document.getElementById('lblActiveSession').innerText = data.session.volume_status;
+          document.getElementById('lblSessionRec').innerText = data.session.trading_recommendation;
+
+          const container = document.getElementById('sessionPills');
+          container.innerHTML = '';
+          const allSessions = ['Sydney', 'Tokyo', 'London', 'New York'];
+          allSessions.forEach(s => {
+            const isActive = data.session.active_sessions.includes(s);
+            const pill = document.createElement('span');
+            pill.className = `text-[10px] px-2.5 py-1 rounded-md font-mono ${isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-bold' : 'bg-gray-800/40 text-gray-500'}`;
+            pill.innerText = `${s} ${isActive ? '● OPEN' : '○ Closed'}`;
+            container.appendChild(pill);
+          });
+        }
+
+        // 2. Filter Actionable Signals
+        const signals = data.signals || [];
+        const actionable = signals.filter(s => s.signal === 'CALL' || s.signal === 'PUT');
+        document.getElementById('badgeActionCount').innerText = `${actionable.length} Actionable`;
+
+        const sigContainer = document.getElementById('signalsContainer');
+        sigContainer.innerHTML = '';
+
+        if (actionable.length === 0) {
+          sigContainer.innerHTML = `
+            <div class="card p-6 rounded-xl text-center text-gray-400 col-span-full space-y-1">
+              <div class="text-xl">⏳</div>
+              <div class="font-bold text-white">No Strong Confluence Right Now</div>
+              <p class="text-xs text-gray-500">The 5 strategies are currently in neutral or consolidating conditions. The scanner will notify you as soon as a 3+ strategy confluence triggers.</p>
+            </div>
+          `;
+        } else {
+          actionable.forEach(sig => {
+            const isCall = sig.signal === 'CALL';
+            const card = document.createElement('div');
+            card.className = 'card-accent p-5 rounded-xl space-y-3 shadow-lg border border-gray-700 hover:border-gray-500 transition';
+            card.innerHTML = `
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <span class="text-white font-extrabold text-base">${sig.symbol}</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-bold">${sig.payout}% Payout</span>
+                </div>
+                <span class="px-2.5 py-1 rounded-md text-xs font-black ${isCall ? 'badge-call' : 'badge-put'}">
+                  ${isCall ? 'CALL ⬆️' : 'PUT ⬇️'}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 text-xs font-mono bg-[#111622] p-2.5 rounded-lg border border-gray-800">
+                <div>
+                  <span class="text-gray-400 text-[10px]">Price:</span>
+                  <div class="text-white font-bold">${sig.price}</div>
+                </div>
+                <div>
+                  <span class="text-gray-400 text-[10px]">Confluence Score:</span>
+                  <div class="text-emerald-400 font-bold">${sig.confidence_pct}% (${sig.agreeing_count}/4)</div>
+                </div>
+                <div>
+                  <span class="text-gray-400 text-[10px]">Expiry:</span>
+                  <div class="text-blue-300 font-bold">${sig.recommended_expiry}</div>
+                </div>
+                <div>
+                  <span class="text-gray-400 text-[10px]">RSI (14):</span>
+                  <div class="${sig.indicators_summary.rsi < 35 ? 'text-emerald-400' : sig.indicators_summary.rsi > 65 ? 'text-red-400' : 'text-gray-300'} font-bold">${sig.indicators_summary.rsi}</div>
+                </div>
+              </div>
+
+              <div class="space-y-1">
+                <span class="text-[10px] text-gray-400 font-semibold uppercase">Triggering Reasons:</span>
+                <ul class="text-[11px] text-gray-300 space-y-0.5 font-sans">
+                  ${sig.triggering_reasons.map(r => `<li class="flex items-start gap-1.5"><span class="text-emerald-400">✓</span> <span>${r}</span></li>`).join('')}
+                </ul>
+              </div>
+
+              <div class="pt-2 border-t border-gray-800 flex justify-between items-center text-[10px] text-gray-400 font-mono">
+                <span>Safe From Red News: ${sig.safe_from_news ? '✅ Yes' : '⚠️ News Warning'}</span>
+                <span class="text-emerald-400 font-bold">Quotex Ready</span>
+              </div>
+            `;
+            sigContainer.appendChild(card);
+          });
+        }
+
+        // 3. Populate All 20 Pairs Table
+        const tbody = document.getElementById('pairsTableBody');
+        tbody.innerHTML = '';
+        signals.forEach(s => {
+          const isCall = s.signal === 'CALL';
+          const isPut = s.signal === 'PUT';
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-[#182030] transition';
+          tr.innerHTML = `
+            <td class="py-3 px-4 font-bold text-white">${s.symbol}</td>
+            <td class="py-3 px-4 text-amber-400 font-bold">${s.payout}%</td>
+            <td class="py-3 px-4 text-gray-200">${s.price}</td>
+            <td class="py-3 px-4 ${s.indicators_summary.rsi < 35 ? 'text-emerald-400 font-bold' : s.indicators_summary.rsi > 65 ? 'text-red-400 font-bold' : 'text-gray-400'}">${s.indicators_summary.rsi}</td>
+            <td class="py-3 px-4">${s.indicators_summary.ema20 > s.indicators_summary.ema50 ? '<span class="text-emerald-400">▲ Bullish</span>' : '<span class="text-red-400">▼ Bearish</span>'}</td>
+            <td class="py-3 px-4 text-emerald-400 font-bold">${s.confidence_pct}%</td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${isCall ? 'badge-call' : isPut ? 'badge-put' : 'badge-wait'}">
+                ${s.signal}
+              </span>
+            </td>
+            <td class="py-3 px-4 text-gray-400">${s.recommended_expiry}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (e) {
+        console.error("Error loading scanner data:", e);
+      }
+    }
+
+    function refreshSignals() {
+      loadData();
+    }
+
+    window.onload = function() {
+      loadData();
+      setInterval(loadData, 10000); // auto-refresh every 10 seconds
+    };
+  </script>
+</body>
+</html>
