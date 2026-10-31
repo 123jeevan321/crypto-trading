@@ -3,253 +3,237 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>J1 Trader — Smart Signals & IPO Intelligence</title>
+  <title>J1 TRADER — Institutional Terminal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
 
-  <!-- Top Announcement / Commodity Bar -->
-  <header class="commodity-bar" id="commodityBar">
-    <div class="commodity-item"><span class="ticker-label">NIFTY 50:</span> <span id="tickerNifty">Loading...</span></div>
+  <!-- Top Real-Time Macro Ticker Bar -->
+  <header class="commodity-bar">
+    <div class="commodity-item"><span class="ticker-label">NIFTY 50:</span> <span id="tickerNifty">24,205.35 <span class="text-green">(+0.65%)</span></span></div>
     <div class="commodity-sep">|</div>
-    <div class="commodity-item"><span class="ticker-label">GOLD:</span> <span id="tickerGold">₹--</span></div>
+    <div class="commodity-item"><span class="ticker-label">GOLD:</span> <span id="tickerGold">Loading...</span></div>
     <div class="commodity-sep">|</div>
-    <div class="commodity-item"><span class="ticker-label">CRUDE OIL:</span> <span id="tickerCrude">₹--</span></div>
+    <div class="commodity-item"><span class="ticker-label">CRUDE OIL:</span> <span id="tickerCrude">Loading...</span></div>
     <div class="commodity-sep">|</div>
-    <div class="commodity-item"><span class="ticker-label">USD/INR:</span> <span id="tickerUsdInr">₹--</span></div>
+    <div class="commodity-item"><span class="ticker-label">USD/INR:</span> <span id="tickerUsdInr">Loading...</span></div>
     <div class="commodity-sep">|</div>
-    <div class="commodity-item"><span class="ticker-label">INDIA VIX:</span> <span id="tickerVix">--</span></div>
+    <div class="commodity-item"><span class="ticker-label">INDIA VIX:</span> <span id="tickerVix">14.25 (NEUTRAL)</span></div>
   </header>
 
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="nav-brand">
-      <img src="/static/logo/jeevan.svg" alt="J1 Trader" class="brand-logo">
-    </div>
-
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="swing"><span class="tab-icon">📈</span> Swing Trade</button>
-      <button class="nav-tab" data-tab="intraday"><span class="tab-icon">⚡</span> Intraday</button>
-      <button class="nav-tab" data-tab="ipo"><span class="tab-icon">🎯</span> IPO Desk <span class="badge-new">3-PAN OPT</span></button>
-      <button class="nav-tab" data-tab="news"><span class="tab-icon">📰</span> News & Events</button>
-      <button class="nav-tab" data-tab="charts"><span class="tab-icon">📊</span> Charts</button>
-      <button class="nav-tab" data-tab="portfolio"><span class="tab-icon">💼</span> Paper Portfolio</button>
-      <button class="nav-tab" data-tab="nifty"><span class="tab-icon">🟡</span> Nifty 50</button>
-    </div>
-
-    <div class="nav-status">
-      <div class="market-pill" id="marketStatusPill">
-        <span class="status-dot"></span>
-        <span id="marketStatusText">CHECKING...</span>
+  <!-- Big Bold Institutional Header -->
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="brand-zone">
+        <div class="brand-logo-wrap">
+          <svg viewBox="0 0 48 48" width="46" height="46" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="14" fill="#12121e" stroke="#00e676" stroke-width="2"/>
+            <path d="M12 18C10 10 14 6 18 8C17 12 15 15 17 18Z" fill="url(#bGrad)"/>
+            <path d="M36 18C38 10 34 6 30 8C31 12 33 15 31 18Z" fill="url(#bGrad)"/>
+            <polygon points="17,17 31,17 34,26 24,38 14,26" fill="url(#bGrad)"/>
+            <polyline points="6,42 18,36 30,40 42,28" stroke="#00e676" stroke-width="2.5" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="bGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#2979ff"/>
+                <stop offset="100%" stop-color="#00e676"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1 class="brand-name">J1 TRADER</h1>
+          <p class="brand-subtitle">INSTITUTIONAL STOCK SIGNALS &amp; IPO DESK • ENGINEERED FOR JEEVAN</p>
+        </div>
       </div>
-      <div class="clock-display" id="istClock">--:--:-- IST</div>
+
+      <div class="header-actions">
+        <div class="market-pill closed" id="marketStatusPill">
+          <span class="status-dot"></span>
+          <span id="marketStatusText">WEEKEND CLOSED • MONDAY PREDICTIONS READY</span>
+        </div>
+        <div class="ist-time-box" id="istClock">--:--:-- IST</div>
+      </div>
     </div>
-  </nav>
 
-  <!-- Main Content Container -->
-  <main class="main-container">
+    <!-- Navigation Tabs (Dedicated Modules Only) -->
+    <nav class="module-nav">
+      <button class="nav-btn active" data-tab="swing">
+        <span class="btn-icon">📈</span> SWING TRADE <span class="badge-count">15 STOCKS</span>
+      </button>
+      <button class="nav-btn" data-tab="intraday">
+        <span class="btn-icon">⚡</span> INTRADAY SCALP <span class="badge-count">15 STOCKS</span>
+      </button>
+      <button class="nav-btn" data-tab="ipo">
+        <span class="btn-icon">🎯</span> IPO DESK <span class="badge-highlight">3-PAN OPTIMIZER</span>
+      </button>
+      <button class="nav-btn" data-tab="charts">
+        <span class="btn-icon">📊</span> CHARTS <span class="badge-subtle">TRADINGVIEW</span>
+      </button>
+      <button class="nav-btn" data-tab="portfolio">
+        <span class="btn-icon">💼</span> PAPER PORTFOLIO <span class="badge-subtle">₹1,00,000</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Main Container -->
+  <main class="content-body">
 
     <!-- ============================================================== -->
-    <!-- TAB 1: SWING TRADE -->
+    <!-- MODULE 1: SWING TRADE POSTERS (15 STOCKS) -->
     <!-- ============================================================== -->
-    <section class="tab-content active" id="tab-swing">
-      <div class="section-header">
+    <section class="module-view active" id="tab-swing">
+      <div class="module-banner">
         <div>
-          <h1 class="section-title">Institutional Swing Trades</h1>
-          <p class="section-desc">Multi-day holding (1–3 Days / 1–2 Weeks) • Target: 5%–16%+ • Capital: ₹1,00,000 • Max SL: ₹2,000</p>
+          <h2 class="module-heading">15 Institutional Swing Trade Posters</h2>
+          <p class="module-sub">Multi-Day Holding (1–3 Days / 1–2 Weeks) • High-Velocity Momentum (5% to 18%+ Gains) • Capital: ₹1,00,000 • Max Risk Strictly Capped at ₹2,000</p>
         </div>
-        <div class="filter-group">
-          <span class="filter-pill active">All Confluence ≥ 90%</span>
-          <button class="btn-refresh" onclick="fetchSwingSignals(true)">🔄 Scan Live</button>
+        <div class="module-meta">
+          <span class="meta-chip chip-gold">👑 Priority #1 Setup at Top</span>
+          <span class="meta-chip chip-green">✓ Institutional Buyers Tracked</span>
+          <span class="meta-chip chip-blue">📅 Monday Prediction Included</span>
         </div>
       </div>
 
-      <!-- HIGHEST PRIORITY 100% POSTER CONTAINER -->
-      <div class="top-conviction-wrapper" id="swingTopConviction">
-        <!-- Rendered dynamically: The single 100% highest confidence trade at the very top -->
-      </div>
+      <!-- Priority #1 Poster -->
+      <div id="swingPriorityPosterWrap"></div>
 
-      <div class="section-subheading">
-        <h2>Ranked Watchlist Opportunities</h2>
-        <span class="text-muted" id="swingCount">0 setups found</span>
+      <!-- Grid of Remaining 14 Posters -->
+      <div class="poster-section-header">
+        <h3>Institutional Swing Watchlist (Ranked 2 to 15)</h3>
+        <span class="text-muted">Filtered by Order Flow, Delivery %, and Catalyst Confirmation</span>
       </div>
-
-      <!-- Grid of Remaining Ranked Swing Trade Cards -->
-      <div class="signals-grid" id="swingCardsGrid">
-        <div class="loading-spinner">Scanning 30 high-momentum NSE stocks (SMC, Order Flow, Delivery %, Catalysts)...</div>
+      <div class="posters-grid" id="swingPostersGrid">
+        <div class="loading-spinner">Loading 15 Institutional Swing Trade Posters...</div>
       </div>
     </section>
 
     <!-- ============================================================== -->
-    <!-- TAB 2: INTRADAY TRADE -->
+    <!-- MODULE 2: INTRADAY SCALP POSTERS (15 STOCKS: BUY & SELL) -->
     <!-- ============================================================== -->
-    <section class="tab-content" id="tab-intraday">
-      <div class="section-header">
+    <section class="module-view" id="tab-intraday">
+      <div class="module-banner">
         <div>
-          <h1 class="section-title">High-Velocity Intraday Scalping</h1>
-          <p class="section-desc">Window: 9:15 AM – 3:30 PM IST • 3–30 Min Fast Moves • Capital: ₹30,000 (5x) • Max SL: ₹1,000 • Target: ₹2,000+</p>
+          <h2 class="module-heading">15 High-Velocity Intraday Scalp Posters</h2>
+          <p class="module-sub">Execution Window: 9:15 AM – 3:30 PM IST (3–30 Min Scalps) • Capital: ₹30,000 (5x Margin) • Target: ₹2,000+ • Max Risk Strictly Capped at ₹1,000</p>
         </div>
-        <div class="filter-group">
-          <button class="filter-pill active" id="intradayFilterAll" onclick="filterIntraday('ALL')">All (BUY & SELL)</button>
-          <button class="filter-pill" id="intradayFilterBuy" onclick="filterIntraday('BUY')">🟢 BUY Only</button>
-          <button class="filter-pill" id="intradayFilterSell" onclick="filterIntraday('SELL')">🔴 SELL Only</button>
-          <button class="btn-refresh" onclick="fetchIntradaySignals(true)">🔄 Scan Live</button>
+        <div class="intraday-filter-bar">
+          <button class="filter-btn active" onclick="filterIntradayCards('ALL')">All 15 Setups</button>
+          <button class="filter-btn btn-filter-buy" onclick="filterIntradayCards('BUY')">🟢 BUY Posters</button>
+          <button class="filter-btn btn-filter-sell" onclick="filterIntradayCards('SELL')">🔴 SELL Posters</button>
         </div>
       </div>
 
-      <!-- HIGHEST PRIORITY 100% INTRADAY POSTER -->
-      <div class="top-conviction-wrapper" id="intradayTopConviction">
-        <!-- Rendered dynamically -->
-      </div>
+      <!-- Priority #1 Intraday Poster -->
+      <div id="intradayPriorityPosterWrap"></div>
 
-      <div class="section-subheading">
-        <h2>Active Intraday Setups</h2>
-        <span class="text-muted" id="intradayCount">0 setups found</span>
+      <!-- Grid of Remaining 14 Intraday Posters -->
+      <div class="poster-section-header">
+        <h3>Active Intraday Scalp Setups (Ranked 2 to 15)</h3>
+        <span class="text-muted">Strict 3-30 Min Rapid Execution • Monday Opening Scalp Trigger Price</span>
       </div>
-
-      <!-- Grid of Intraday Cards -->
-      <div class="signals-grid" id="intradayCardsGrid">
-        <div class="loading-spinner">Analyzing intraday orderflow, volume spikes, and breakout zones...</div>
+      <div class="posters-grid" id="intradayPostersGrid">
+        <div class="loading-spinner">Loading 15 Intraday Scalp Posters...</div>
       </div>
     </section>
 
     <!-- ============================================================== -->
-    <!-- TAB 3: IPO DESK (MAINBOARD NSE ONLY) -->
+    <!-- MODULE 3: IPO DESK (MAINBOARD ONLY & 3-ACCOUNT OPTIMIZER) -->
     <!-- ============================================================== -->
-    <section class="tab-content" id="tab-ipo">
-      <div class="section-header">
+    <section class="module-view" id="tab-ipo">
+      <div class="module-banner">
         <div>
-          <h1 class="section-title">NSE Mainboard IPO Intelligence & Multi-Account Optimizer</h1>
-          <p class="section-desc">Strictly Mainboard (No SME) • Live GMP Tracking • Mathematical Allotment Optimization across 3 Family Accounts (Jeevan, Sister, Brother)</p>
-        </div>
-        <div class="filter-group">
-          <button class="btn-refresh" onclick="fetchIpoData()">🔄 Refresh IPOs</button>
+          <h2 class="module-heading">NSE Mainboard IPO Intelligence &amp; 3-PAN Optimizer</h2>
+          <p class="module-sub">Strictly Mainboard (Zero SME) • Live GMP Tracking &amp; Trend • Mathematical Allotment Optimization across 3 Family Accounts (Jeevan, Sister, Brother)</p>
         </div>
       </div>
 
-      <!-- 3-Account Rule Banner -->
-      <div class="rule-banner">
-        <div class="rule-icon">💡</div>
-        <div class="rule-body">
-          <strong>SEBI Allotment Rule & 3-Account Strategy:</strong> In oversubscribed retail, SEBI draws 1 lot per unique PAN by computer lottery. Applying 5 lots from 1 PAN does <em>NOT</em> increase your odds! But applying 1 lot each across your <strong>3 family PAN accounts (Jeevan + Sister + Brother = ~₹45,000)</strong> mathematically triples your allotment probability!
+      <!-- 3-PAN Rule Explanation Banner -->
+      <div class="rule-banner-box">
+        <div class="rule-banner-icon">💡</div>
+        <div class="rule-banner-text">
+          <strong>The 3-Account Allotment Formula:</strong> In retail IPOs oversubscribed by computer lottery, SEBI allots 1 lot per unique PAN. Applying multiple lots from 1 account gives you zero extra odds! But applying 1 lot each across your <strong>3 family PAN accounts (Jeevan + Sister + Brother = ~₹45,000)</strong> mathematically triples your allotment probability!
         </div>
       </div>
 
-      <!-- IPO Analysis Grid -->
-      <div class="ipo-grid" id="ipoCardsGrid">
-        <div class="loading-spinner">Loading NSE Mainboard IPOs and GMP data...</div>
+      <!-- IPO Posters Grid -->
+      <div class="posters-grid" id="ipoPostersGrid">
+        <div class="loading-spinner">Loading Mainboard IPO Posters and GMP calculations...</div>
       </div>
 
-      <!-- Interactive Calculator Card -->
-      <div class="calculator-card">
-        <h3 class="calc-title">🧮 Interactive Allotment Probability Calculator</h3>
-        <p class="text-muted">Test custom subscription scenarios to see whether to deploy in Retail 3-PANs or sHNI category:</p>
-        <div class="calc-form">
-          <div class="form-group">
-            <label>Family Accounts:</label>
+      <!-- Custom Calculator -->
+      <div class="calc-panel">
+        <h3 class="calc-panel-title">🧮 Interactive Allotment Probability Calculator</h3>
+        <p class="text-muted" style="margin-bottom:16px;">Test any upcoming IPO numbers to see whether to deploy in Retail across 3 PANs or sHNI category:</p>
+        <div class="calc-grid">
+          <div class="calc-field">
+            <label>Family PAN Accounts:</label>
             <input type="number" id="calcAccounts" value="3" min="1" max="10">
           </div>
-          <div class="form-group">
+          <div class="calc-field">
             <label>Retail Subscribed (x):</label>
-            <input type="number" id="calcRetailSub" value="4.5" step="0.1">
+            <input type="number" id="calcRetailSub" value="3.5" step="0.1">
           </div>
-          <div class="form-group">
-            <label>sHNI Subscribed (x):</label>
+          <div class="calc-field">
+            <label>sHNI (2L–10L) Sub (x):</label>
             <input type="number" id="calcShniSub" value="45.0" step="0.5">
           </div>
-          <div class="form-group">
-            <label>Expected GMP (%):</label>
-            <input type="number" id="calcGmpPct" value="15.0" step="0.5">
+          <div class="calc-field">
+            <label>Estimated GMP (%):</label>
+            <input type="number" id="calcGmpPct" value="12.0" step="0.5">
           </div>
-          <div class="form-group">
-            <label>Lot Size & Price:</label>
-            <div style="display:flex; gap:6px;">
+          <div class="calc-field">
+            <label>Lot Size &amp; Cutoff Price:</label>
+            <div style="display:flex; gap:8px;">
               <input type="number" id="calcLotSize" value="30" placeholder="Lot">
               <input type="number" id="calcPrice" value="500" placeholder="Price">
             </div>
           </div>
-          <button class="btn-action btn-calc" onclick="calculateIpoProb()">Calculate Odds</button>
+          <button class="btn-run-calc" onclick="calculateIpoProb()">RUN OPTIMIZER</button>
         </div>
-        <div class="calc-result" id="calcResultBox" style="display:none;"></div>
+        <div class="calc-result-display" id="calcResultBox" style="display:none;"></div>
       </div>
     </section>
 
     <!-- ============================================================== -->
-    <!-- TAB 4: NEWS & EVENTS -->
+    <!-- MODULE 4: INTERACTIVE TRADINGVIEW CHARTS -->
     <!-- ============================================================== -->
-    <section class="tab-content" id="tab-news">
-      <div class="section-header">
+    <section class="module-view" id="tab-charts">
+      <div class="module-banner">
         <div>
-          <h1 class="section-title">Market News, Institutional Deals & Triggers</h1>
-          <p class="section-desc">NSE Corporate Actions • Bulk & Block Deals • FII/DII Net Flow • Circuit Breakers</p>
+          <h2 class="module-heading">Institutional TradingView Terminal</h2>
+          <p class="module-sub">Live technical indicators (EMA 20/50/200, SuperTrend, MACD, RSI, Bollinger Bands, Volume Delta)</p>
         </div>
-        <button class="btn-refresh" onclick="fetchNewsAndDeals()">🔄 Refresh News</button>
-      </div>
-
-      <div class="dashboard-columns">
-        <!-- Left: News & Events -->
-        <div class="col-half">
-          <h2 class="sub-title">📰 Live Market News & Catalysts</h2>
-          <div class="news-list" id="newsList">
-            <div class="loading-spinner">Fetching live Google News & NSE announcements...</div>
-          </div>
-
-          <h2 class="sub-title" style="margin-top:24px;">📅 Economic Calendar & Triggers</h2>
-          <div class="events-list" id="eventsList"></div>
-        </div>
-
-        <!-- Right: Institutional Flow & Deals -->
-        <div class="col-half">
-          <h2 class="sub-title">🏛️ FII & DII Net Institutional Flow</h2>
-          <div class="table-card" id="fiiDiiBox">
-            <div class="loading-spinner">Loading FII/DII daily figures...</div>
-          </div>
-
-          <h2 class="sub-title" style="margin-top:24px;">💼 Recent NSE Bulk & Block Deals</h2>
-          <div class="table-card" id="bulkDealsBox">
-            <div class="loading-spinner">Scraping NSE bulk deals...</div>
-          </div>
-
-          <h2 class="sub-title" style="margin-top:24px;">⚡ Circuit Breakers & Upper Limits</h2>
-          <div class="table-card" id="circuitBox">
-            <div class="loading-spinner">Checking circuit limits...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================== -->
-    <!-- TAB 5: CHARTS (TRADINGVIEW) -->
-    <!-- ============================================================== -->
-    <section class="tab-content" id="tab-charts">
-      <div class="section-header">
-        <div>
-          <h1 class="section-title">Interactive Chart Terminal</h1>
-          <p class="section-desc">Institutional TradingView feed with technical indicators (EMA, RSI, MACD, Bollinger Bands)</p>
-        </div>
-        <div class="chart-controls">
+        <div class="chart-bar-controls">
           <select id="chartSymbolSelect" onchange="changeChartSymbol()">
-            <option value="NSE:RELIANCE">RELIANCE (Reliance Industries)</option>
-            <option value="NSE:TCS">TCS (Tata Consultancy)</option>
-            <option value="NSE:HDFCBANK">HDFCBANK (HDFC Bank)</option>
-            <option value="NSE:ICICIBANK">ICICIBANK (ICICI Bank)</option>
-            <option value="NSE:INFY">INFY (Infosys)</option>
-            <option value="NSE:SBIN">SBIN (State Bank of India)</option>
-            <option value="NSE:TATAMOTORS">TATAMOTORS (Tata Motors)</option>
-            <option value="NSE:TATAPOWER">TATAPOWER (Tata Power)</option>
-            <option value="NSE:SUZLON">SUZLON (Suzlon Energy)</option>
-            <option value="NSE:IRFC">IRFC (Indian Railway Finance)</option>
-            <option value="NSE:HUDCO">HUDCO (Housing & Urban Dev)</option>
-            <option value="NSE:RVNL">RVNL (Rail Vikas Nigam)</option>
-            <option value="NSE:BEL">BEL (Bharat Electronics)</option>
-            <option value="NSE:HAL">HAL (Hindustan Aeronautics)</option>
-            <option value="NSE:WAAREE">WAAREE (Waaree Energies)</option>
-            <option value="NSE:NIFTY">NIFTY 50 INDEX</option>
+            <optgroup label="Swing Top Setups">
+              <option value="NSE:PCJEWELLER">PCJEWELLER (PC Jeweller Ltd)</option>
+              <option value="NSE:WAAREE">WAAREE (Waaree Energies Ltd)</option>
+              <option value="NSE:SUZLON">SUZLON (Suzlon Energy Ltd)</option>
+              <option value="NSE:COCHINSHIP">COCHINSHIP (Cochin Shipyard Ltd)</option>
+              <option value="NSE:IRFC">IRFC (Indian Railway Finance)</option>
+              <option value="NSE:HUDCO">HUDCO (Housing & Urban Dev)</option>
+              <option value="NSE:RVNL">RVNL (Rail Vikas Nigam)</option>
+              <option value="NSE:BEL">BEL (Bharat Electronics)</option>
+              <option value="NSE:HAL">HAL (Hindustan Aeronautics)</option>
+              <option value="NSE:TATAPOWER">TATAPOWER (Tata Power)</option>
+              <option value="NSE:TATAMOTORS">TATAMOTORS (Tata Motors)</option>
+              <option value="NSE:ANGELONE">ANGELONE (Angel One Ltd)</option>
+            </optgroup>
+            <optgroup label="Intraday Setups">
+              <option value="NSE:RELIANCE">RELIANCE (Reliance Industries)</option>
+              <option value="NSE:HDFCBANK">HDFCBANK (HDFC Bank)</option>
+              <option value="NSE:ICICIBANK">ICICIBANK (ICICI Bank)</option>
+              <option value="NSE:SBIN">SBIN (State Bank of India)</option>
+              <option value="NSE:INFY">INFY (Infosys Ltd)</option>
+              <option value="NSE:TCS">TCS (Tata Consultancy)</option>
+              <option value="NSE:TATASTEEL">TATASTEEL (Tata Steel)</option>
+              <option value="NSE:NIFTY">NIFTY 50 INDEX</option>
+            </optgroup>
           </select>
-          <div class="btn-group">
+          <div class="tf-btn-group">
             <button class="btn-tf" onclick="changeChartTf('1')">1m</button>
             <button class="btn-tf active" onclick="changeChartTf('5')">5m</button>
             <button class="btn-tf" onclick="changeChartTf('15')">15m</button>
@@ -259,104 +243,72 @@
         </div>
       </div>
 
-      <!-- TradingView Widget Embed Container -->
-      <div class="tradingview-widget-container" id="tvChartContainer" style="height:620px; width:100%;">
-        <!-- Injected via JS -->
-      </div>
+      <div class="chart-embed-frame" id="tvChartContainer" style="height:640px; width:100%;"></div>
     </section>
 
     <!-- ============================================================== -->
-    <!-- TAB 6: PAPER PORTFOLIO -->
+    <!-- MODULE 5: PAPER TRADING PORTFOLIO (₹1,00,000) -->
     <!-- ============================================================== -->
-    <section class="tab-content" id="tab-portfolio">
-      <div class="section-header">
+    <section class="module-view" id="tab-portfolio">
+      <div class="module-banner">
         <div>
-          <h1 class="section-title">Virtual Paper Portfolio</h1>
-          <p class="section-desc">Track all signals live with ₹1,00,000 initial capital • Auto Stop Loss & Target Management</p>
+          <h2 class="module-heading">Virtual Paper Portfolio</h2>
+          <p class="module-sub">Execute any poster trade live with ₹1,00,000 virtual capital • Strict Automated Stop Loss & Target Management</p>
         </div>
         <button class="btn-refresh" onclick="fetchPortfolio()">🔄 Refresh Portfolio</button>
       </div>
 
-      <!-- Portfolio Summary Cards -->
-      <div class="stats-grid" id="portfolioStats">
-        <div class="stat-card">
-          <div class="stat-label">Initial Capital</div>
-          <div class="stat-value">₹1,00,000</div>
+      <div class="port-summary-row">
+        <div class="port-metric-card">
+          <span class="metric-label">Allocated Capital</span>
+          <span class="metric-val">₹1,00,000</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Available Cash</div>
-          <div class="stat-value" id="portCash">₹1,00,000</div>
+        <div class="port-metric-card">
+          <span class="metric-label">Available Cash</span>
+          <span class="metric-val" id="portCash">₹1,00,000</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Invested Value</div>
-          <div class="stat-value" id="portInvested">₹0</div>
+        <div class="port-metric-card">
+          <span class="metric-label">Invested in Trades</span>
+          <span class="metric-val" id="portInvested">₹0</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Portfolio Value</div>
-          <div class="stat-value" id="portTotal">₹1,00,000</div>
+        <div class="port-metric-card">
+          <span class="metric-label">Total Portfolio Value</span>
+          <span class="metric-val" id="portTotal">₹1,00,000</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Net Realized P&L</div>
-          <div class="stat-value text-green" id="portPnl">+₹0.00 (0.0%)</div>
+        <div class="port-metric-card">
+          <span class="metric-label">Net Realized P&amp;L</span>
+          <span class="metric-val text-green" id="portPnl">+₹0.00 (0.0%)</span>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Win Rate</div>
-          <div class="stat-value text-accent" id="portWinRate">--%</div>
+        <div class="port-metric-card">
+          <span class="metric-label">Win Rate</span>
+          <span class="metric-val text-accent" id="portWinRate">--%</span>
         </div>
       </div>
 
-      <!-- Open Positions -->
-      <div class="table-card" style="margin-top:24px;">
-        <h3 class="table-title">Active Open Positions</h3>
+      <!-- Open Trades Table -->
+      <div class="panel-box" style="margin-top:24px;">
+        <h3 class="panel-title">Active Open Positions</h3>
         <div id="openPositionsTable">
-          <p class="text-muted" style="padding:16px;">No active open positions. Execute any signal to start paper trading.</p>
+          <p class="text-muted" style="padding:16px;">No active open positions. Click "⚡ EXECUTE PAPER TRADE" on any poster to start.</p>
         </div>
       </div>
 
-      <!-- Trade History -->
-      <div class="table-card" style="margin-top:24px;">
-        <h3 class="table-title">Trade History & Realized Logs</h3>
+      <!-- Closed Trades History -->
+      <div class="panel-box" style="margin-top:24px;">
+        <h3 class="panel-title">Trade Execution History</h3>
         <div id="tradeHistoryTable">
           <p class="text-muted" style="padding:16px;">Trade log empty.</p>
         </div>
       </div>
     </section>
 
-    <!-- ============================================================== -->
-    <!-- TAB 7: NIFTY 50 DESK -->
-    <!-- ============================================================== -->
-    <section class="tab-content" id="tab-nifty">
-      <div class="section-header">
-        <div>
-          <h1 class="section-title">Nifty 50 Index & Options Desk</h1>
-          <p class="section-desc">Spot Price • Moving Averages • Put-Call Ratio (PCR) • Top Gainers & Losers</p>
-        </div>
-        <button class="btn-refresh" onclick="fetchNiftyDesk()">🔄 Refresh Nifty</button>
-      </div>
-
-      <div class="dashboard-columns">
-        <div class="col-half">
-          <div class="table-card" id="niftyMetricsBox">
-            <h3 class="table-title">Index Technical Overview</h3>
-            <div class="loading-spinner">Loading Nifty 50 metrics...</div>
-          </div>
-        </div>
-
-        <div class="col-half">
-          <div class="table-card" id="niftyGainersLosersBox">
-            <h3 class="table-title">Top 5 Gainers & Losers Today</h3>
-            <div class="loading-spinner">Loading market movers...</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
-  <footer class="footer">
-    <div><strong>J1 Trader</strong> — Engineered for Jeevan • Built with Multi-Confluence SMC, Order Flow Delta & IPO Intelligence</div>
-    <div class="footer-links">
-      <span>Angel One API Ready</span> • <span>NSE Public Feeds</span> • <span>No Financial Advice</span>
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div><strong>J1 TRADER</strong> • Designed for Jeevan • Multi-Confluence SMC, Order Flow Delta &amp; IPO Allotment Engine</div>
+    <div class="footer-meta">
+      <span>Angel One SmartAPI Ready</span> • <span>NSE Public Feeds</span> • <span>15 Curated Stocks per Module</span>
     </div>
   </footer>
 

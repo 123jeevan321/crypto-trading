@@ -331,12 +331,17 @@ def api_circuit_breakers():
 
 @app.route("/api/swing-signals")
 def api_swing_signals():
-    """GET /api/swing-signals — Multi-day swing trade signal cards (cached)."""
+    """GET /api/swing-signals — Multi-day swing trade signal cards (15 curated institutional setups)."""
     try:
         with _cache_lock:
             signals = list(_signal_cache["swing"])
-            last_refresh = _signal_cache["last_refresh"]
-        return _success({"signals": signals, "last_refresh": last_refresh})
+
+        if not signals and _swing_engine is not None:
+            signals = _swing_engine.generate_signals()
+            with _cache_lock:
+                _signal_cache["swing"] = signals
+
+        return _success(signals)
     except Exception as exc:
         logger.exception("api_swing_signals error")
         return _error(str(exc))
@@ -344,12 +349,17 @@ def api_swing_signals():
 
 @app.route("/api/intraday-signals")
 def api_intraday_signals():
-    """GET /api/intraday-signals — Intraday signal cards (cached)."""
+    """GET /api/intraday-signals — Intraday signal cards (15 curated setups: BUY & SELL)."""
     try:
         with _cache_lock:
             signals = list(_signal_cache["intraday"])
-            last_refresh = _signal_cache["last_refresh"]
-        return _success({"signals": signals, "last_refresh": last_refresh})
+
+        if not signals and _intraday_engine is not None:
+            signals = _intraday_engine.generate_signals()
+            with _cache_lock:
+                _signal_cache["intraday"] = signals
+
+        return _success(signals)
     except Exception as exc:
         logger.exception("api_intraday_signals error")
         return _error(str(exc))
