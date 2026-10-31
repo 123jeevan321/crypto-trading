@@ -595,7 +595,10 @@ def normalize_plan(raw, src="flags"):
     if k is None:
         raise TMError("the plan needs entry_time (the entry bar's close, e.g. 10:15 AM) or entry_bar")
     if not 0 <= k <= sess_bars - 2:
-        raise TMError("the entry must leave bars to replay (got %s)" % (raw.get("entry_time") or clock12(open_min + 5 * (k + 1))))
+        if crypto:
+            raise TMError("the entry must leave bars to replay (got %s)" % (raw.get("entry_time") or clock12(open_min + 5 * (k + 1))))
+        raise TMError("the entry must close between 9:35 AM and 3:55 PM to leave bars to replay (got %s)"
+                      % clock12(OPEN_MIN + 5 * (k + 1)))
     orng = raw.get("opening_range") or {}
     or_min = orng.get("minutes", 15) if isinstance(orng, dict) else 15
     try:

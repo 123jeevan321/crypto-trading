@@ -103,7 +103,9 @@ def is_crypto(sym, cfg=None):
     if not sym:
         return False
     s = str(sym).upper().strip()
-    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT") or s.endswith("USD"):
+    if "/" in s:
+        return False
+    if s.endswith("-USD") or s.endswith("-USDT") or s.endswith("USDT"):
         return True
     return s in COMMON_CRYPTO
 

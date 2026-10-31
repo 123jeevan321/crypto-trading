@@ -494,8 +494,13 @@ def plan_report(s, order, notes=()):
         return "\n".join(lines)
     qty_str = ("%.4f" % s["qty"]).rstrip("0").rstrip(".") if crypto else str(int(s["qty"]))
     unit_word = "units" if crypto else "shares"
-    lines.append("Size: %s %s of %s = %s at %s. Max loss at the stop: %s."
-                 % (qty_str, unit_word, s["symbol"], money(s["cost"]), _price(s["entry"]), money(s["max_loss"])))
+    if crypto:
+        lines.append("Size: %s %s of %s = %s at %s. Max loss at the stop: %s."
+                     % (qty_str, unit_word, s["symbol"], money(s["cost"]), _price(s["entry"]), money(s["max_loss"])))
+    else:
+        lines.append("Size: %d shares of %s = %s at %s. Max loss at the stop: %d x %s = %s."
+                     % (s["qty"], s["symbol"], money(s["cost"]), _price(s["entry"]), s["qty"],
+                        _price(s["risk_per_share"]), money(s["max_loss"])))
     lines.append("A stop is an order, not a promise: in a fast market it can fill below %s." % _price(s["stop"]))
     lines.append("")
     lines.append("Proposed bracket order (place_stock_order arguments, nothing has been placed):")
