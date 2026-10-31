@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""CoinSwitch Pro Official REST API Connector.
+"""CoinSwitch Pro Official REST API Connector using Ed25519 Cryptography.
 
-Handles authentication (HMAC-SHA256), portfolio fetching,
-futures margin tracking, and bracket order execution.
-Zero external dependencies (uses standard library urllib, hmac, hashlib).
+Authenticates using CoinSwitch PRO's exact Ed25519 public-key signature standard:
+- Public Key (API Key): Hex-encoded Ed25519 public key.
+- Private Key (Secret Key): Hex-encoded Ed25519 secret key.
+- Message = METHOD + decoded_path + epoch.
+- Headers: X-AUTH-APIKEY, X-AUTH-SIGNATURE, X-AUTH-EPOCH.
 """
-import hashlib
-import hmac
 import json
 import os
 import time
 import urllib.parse
 import urllib.request
+from cryptography.hazmat.primitives.asymmetric import ed25519
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
@@ -41,16 +42,30 @@ def load_env():
     return creds
 
 
-def sign_request(secret_key, method, path, payload_str, timestamp):
-    """Generates CoinSwitch Pro HMAC-SHA256 request signature."""
-    # Message format: method + path + payload + timestamp
-    message = f"{method.upper()}{path}{payload_str}{timestamp}"
-    signature = hmac.new(
-        secret_key.encode("utf-8"),
-        message.encode("utf-8"),
-        hashlib.sha256
-    ).hexdigest()
-    return signature
+def sign_request(api_key, secret_key_hex, method, path, params=None):
+    """Signs request using official CoinSwitch Pro Ed25519 specification."""
+    method = method.upper()
+    if params:
+        sep = "&" if "?" in path else "?"
+        path = path + sep + urllib.parse.urlencode(params)
+
+    decoded_path = urllib.parse.unquote_plus(path)
+    epoch = str(int(time.time() * 1000))
+
+    message = f"{method}{decoded_path}{epoch}"
+
+    private_key = ed25519.Ed25519PrivateKey.from_private_bytes(bytes.fromhex(secret_key_hex))
+    signature = private_key.sign(message.encode("utf-8")).hex()
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-AUTH-APIKEY": api_key,
+        "X-AUTH-SIGNATURE": signature,
+        "X-AUTH-EPOCH": epoch,
+        "User-Agent": "AntigravityTrader/2.0"
+    }
+
+    return headers, path
 
 
 def send_coinswitch_request(method, endpoint, params=None, data=None):
@@ -61,32 +76,15 @@ def send_coinswitch_request(method, endpoint, params=None, data=None):
     base_url = creds["BASE_URL"].rstrip("/")
 
     if not api_key:
-        return {"status": "error", "message": "Missing CoinSwitch API Key. Check your .env file."}
+        return {"status": "error", "message": "Missing CoinSwitch API Key."}
     if not secret_key:
-        return {"status": "error", "message": "Missing CoinSwitch Secret Key. CoinSwitch requires both API Key and Secret Key for signature."}
+        return {"status": "error", "message": "Missing CoinSwitch Secret Key."}
 
-    path = endpoint
-    query_str = ""
-    if params:
-        query_str = "?" + urllib.parse.urlencode(params)
-        path += query_str
+    headers, signed_path = sign_request(api_key, secret_key, method, endpoint, params)
+    full_url = base_url + signed_path
 
-    full_url = base_url + path
-    payload_str = json.dumps(data) if data is not None else ""
-    timestamp = str(int(time.time() * 1000))
-
-    signature = sign_request(secret_key, method, endpoint, payload_str, timestamp)
-
-    headers = {
-        "Content-Type": "application/json",
-        "X-AUTH-APIKEY": api_key,
-        "X-AUTH-SIGNATURE": signature,
-        "X-AUTH-TIMESTAMP": timestamp,
-        "User-Agent": "AntigravityTrader/2.0"
-    }
-
-    req_data = payload_str.encode("utf-8") if payload_str else None
-    req = urllib.request.Request(full_url, data=req_data, headers=headers, method=method)
+    payload_bytes = json.dumps(data).encode("utf-8") if data is not None else None
+    req = urllib.request.Request(full_url, data=payload_bytes, headers=headers, method=method)
 
     try:
         with urllib.request.urlopen(req, timeout=10) as resp:
@@ -113,24 +111,20 @@ def get_open_futures():
 
 
 def test_connection():
-    """Quick diagnostics to verify API credentials."""
+    """Run diagnostics to verify real CoinSwitch Pro credentials."""
     creds = load_env()
     print("==================================================")
-    print(" CoinSwitch Pro API Credentials Verification")
+    print(" CoinSwitch Pro Ed25519 API Connection Test")
     print("==================================================")
-    print(f" API Key Loaded:    {creds['API_KEY'][:6]}...{creds['API_KEY'][-6:] if len(creds['API_KEY']) > 12 else ''}")
-    print(f" Secret Key Loaded: {'[PRESENT]' if creds['SECRET_KEY'] else '[MISSING - Needed for HMAC]'}")
+    print(f" API Key Loaded:    {creds['API_KEY'][:6]}...{creds['API_KEY'][-6:]}")
+    print(f" Secret Key Loaded: {creds['SECRET_KEY'][:6]}...{creds['SECRET_KEY'][-6:]}")
     print(f" Base URL:          {creds['BASE_URL']}")
 
-    if not creds["SECRET_KEY"]:
-        print("\n[NOTE] CoinSwitch requires the Secret Key to sign requests.")
-        print("Please copy the Secret Key from CoinSwitch Pro API settings.")
-        return False
-
-    print("\nPinging CoinSwitch Pro user portfolio...")
+    print("\nPinging CoinSwitch Pro /trade/api/v2/user/portfolio...")
     res = get_real_portfolio()
-    print("Response:", json.dumps(res, indent=2))
-    return res.get("status") == "success" or res.get("code") == 200
+    print("Response:")
+    print(json.dumps(res, indent=2))
+    return res
 
 
 if __name__ == "__main__":

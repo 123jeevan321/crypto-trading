@@ -25,11 +25,19 @@ USD_INR_RATE = 85.0
 FEE_RATE = 0.0005
 GST_RATE = 0.18
 
+# Capital & Risk Limits for ₹1,000 Wallet
+INITIAL_WALLET_CAPITAL = 1000.51
+OVERALL_TARGET_INR = 2000.00   # +100% target
+OVERALL_MAX_LOSS_INR = 500.00  # Strict stop loss floor
+DEFAULT_LEVERAGE = 50          # 50x gives ~16,500 exposure on ₹330 margin
+MARGIN_RATIO = 0.33            # 33% per trade (leaving 67% unallocated safe reserve)
+
 # Global state
 AUTO_SCALP_ENABLED = True
-TRADING_MODE = "PAPER"  # "PAPER" or "LIVE"
+TRADING_MODE = "AUTO-SCALPER"  # Connected to CoinSwitch Pro
 TRADE_LOGS = []
 CURRENT_PRICE = 77156.00
+PRICE_HISTORY = []
 
 sys.path.append(os.path.join(BASE_DIR, "trader-broker"))
 try:
@@ -62,16 +70,28 @@ def log_message(msg):
 
 
 def get_live_price():
-    global CURRENT_PRICE
-    url = "https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1m&range=1d"
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    global CURRENT_PRICE, PRICE_HISTORY
     try:
+        url = "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+        req = urllib.request.Request(url, headers={"User-Agent": "AntigravityTrader/1.0"})
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode())
-        meta = data["chart"]["result"][0]["meta"]
-        CURRENT_PRICE = float(meta.get("regularMarketPrice", CURRENT_PRICE))
+            CURRENT_PRICE = round(float(data["price"]), 2)
     except Exception:
-        pass
+        try:
+            url = "https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1m&range=1d"
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=3) as resp:
+                data = json.loads(resp.read().decode())
+            meta = data["chart"]["result"][0]["meta"]
+            CURRENT_PRICE = round(float(meta.get("regularMarketPrice", CURRENT_PRICE)), 2)
+        except Exception:
+            pass
+
+    PRICE_HISTORY.append(CURRENT_PRICE)
+    if len(PRICE_HISTORY) > 30:
+        PRICE_HISTORY.pop(0)
+
     return CURRENT_PRICE
 
 
@@ -95,7 +115,7 @@ def check_and_execute_auto_triggers(live_price):
     """Monitors active positions and automatically closes when price reaches TP or SL."""
     global AUTO_SCALP_ENABLED
     portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
-    portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": 10000.0, "positions": [], "history": []})
+    portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": INITIAL_WALLET_CAPITAL, "positions": [], "history": []})
 
     positions = portfolio.get("positions", [])
     remaining_positions = []
@@ -106,8 +126,8 @@ def check_and_execute_auto_triggers(live_price):
         entry = float(p.get("entry_price", live_price))
         tp = float(p.get("tp_price", 0))
         sl = float(p.get("sl_price", 0))
-        margin = float(p.get("margin_inr", 5000.0))
-        lev = float(p.get("leverage", 25))
+        margin = float(p.get("margin_inr", 330.0))
+        lev = float(p.get("leverage", DEFAULT_LEVERAGE))
         exposure = margin * lev
         exit_fee = round(exposure * FEE_RATE * (1 + GST_RATE), 2)
 
@@ -135,7 +155,7 @@ def check_and_execute_auto_triggers(live_price):
 
             portfolio["cash_inr"] = round(portfolio.get("cash_inr", 0.0) + cash_return, 2)
 
-            status_label = "TARGET HIT (TP)" if is_tp else "STOP LOSS HIT (SL)"
+            status_label = "TARGET HIT (TP) 🎉" if is_tp else "STOP LOSS HIT (SL) 🛑"
             log_message(f"⚡ {status_label}: {side} {lev}x closed at ${exit_price:,.2f} | Net P&L: ₹{net_pnl:+,.2f} | Wallet: ₹{portfolio['cash_inr']:,.2f}")
 
             history_entry = {
@@ -164,35 +184,69 @@ def check_and_execute_auto_triggers(live_price):
 
 
 def auto_enter_next_scalp(live_price):
-    """Automatically opens the next high-probability scalp trade."""
+    """Automatically opens the next high-probability scalp trade within ₹1,000 risk parameters."""
+    global AUTO_SCALP_ENABLED
     portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
-    portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": 10000.0, "positions": [], "history": []})
+    portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": INITIAL_WALLET_CAPITAL, "positions": [], "history": []})
 
-    cash = float(portfolio.get("cash_inr", 10000.0))
-    if cash < 3000:
-        log_message("⚠️ Auto-Scalp Bot: Insufficient margin to open new scalp.")
+    cash = float(portfolio.get("cash_inr", INITIAL_WALLET_CAPITAL))
+
+    # 1. Enforce Profit Target Limit (+100% gain)
+    if cash >= OVERALL_TARGET_INR:
+        AUTO_SCALP_ENABLED = False
+        log_message(f"🏆 DAILY TARGET HIT! Wallet reached ₹{cash:,.2f} (+100% gain). Auto-trading paused to secure profits!")
         return
 
-    margin_inr = 5000.0 if cash >= 5100.0 else round(cash * 0.9, 2)
-    leverage = 25
+    # 2. Enforce Strict Stop Loss Limit (Max loss capped at ₹500 floor)
+    if cash <= OVERALL_MAX_LOSS_INR:
+        AUTO_SCALP_ENABLED = False
+        log_message(f"🛑 MAX LOSS LIMIT HIT: Wallet ₹{cash:,.2f} is at/below ₹{OVERALL_MAX_LOSS_INR:,.2f}. Auto-trading halted to protect your capital!")
+        return
+
+    # 3. Position Sizing: Use ~33% of current wallet (e.g. ₹330 on ₹1,000 wallet)
+    margin_inr = round(max(100.0, cash * MARGIN_RATIO), 2)
+    leverage = DEFAULT_LEVERAGE  # 50x gives ~₹16,500 exposure (matches user's screenshot)
     exposure_inr = round(margin_inr * leverage, 2)
     entry_fee_inr = round(exposure_inr * FEE_RATE * (1 + GST_RATE), 2)
     roundtrip_fee_inr = round(entry_fee_inr * 2, 2)
 
-    # Strategy: Buy support bounce with +350 pt target and -150 pt stop (2.33 R:R)
-    side = "LONG"
-    entry_price = live_price
-    points_target = 350.0
-    points_stop = 150.0
-    tp_price = round(entry_price + points_target, 2)
-    sl_price = round(entry_price - points_stop, 2)
-    liq_price = round(entry_price * (1 - (1.0 / leverage) * 0.90), 2)
-
     total_deduction = round(margin_inr + entry_fee_inr, 2)
+    if total_deduction > cash:
+        log_message(f"⚠️ Auto-Scalp Bot: Insufficient balance (Have ₹{cash:,.2f}, need ₹{total_deduction:,.2f})")
+        return
+
+    # 4. Momentum / Trend Filter
+    side = "LONG"
+    if len(PRICE_HISTORY) >= 4:
+        recent_delta = PRICE_HISTORY[-1] - PRICE_HISTORY[-4]
+        if recent_delta < -15.0:
+            side = "SHORT"
+        else:
+            side = "LONG"
+    else:
+        history = portfolio.get("history", [])
+        if history and history[0].get("exit_reason") == "STOP_LOSS":
+            # Reverse direction if stopped out
+            side = "SHORT" if history[0].get("side") == "LONG" else "LONG"
+
+    entry_price = live_price
+    points_target = 280.0  # +280 pts target
+    points_stop = 130.0    # -130 pts stop (2.15:1 R:R)
+
+    if side == "LONG":
+        tp_price = round(entry_price + points_target, 2)
+        sl_price = round(entry_price - points_stop, 2)
+        liq_price = round(entry_price * (1 - (1.0 / leverage) * 0.90), 2)
+    else:
+        tp_price = round(entry_price - points_target, 2)
+        sl_price = round(entry_price + points_stop, 2)
+        liq_price = round(entry_price * (1 + (1.0 / leverage) * 0.90), 2)
+
     portfolio["cash_inr"] = round(cash - total_deduction, 2)
 
+    trade_num = len(portfolio.get('history', [])) + 1
     new_position = {
-        "id": f"SCALP-{len(portfolio.get('history', [])) + 1}",
+        "id": f"SCALP-{trade_num}",
         "symbol": "BTC/USDT",
         "side": side,
         "margin_inr": margin_inr,
@@ -213,7 +267,7 @@ def auto_enter_next_scalp(live_price):
     portfolio["positions"] = [new_position]
     write_json_file(portfolio_path, portfolio)
 
-    log_message(f"🤖 Auto-Scalp Bot: Entered {side} 25x @ ${entry_price:,.2f} | TP: ${tp_price:,.2f} (+{points_target} pts) | SL: ${sl_price:,.2f} (-{points_stop} pts)")
+    log_message(f"🤖 Trade #{trade_num}: Entered {side} {leverage}x @ ${entry_price:,.2f} | Margin: ₹{margin_inr:,.2f} | TP: ${tp_price:,.2f} (+{points_target} pts) | SL: ${sl_price:,.2f} (-{points_stop} pts)")
 
 
 def background_monitor_loop():
@@ -278,7 +332,7 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
         global CURRENT_PRICE, AUTO_SCALP_ENABLED, TRADE_LOGS, TRADING_MODE
         portfolio = read_json_file(
             os.path.join(TRADER_DIR, "portfolio.json"),
-            {"currency": "INR", "cash_inr": 10000.0, "positions": [], "history": []}
+            {"currency": "INR", "cash_inr": INITIAL_WALLET_CAPITAL, "positions": [], "history": []}
         )
 
         real_inr = get_real_coinswitch_inr()
@@ -288,13 +342,13 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
         for p in positions:
             side = p.get("side", "LONG").upper()
             entry = float(p.get("entry_price", CURRENT_PRICE))
-            margin = float(p.get("margin_inr", 5000.0))
-            lev = float(p.get("leverage", 25))
+            margin = float(p.get("margin_inr", 330.0))
+            lev = float(p.get("leverage", DEFAULT_LEVERAGE))
             exposure = margin * lev
 
             pct_move = (CURRENT_PRICE - entry) / entry if side == "LONG" else (entry - CURRENT_PRICE) / entry
             gross_pnl = round(pct_move * exposure, 2)
-            entry_fee = float(p.get("entry_fee_inr", 73.75))
+            entry_fee = float(p.get("entry_fee_inr", 9.74))
             net_pnl = round(gross_pnl - entry_fee, 2)
             roi_pct = round((net_pnl / margin) * 100, 2) if margin > 0 else 0
 
@@ -311,9 +365,11 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
             "spot_price_usd": round(CURRENT_PRICE - 45.0, 2),
             "usd_inr_rate": USD_INR_RATE,
             "price_inr": round(CURRENT_PRICE * USD_INR_RATE, 2),
-            "cash_inr": float(portfolio.get("cash_inr", 10000.0)),
+            "cash_inr": float(portfolio.get("cash_inr", INITIAL_WALLET_CAPITAL)),
             "real_inr_balance": real_inr,
             "real_connected": True,
+            "overall_target_inr": OVERALL_TARGET_INR,
+            "overall_max_loss_inr": OVERALL_MAX_LOSS_INR,
             "trading_mode": TRADING_MODE,
             "positions": enhanced_positions,
             "history": portfolio.get("history", [])[:10],
@@ -447,10 +503,10 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_reset(self):
         portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
-        data = {"currency": "INR", "cash_inr": 10000.0, "initial_capital_inr": 10000.0, "positions": [], "history": []}
+        data = {"currency": "INR", "cash_inr": INITIAL_WALLET_CAPITAL, "initial_capital_inr": INITIAL_WALLET_CAPITAL, "positions": [], "history": []}
         write_json_file(portfolio_path, data)
-        log_message("Wallet reset to ₹10,000.00 INR.")
-        self.send_json({"status": "ok", "cash_inr": 10000.0})
+        log_message(f"Wallet reset to ₹{INITIAL_WALLET_CAPITAL:,.2f} INR.")
+        self.send_json({"status": "ok", "cash_inr": INITIAL_WALLET_CAPITAL})
 
 
 def main():

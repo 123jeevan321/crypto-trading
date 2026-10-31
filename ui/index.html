@@ -57,11 +57,14 @@
         <span>₹ INR Margin</span>
       </div>
 
-      <!-- Real Live CoinSwitch Balance -->
-      <div class="flex items-center space-x-2 bg-[#1a2130] px-3 py-1 rounded border border-emerald-500/30">
+      <!-- Real Live CoinSwitch Balance & Goals -->
+      <div class="flex items-center space-x-3 bg-[#1a2130] px-3 py-1 rounded border border-emerald-500/30">
         <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
         <span class="text-gray-400">Bal:</span>
         <strong id="headerWalletBal" class="text-white font-mono font-bold text-sm">₹1,000.51</strong>
+        <span class="text-xs text-gray-500">|</span>
+        <span class="text-[11px] text-amber-400 font-mono">Goal: <strong>₹2,000</strong></span>
+        <span class="text-[11px] text-red-400 font-mono">Stop: <strong>₹500</strong></span>
       </div>
     </div>
   </header>
@@ -122,7 +125,7 @@
           <div class="text-center space-y-1">
             <div class="text-[11px] text-gray-400 font-mono">Value (INR)</div>
             <div class="relative">
-              <input type="number" id="inpScalperValue" value="500" step="100" class="w-full cs-input py-2 px-2 text-center rounded-lg font-mono text-white font-bold text-sm" oninput="recalcModal()">
+              <input type="number" id="inpScalperValue" value="330" step="10" class="w-full cs-input py-2 px-2 text-center rounded-lg font-mono text-white font-bold text-sm" oninput="recalcModal()">
             </div>
           </div>
 
@@ -136,7 +139,7 @@
         <!-- Bottom Modal Margin & Balance Footer -->
         <div class="grid grid-cols-3 text-center text-[11px] font-mono border-t border-gray-800/80 pt-3 text-gray-400">
           <div>
-            <div>Margin <span id="lblBuyMargin" class="text-white font-semibold">₹500.00</span></div>
+            <div>Margin <span id="lblBuyMargin" class="text-white font-semibold">₹330.00</span></div>
             <div class="text-[10px] text-gray-500">Liq: <span id="lblBuyLiq" class="text-gray-400">74,210 USDT</span></div>
           </div>
           <div>
@@ -144,7 +147,7 @@
             <div class="text-[10px] text-[#00d09c]">Real Wallet ✅</div>
           </div>
           <div>
-            <div>Margin <span id="lblSellMargin" class="text-white font-semibold">₹500.00</span></div>
+            <div>Margin <span id="lblSellMargin" class="text-white font-semibold">₹330.00</span></div>
             <div class="text-[10px] text-gray-500">Liq: <span id="lblSellLiq" class="text-gray-400">79,980 USDT</span></div>
           </div>
         </div>
@@ -221,7 +224,7 @@
         </div>
         <div>
           <label class="text-gray-400 block text-[10px] mb-1">Margin (₹)</label>
-          <input type="number" id="deskMargin" value="500" step="50" class="w-full cs-input px-2.5 py-1.5 rounded text-white text-xs font-bold" oninput="syncFromMargin()">
+          <input type="number" id="deskMargin" value="330" step="50" class="w-full cs-input px-2.5 py-1.5 rounded text-white text-xs font-bold" oninput="syncFromMargin()">
         </div>
       </div>
 
@@ -236,9 +239,9 @@
               <input type="checkbox" checked class="accent-[#00d09c]">
               <span>Take Profit</span>
             </label>
-            <span class="text-[10px] text-gray-400">75 ticks (+350 pts)</span>
+            <span class="text-[10px] text-gray-400">75 ticks (+280 pts)</span>
           </div>
-          <input type="number" id="deskTpPrice" value="77691.70" class="w-full cs-input px-2 py-1 rounded text-emerald-300 text-xs">
+          <input type="number" id="deskTpPrice" value="77621.70" class="w-full cs-input px-2 py-1 rounded text-emerald-300 text-xs">
         </div>
 
         <!-- SL -->
@@ -248,22 +251,22 @@
               <input type="checkbox" checked class="accent-[#f6465d]">
               <span>Stop Loss</span>
             </label>
-            <span class="text-[10px] text-gray-400">25 ticks (-150 pts)</span>
+            <span class="text-[10px] text-gray-400">25 ticks (-130 pts)</span>
           </div>
-          <input type="number" id="deskSlPrice" value="77191.70" class="w-full cs-input px-2 py-1 rounded text-red-300 text-xs">
+          <input type="number" id="deskSlPrice" value="77211.70" class="w-full cs-input px-2 py-1 rounded text-red-300 text-xs">
         </div>
       </div>
 
       <!-- Action Button -->
       <div class="pt-2">
         <button onclick="executeOrder('BUY')" class="w-full py-3 bg-[#2563eb] hover:bg-blue-600 text-white font-extrabold text-xs rounded-lg shadow-lg flex flex-col items-center justify-center transition cursor-pointer">
-          <span>Buy 0.0016 BTC,USDT</span>
-          <span class="text-[10px] font-normal text-blue-200">25x Leverage • ₹500 Margin</span>
+          <span>Buy 0.0020 BTC,USDT</span>
+          <span class="text-[10px] font-normal text-blue-200">50x Leverage • ₹330 Margin</span>
         </button>
       </div>
 
       <div class="text-[10px] text-gray-500 font-mono text-center pt-1">
-        Fees: 0.05% Taker + GST (~₹7.38)
+        Fees: 0.05% Taker + GST (~₹9.74)
       </div>
 
     </div>
@@ -272,7 +275,7 @@
 
   <script>
     let liveBtcPrice = 77341.70;
-    let currentLeverage = 25;
+    let currentLeverage = 50;
     let realBalanceInr = 1000.51;
     let scalperModalOpen = true;
 
@@ -349,7 +352,7 @@
     }
 
     function recalcModal() {
-      const margin = parseFloat(document.getElementById('inpScalperValue').value) || 500;
+      const margin = parseFloat(document.getElementById('inpScalperValue').value) || 330;
       document.getElementById('lblBuyMargin').innerText = `₹${margin.toFixed(2)}`;
       document.getElementById('lblSellMargin').innerText = `₹${margin.toFixed(2)}`;
 
