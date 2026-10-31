@@ -1,20 +1,22 @@
 /**
  * J1 TRADER — Institutional Dashboard JavaScript
- * Engineered for Jeevan • 15 Curated Posters per Module
- * Embedded Catalysts, Institutional Buyers, and Monday Predictions
+ * Minimal Front Face Posters with Smooth Drill-Down Accordion Drawer,
+ * Live Dynamic Quotes, Module Visibility Toggles, and Collapsible Navbar.
  */
 
 let currentChartSymbol = 'NSE:PCJEWELLER';
 let currentChartTf = '5';
 let intradayFilter = 'ALL';
 let allIntradaySignals = [];
+let isNavCollapsed = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   initClock();
   initModuleTabs();
+  initModuleToggles();
   initTradingView();
 
-  // Load All Core Modules
+  // Load All Core Modules with Live Data
   fetchCommodities();
   fetchMarketStatus();
   fetchSwingSignals();
@@ -44,6 +46,9 @@ function initClock() {
   setInterval(updateTime, 1000);
 }
 
+// -----------------------------------------------------------------------------
+// MODULE TABS & CUSTOMIZATION (ENABLE / DISABLE MODULES & COLLAPSE)
+// -----------------------------------------------------------------------------
 function initModuleTabs() {
   const btns = document.querySelectorAll('.nav-btn');
   btns.forEach(btn => {
@@ -63,6 +68,62 @@ function initModuleTabs() {
   });
 }
 
+function toggleSettingsDrawer() {
+  const drawer = document.getElementById('modulesToggleDrawer');
+  if (drawer.style.display === 'none' || !drawer.style.display) {
+    drawer.style.display = 'block';
+  } else {
+    drawer.style.display = 'none';
+  }
+}
+
+function toggleNavCollapse() {
+  isNavCollapsed = !isNavCollapsed;
+  const nav = document.getElementById('moduleNav');
+  const btn = document.getElementById('btnCollapseNav');
+  if (isNavCollapsed) {
+    nav.classList.add('collapsed');
+    btn.innerText = '⬇️';
+    btn.title = 'Show Navigation Bar';
+  } else {
+    nav.classList.remove('collapsed');
+    btn.innerText = '⬆️';
+    btn.title = 'Hide Navigation Bar';
+  }
+}
+
+function updateModuleVisibility(moduleKey) {
+  const checkbox = document.getElementById(`toggle${capitalize(moduleKey)}`);
+  const navBtn = document.getElementById(`navBtn-${moduleKey}`);
+  const view = document.getElementById(`tab-${moduleKey}`);
+
+  if (checkbox && navBtn) {
+    if (checkbox.checked) {
+      navBtn.style.display = 'inline-flex';
+    } else {
+      navBtn.style.display = 'none';
+      if (navBtn.classList.contains('active')) {
+        // Switch to the first visible module
+        const firstVisible = document.querySelector('.nav-btn:not([style*="display: none"])');
+        if (firstVisible) firstVisible.click();
+      }
+    }
+  }
+}
+
+function initModuleToggles() {
+  ['swing', 'intraday', 'ipo', 'charts', 'portfolio'].forEach(key => {
+    updateModuleVisibility(key);
+  });
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// -----------------------------------------------------------------------------
+// MARKET STATUS & COMMODITIES
+// -----------------------------------------------------------------------------
 async function fetchMarketStatus() {
   try {
     const res = await fetch('/api/market-status');
@@ -76,10 +137,10 @@ async function fetchMarketStatus() {
         text.innerText = `MARKET LIVE (${d.session || 'REGULAR'})`;
       } else {
         pill.className = 'market-pill closed';
-        text.innerText = `WEEKEND CLOSED • MONDAY PREDICTIONS READY`;
+        text.innerText = `WEEKEND CLOSED • MONDAY LIVE SETUPS READY`;
       }
       if (d.vix) {
-        document.getElementById('tickerVix').innerText = `${d.vix.toFixed(2)} (${d.mood || 'NEUTRAL'})`;
+        document.getElementById('tickerVix').innerText = `${d.vix.toFixed(2)}`;
       }
     }
   } catch (err) {
@@ -112,74 +173,78 @@ function updateTickerItem(id, item) {
 }
 
 // -----------------------------------------------------------------------------
-// MODULE 1: SWING TRADE POSTERS (15 STOCKS)
+// MODULE 1: SWING TRADE POSTERS (CLEAN FRONT FACE WITH DRILL-DOWN)
 // -----------------------------------------------------------------------------
 async function fetchSwingSignals() {
   const priorityWrap = document.getElementById('swingPriorityPosterWrap');
   const grid = document.getElementById('swingPostersGrid');
+  const countEl = document.getElementById('swingLiveCount');
 
   try {
     const res = await fetch('/api/swing-signals');
     const json = await res.json();
-    if (!json.success || !json.data || json.data.length === 0) {
-      grid.innerHTML = '<div class="loading-spinner">No swing setups available.</div>';
+    const signals = Array.isArray(json.data) ? json.data : (json.data && json.data.signals ? json.data.signals : []);
+
+    if (signals.length === 0) {
+      grid.innerHTML = '<div class="loading-spinner">No swing setups available right now. Market neutral.</div>';
       return;
     }
 
-    const signals = json.data;
+    countEl.innerText = `${signals.length} Institutional setups synced with live market`;
 
-    // 1. Render Priority #1 Poster at the very top
-    const topTrade = signals[0];
-    priorityWrap.innerHTML = renderFullPosterCard(topTrade, true);
+    // 1. Render Priority #1 Poster at Top
+    priorityWrap.innerHTML = renderCompactPosterCard(signals[0], true, 1, 'swing');
 
     // 2. Render Remaining Posters (Rank 2 to 15)
     const remaining = signals.slice(1);
-    grid.innerHTML = remaining.map((s, idx) => renderFullPosterCard(s, false, idx + 2)).join('');
+    grid.innerHTML = remaining.map((s, idx) => renderCompactPosterCard(s, false, idx + 2, 'swing')).join('');
 
   } catch (err) {
     console.error('Swing fetch error:', err);
-    grid.innerHTML = '<div class="loading-spinner text-red">Error loading swing setups.</div>';
+    grid.innerHTML = '<div class="loading-spinner text-red">Error loading live swing setups.</div>';
   }
 }
 
 // -----------------------------------------------------------------------------
-// MODULE 2: INTRADAY SCALP POSTERS (15 STOCKS: BUY & SELL)
+// MODULE 2: INTRADAY SCALP POSTERS
 // -----------------------------------------------------------------------------
 async function fetchIntradaySignals() {
   const grid = document.getElementById('intradayPostersGrid');
   try {
     const res = await fetch('/api/intraday-signals');
     const json = await res.json();
-    if (!json.success || !json.data || json.data.length === 0) {
-      grid.innerHTML = '<div class="loading-spinner">No intraday setups available.</div>';
+    allIntradaySignals = Array.isArray(json.data) ? json.data : (json.data && json.data.signals ? json.data.signals : []);
+
+    if (allIntradaySignals.length === 0) {
+      grid.innerHTML = '<div class="loading-spinner">No intraday scalps available right now.</div>';
       return;
     }
 
-    allIntradaySignals = json.data;
     renderIntradayView();
 
   } catch (err) {
     console.error('Intraday fetch error:', err);
-    grid.innerHTML = '<div class="loading-spinner text-red">Error loading intraday setups.</div>';
+    grid.innerHTML = '<div class="loading-spinner text-red">Error loading live intraday setups.</div>';
   }
 }
 
 function filterIntradayCards(mode) {
   intradayFilter = mode;
   document.querySelectorAll('.intraday-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
-  if (mode === 'ALL') event.target.classList.add('active');
-  if (mode === 'BUY') event.target.classList.add('active');
-  if (mode === 'SELL') event.target.classList.add('active');
+  event.target.classList.add('active');
   renderIntradayView();
 }
 
 function renderIntradayView() {
   const priorityWrap = document.getElementById('intradayPriorityPosterWrap');
   const grid = document.getElementById('intradayPostersGrid');
+  const countEl = document.getElementById('intradayLiveCount');
 
   let list = allIntradaySignals;
   if (intradayFilter === 'BUY') list = allIntradaySignals.filter(s => s.direction === 'BUY');
   if (intradayFilter === 'SELL') list = allIntradaySignals.filter(s => s.direction === 'SELL');
+
+  countEl.innerText = `${list.length} setups in view (${intradayFilter})`;
 
   if (list.length === 0) {
     priorityWrap.innerHTML = '';
@@ -187,18 +252,18 @@ function renderIntradayView() {
     return;
   }
 
-  // Render Top Priority
-  priorityWrap.innerHTML = renderFullPosterCard(list[0], true);
+  // Render Priority #1
+  priorityWrap.innerHTML = renderCompactPosterCard(list[0], true, 1, 'intraday');
 
-  // Render remaining in view
+  // Render Remaining
   const remaining = list.slice(1);
-  grid.innerHTML = remaining.map((s, idx) => renderFullPosterCard(s, false, idx + 2)).join('');
+  grid.innerHTML = remaining.map((s, idx) => renderCompactPosterCard(s, false, idx + 2, 'intraday')).join('');
 }
 
 // -----------------------------------------------------------------------------
-// MASTER POSTER CARD RENDERER (Clean, Institutional, High-Impact)
+// MINIMAL FRONT-FACE POSTER WITH DRILL-DOWN DRAWER
 // -----------------------------------------------------------------------------
-function renderFullPosterCard(s, isMaster = false, rank = 1) {
+function renderCompactPosterCard(s, isMaster = false, rank = 1, moduleType = 'swing') {
   const isBuy = s.direction === 'BUY';
   const cardBorderClass = isBuy ? 'card-buy' : 'card-sell';
   const pillClass = isBuy ? 'pill-buy' : 'pill-sell';
@@ -207,18 +272,21 @@ function renderFullPosterCard(s, isMaster = false, rank = 1) {
 
   const masterClass = isMaster ? 'master-poster' : '';
   const crownTag = isMaster
-    ? `<span class="poster-crown-tag">👑 PRIORITY #1 SETUP — ${s.confidence}% CONVICTION</span>`
-    : `<span class="poster-crown-tag" style="background:#202035; color:#cfd8dc; border:1px solid rgba(255,255,255,0.1);">RANK #${rank} • ${s.confidence}% CONFLUENCE</span>`;
+    ? `<span class="poster-crown-tag crown-master">👑 PRIORITY #1 SETUP — ${s.confidence}% CONVICTION</span>`
+    : `<span class="poster-crown-tag crown-standard">RANK #${rank} • ${s.confidence}% CONFLUENCE</span>`;
 
   const timeLabel = s.holding_period || s.time_window || 'Immediate Execution';
+  const uniqueId = `drawer-${moduleType}-${rank}-${s.symbol}`;
 
   return `
     <div class="poster-card ${cardBorderClass} ${masterClass}">
+      <!-- Crown / Time Bar -->
       <div class="poster-crown-bar">
         ${crownTag}
         <span class="poster-time-tag">⏱ ${timeLabel}</span>
       </div>
 
+      <!-- Header: Symbol + Name + Direction Pill -->
       <div class="poster-head">
         <div>
           <h3 class="poster-stock-sym">${s.symbol}</h3>
@@ -227,14 +295,14 @@ function renderFullPosterCard(s, isMaster = false, rank = 1) {
         <div class="poster-dir-pill ${pillClass}">${dirText}</div>
       </div>
 
-      <!-- Levels Matrix -->
+      <!-- 4-Level Matrix (Entry, Target, Stop Loss, Risk:Reward) -->
       <div class="poster-levels-grid">
         <div class="lvl-cell">
-          <span class="lvl-lbl">ENTRY ZONE</span>
+          <span class="lvl-lbl">ENTRY (LTP)</span>
           <span class="lvl-num">₹${s.entry_price.toFixed(2)}</span>
         </div>
         <div class="lvl-cell">
-          <span class="lvl-lbl">TARGET PRICE</span>
+          <span class="lvl-lbl">TARGET</span>
           <span class="lvl-num text-green">₹${s.target_price.toFixed(2)}</span>
         </div>
         <div class="lvl-cell">
@@ -247,38 +315,57 @@ function renderFullPosterCard(s, isMaster = false, rank = 1) {
         </div>
       </div>
 
-      <!-- Monday Prediction Callout -->
-      <div class="poster-callout callout-monday">
-        <div class="callout-title title-monday">📅 MONDAY SETUP PREDICTION (${s.confidence}% PROBABILITY):</div>
-        <div>${s.monday_prediction}</div>
-      </div>
-
-      <!-- Institutional Buyer Callout -->
-      <div class="poster-callout callout-inst">
-        <div class="callout-title title-inst">🏛️ INSTITUTIONAL ACCUMULATION &amp; BUYER:</div>
-        <div>${s.institutional_buyer || 'Institutional DII/FII Active Accumulation'}</div>
-      </div>
-
-      <!-- News & Fundamental Catalyst Callout -->
-      <div class="poster-callout callout-catalyst">
-        <div class="callout-title title-catalyst">📰 NEWS &amp; EVENT CATALYST:</div>
-        <div>${s.catalyst}</div>
-      </div>
-
       <!-- Financial Execution Strip -->
       <div class="poster-finance-strip">
         <div>Capital: <strong>₹${(s.capital || 100000).toLocaleString('en-IN')}</strong> (${s.quantity} Qty)</div>
         <div>Target Gain: <strong class="text-green">+₹${s.potential_profit ? s.potential_profit.toLocaleString('en-IN') : '--'} (+${s.potential_percent || ''}%)</strong></div>
-        <div>Max SL: <strong class="text-red">-₹${s.max_loss ? s.max_loss.toLocaleString('en-IN') : '--'}</strong></div>
-        <div>Delta: <span class="text-accent">${s.orderflow_delta || '+75% Inflow'}</span></div>
+        <div>Max Risk: <strong class="text-red">-₹${s.max_loss ? s.max_loss.toLocaleString('en-IN') : '--'}</strong></div>
       </div>
 
-      <!-- Interactive Execution Button -->
+      <!-- Interactive Drill-Down Arrow Button -->
+      <button class="btn-drilldown-toggle" onclick="toggleCardDrawer('${uniqueId}', this)">
+        <span>⬇️ Analysis, Institutional Buyer &amp; Monday Setup</span>
+      </button>
+
+      <!-- Expandable Drill-Down Details Drawer (Hidden by default) -->
+      <div class="drilldown-drawer" id="${uniqueId}" style="display:none;">
+        <div class="callout-row">
+          <div class="callout-tag-title text-gold">📅 MONDAY SETUP PREDICTION (${s.confidence}% CHANCE):</div>
+          <div style="color:#fff9c4;">${s.monday_prediction}</div>
+        </div>
+        <div class="callout-row">
+          <div class="callout-tag-title text-purple">🏛️ INSTITUTIONAL ACCUMULATION &amp; BUYER:</div>
+          <div style="color:#ede7f6;">${s.institutional_buyer || 'Institutional DII/FII Active Accumulation'}</div>
+        </div>
+        <div class="callout-row">
+          <div class="callout-tag-title text-accent">📰 RECENT NEWS &amp; EVENT CATALYST:</div>
+          <div style="color:#e3f2fd;">${s.catalyst}</div>
+        </div>
+        <div class="callout-row">
+          <div class="callout-tag-title text-green">⚡ ORDER FLOW DELTA:</div>
+          <div class="text-green">${s.orderflow_delta || '+75% Inflow'}</div>
+        </div>
+      </div>
+
+      <!-- Primary 1-Click Execution Button -->
       <button class="${btnClass}" onclick="executePaperTrade('${s.symbol}', '${s.direction}', ${s.entry_price}, ${s.quantity}, ${s.target_price}, ${s.stop_loss})">
         ⚡ EXECUTE PAPER TRADE (₹${(s.capital || 100000).toLocaleString('en-IN')})
       </button>
     </div>
   `;
+}
+
+function toggleCardDrawer(drawerId, btn) {
+  const drawer = document.getElementById(drawerId);
+  if (!drawer) return;
+
+  if (drawer.style.display === 'none' || !drawer.style.display) {
+    drawer.style.display = 'block';
+    btn.innerHTML = '<span>⬆️ Hide Details</span>';
+  } else {
+    drawer.style.display = 'none';
+    btn.innerHTML = '<span>⬇️ Analysis, Institutional Buyer &amp; Monday Setup</span>';
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -289,12 +376,13 @@ async function fetchIpoData() {
   try {
     const res = await fetch('/api/ipo/strategy');
     const json = await res.json();
-    if (!json.success || !json.data) {
+    const ipos = json.data || [];
+
+    if (ipos.length === 0) {
       grid.innerHTML = '<div class="loading-spinner text-red">Unable to load IPO data.</div>';
       return;
     }
 
-    const ipos = json.data;
     grid.innerHTML = ipos.map(ipo => renderIpoPoster(ipo)).join('');
   } catch (err) {
     console.error('IPO error:', err);
@@ -323,12 +411,11 @@ function renderIpoPoster(ipo) {
         </div>
         <div style="text-align:right;">
           <span style="font-size:0.68rem; color:#78909c; display:block;">ESTIMATED GMP</span>
-          <span style="font-size:1.4rem; font-weight:900; font-family:var(--font-mono);" class="text-green">+₹${ipo.gmp_rs}</span>
+          <span style="font-size:1.35rem; font-weight:900; font-family:var(--font-mono);" class="text-green">+₹${ipo.gmp_rs}</span>
           <span style="font-size:0.75rem; font-weight:700;" class="${trendClass}">${trendTag} (+${ipo.gmp_percent.toFixed(1)}%)</span>
         </div>
       </div>
 
-      <!-- 3-PAN Subscription & Allotment Comparison -->
       <div class="poster-levels-grid" style="grid-template-columns: repeat(4, 1fr);">
         <div class="lvl-cell">
           <span class="lvl-lbl">RETAIL SUB</span>
@@ -348,17 +435,15 @@ function renderIpoPoster(ipo) {
         </div>
       </div>
 
-      <!-- Action Plan Box -->
-      <div class="poster-callout callout-inst" style="background:rgba(0,230,118,0.06); border-color:rgba(0,230,118,0.25);">
-        <div class="callout-title" style="color:#00e676;">🎯 ALLOTMENT STRATEGY &amp; ACTION PLAN:</div>
-        <div style="font-weight:800; font-size:0.85rem; color:#fff; margin-bottom:6px;">${ipo.recommendation}</div>
+      <div class="drilldown-drawer" style="display:block; margin-top:8px;">
+        <div class="callout-tag-title text-green">🎯 ALLOTMENT STRATEGY &amp; ACTION PLAN:</div>
+        <div style="font-weight:800; font-size:0.85rem; color:#fff; margin-bottom:4px;">${ipo.recommendation}</div>
         <ul style="padding-left:18px; margin:0; font-size:0.75rem; color:#cfd8dc;">
           ${(ipo.action_plan || []).map(step => `<li>${step}</li>`).join('')}
         </ul>
       </div>
 
-      <!-- Summary Strip -->
-      <div class="poster-finance-strip">
+      <div class="poster-finance-strip" style="margin-top:10px;">
         <div>Capital for 3 PANs: <strong>₹${ipo.min_investment_3accounts.toLocaleString('en-IN')}</strong></div>
         <div>Expected Gain (3 Accts): <strong class="text-green">+₹${ipo.expected_profit_3_retail.toLocaleString('en-IN')}</strong></div>
       </div>
@@ -492,7 +577,6 @@ async function fetchPortfolio() {
       document.getElementById('portWinRate').innerText = `${d.win_rate.toFixed(1)}%`;
     }
 
-    // Render Open Positions
     const posTable = document.getElementById('openPositionsTable');
     if (d.holdings && d.holdings.length > 0) {
       posTable.innerHTML = `

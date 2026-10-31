@@ -1,6 +1,6 @@
 /* ==========================================================================
    J1 TRADER — Institutional Dark Theme CSS
-   Engineered for Jeevan • Bold Typography, Zerodha-Inspired Dark Glassmorphism
+   Engineered for Jeevan • Clean Minimal Front Face with Smooth Drill-Down Slider
    ========================================================================== */
 
 :root {
@@ -68,11 +68,12 @@ body {
   top: 0;
   z-index: 100;
   backdrop-filter: blur(16px);
+  transition: all 0.25s ease;
 }
 .header-inner {
   max-width: 1500px;
   margin: 0 auto;
-  padding: 18px 24px 14px;
+  padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -98,15 +99,16 @@ body {
 .brand-subtitle {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 2.5px;
+  letter-spacing: 2px;
   color: var(--text-muted);
   text-transform: uppercase;
   margin-top: 2px;
 }
+
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 .market-pill {
   display: inline-flex;
@@ -147,6 +149,56 @@ body {
   font-weight: 700;
 }
 
+.btn-settings-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: #cfd8dc;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-settings-pill:hover { background: rgba(255, 255, 255, 0.12); }
+
+.btn-collapse-nav {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  color: #cfd8dc;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.btn-collapse-nav:hover { background: rgba(255, 255, 255, 0.14); }
+
+/* Modules Toggle Drawer */
+.modules-toggle-drawer {
+  background: #0d0d18;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 24px;
+}
+.drawer-inner {
+  max-width: 1500px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.drawer-title { font-size: 0.72rem; font-weight: 800; color: var(--gold); letter-spacing: 0.5px; }
+.toggle-label {
+  font-size: 0.82rem;
+  color: #cfd8dc;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.toggle-label input { accent-color: var(--green); cursor: pointer; }
+
 /* ── Navigation Tabs ─────────────────────────────────────────── */
 .module-nav {
   max-width: 1500px;
@@ -155,6 +207,10 @@ body {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  transition: max-height 0.25s ease, opacity 0.25s ease;
+}
+.module-nav.collapsed {
+  display: none !important;
 }
 .nav-btn {
   background: transparent;
@@ -182,15 +238,7 @@ body {
   border-bottom-color: var(--green);
   background: rgba(0, 230, 118, 0.05);
 }
-.badge-count {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 100px;
-}
-.badge-highlight {
+.badge-opt {
   background: rgba(0, 230, 118, 0.18);
   color: var(--green);
   font-size: 0.68rem;
@@ -199,14 +247,6 @@ body {
   border-radius: 100px;
   border: 1px solid rgba(0, 230, 118, 0.3);
 }
-.badge-subtle {
-  background: rgba(41, 121, 255, 0.15);
-  color: var(--accent-blue);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 100px;
-}
 
 /* ── Content Layout ──────────────────────────────────────────── */
 .content-body {
@@ -214,9 +254,7 @@ body {
   margin: 0 auto;
   padding: 24px;
 }
-.module-view {
-  display: none;
-}
+.module-view { display: none; }
 .module-view.active {
   display: block;
   animation: fadeIn 0.25s ease forwards;
@@ -226,50 +264,8 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Module Banners ──────────────────────────────────────────── */
-.module-banner {
-  background: linear-gradient(135deg, rgba(24, 24, 40, 0.8), rgba(16, 16, 28, 0.9));
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.module-heading {
-  font-size: 1.45rem;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: -0.3px;
-}
-.module-sub {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-.module-meta {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.meta-chip {
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 5px 12px;
-  border-radius: 100px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.chip-gold { background: rgba(255, 215, 64, 0.15); color: var(--gold); border: 1px solid rgba(255, 215, 64, 0.3); }
-.chip-green { background: rgba(0, 230, 118, 0.15); color: var(--green); border: 1px solid rgba(0, 230, 118, 0.3); }
-.chip-blue { background: rgba(41, 121, 255, 0.15); color: var(--accent-blue); border: 1px solid rgba(41, 121, 255, 0.3); }
-
-/* ── Poster Section Subheadings ──────────────────────────────── */
 .poster-section-header {
-  margin: 32px 0 16px;
+  margin: 28px 0 16px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -283,58 +279,54 @@ body {
 }
 
 /* ==============================================================
-   POSTER CARDS (Styled like Waaree Energies IPO Poster)
+   CLEAN POSTER CARDS WITH EXPANDABLE DRILL-DOWN ACCORDION
    ============================================================== */
 .posters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
-  gap: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+  gap: 20px;
 }
 
 .poster-card {
   background: linear-gradient(145deg, #151524 0%, #10101c 100%);
   border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 22px;
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
-  overflow: hidden;
 }
 .poster-card:hover {
-  transform: translateY(-3px);
   border-color: rgba(0, 230, 118, 0.4);
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
 }
 .poster-card.card-buy { border-left: 4px solid var(--green); }
 .poster-card.card-sell { border-left: 4px solid var(--red); }
 
-/* Priority #1 Master Poster Styling */
+/* Master Priority #1 Poster */
 .poster-card.master-poster {
   border: 2px solid var(--green);
-  box-shadow: 0 0 40px var(--green-glow);
+  box-shadow: 0 0 35px var(--green-glow);
   background: linear-gradient(135deg, #181830 0%, #111122 100%);
   margin-bottom: 24px;
 }
 .poster-card.master-poster.card-sell {
   border: 2px solid var(--red);
-  box-shadow: 0 0 40px var(--red-glow);
+  box-shadow: 0 0 35px var(--red-glow);
 }
 
 .poster-crown-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 14px;
-  margin-bottom: 14px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 .poster-crown-tag {
-  background: linear-gradient(90deg, #ffd740, #ffab00);
-  color: #000;
   font-size: 0.72rem;
   font-weight: 900;
   padding: 4px 12px;
@@ -342,8 +334,17 @@ body {
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-.poster-time-tag {
+.crown-master {
+  background: linear-gradient(90deg, #ffd740, #ffab00);
+  color: #000;
+}
+.crown-standard {
   background: rgba(255, 255, 255, 0.06);
+  color: #cfd8dc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.poster-time-tag {
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
   color: #cfd8dc;
   font-size: 0.72rem;
@@ -357,10 +358,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 .poster-stock-sym {
-  font-size: 1.65rem;
+  font-size: 1.55rem;
   font-weight: 900;
   color: #ffffff;
   letter-spacing: -0.5px;
@@ -369,13 +370,13 @@ body {
 .poster-stock-name {
   font-size: 0.82rem;
   color: var(--text-muted);
-  margin-top: 3px;
+  margin-top: 2px;
   font-weight: 500;
 }
 .poster-dir-pill {
-  padding: 6px 18px;
+  padding: 5px 16px;
   border-radius: 100px;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   font-weight: 900;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -391,7 +392,7 @@ body {
   border: 1.5px solid var(--red);
 }
 
-/* Poster Levels Grid */
+/* Essential Levels Grid (4 Metrics Only) */
 .poster-levels-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -400,10 +401,10 @@ body {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   text-align: center;
 }
-.lvl-cell { padding: 4px 6px; }
+.lvl-cell { padding: 4px; }
 .lvl-lbl {
   font-size: 0.65rem;
   color: var(--text-dim);
@@ -418,44 +419,7 @@ body {
   font-family: var(--font-mono);
 }
 
-/* Institutional Specific Callout Boxes */
-.poster-callout {
-  border-radius: 10px;
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-.callout-monday {
-  background: rgba(255, 215, 64, 0.08);
-  border: 1px solid rgba(255, 215, 64, 0.25);
-  color: #fff9c4;
-}
-.callout-inst {
-  background: rgba(179, 136, 255, 0.08);
-  border: 1px solid rgba(179, 136, 255, 0.25);
-  color: #ede7f6;
-}
-.callout-catalyst {
-  background: rgba(41, 121, 255, 0.08);
-  border: 1px solid rgba(41, 121, 255, 0.25);
-  color: #e3f2fd;
-}
-.callout-title {
-  font-weight: 800;
-  font-size: 0.7rem;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 3px;
-}
-.title-monday { color: var(--gold); }
-.title-inst { color: var(--purple); }
-.title-catalyst { color: var(--accent-blue); }
-
-/* Poster Financial Summary Strip */
+/* Financial Strip */
 .poster-finance-strip {
   display: flex;
   justify-content: space-between;
@@ -463,23 +427,74 @@ body {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 14px;
-  margin: 12px 0 16px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
   font-size: 0.8rem;
 }
 
-/* Action Button */
+/* Drill-Down Toggle Button */
+.btn-drilldown-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  color: #b0bec5;
+  font-family: var(--font-main);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 7px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+}
+.btn-drilldown-toggle:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Drill-Down Drawer (Smooth Accordion Slide) */
+.drilldown-drawer {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+  animation: slideDown 0.2s ease forwards;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.callout-row {
+  margin-bottom: 8px;
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+.callout-row:last-child { margin-bottom: 0; }
+.callout-tag-title {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* Primary Execution Button */
 .btn-poster-execute {
   width: 100%;
   background: linear-gradient(90deg, #00e676 0%, #00b0ff 100%);
   color: #000000;
   font-family: var(--font-main);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 900;
   letter-spacing: 0.5px;
-  padding: 14px;
+  padding: 12px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
   transition: transform 0.15s ease, filter 0.15s ease;
 }
@@ -497,14 +512,14 @@ body {
   background: linear-gradient(90deg, rgba(41, 121, 255, 0.12), rgba(0, 230, 118, 0.08));
   border: 1px solid rgba(41, 121, 255, 0.35);
   border-radius: 14px;
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: flex;
-  gap: 16px;
+  gap: 14px;
   align-items: center;
   margin-bottom: 24px;
 }
-.rule-banner-icon { font-size: 1.8rem; }
-.rule-banner-text { font-size: 0.86rem; line-height: 1.5; color: #eceff1; }
+.rule-banner-icon { font-size: 1.6rem; }
+.rule-banner-text { font-size: 0.85rem; line-height: 1.5; color: #eceff1; }
 
 .calc-panel {
   background: var(--bg-card);
@@ -513,7 +528,7 @@ body {
   padding: 24px;
   margin: 32px 0;
 }
-.calc-panel-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+.calc-panel-title { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; }
 .calc-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) 160px;
@@ -548,7 +563,15 @@ body {
   letter-spacing: 0.5px;
 }
 
-/* ── Intraday Filter Bar ─────────────────────────────────────── */
+/* ── Intraday Controls Row ───────────────────────────────────── */
+.intraday-controls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 .intraday-filter-bar {
   display: flex;
   gap: 8px;
@@ -560,7 +583,7 @@ body {
   font-family: var(--font-main);
   font-size: 0.82rem;
   font-weight: 700;
-  padding: 8px 16px;
+  padding: 7px 16px;
   border-radius: 100px;
   cursor: pointer;
 }
@@ -595,10 +618,7 @@ body {
   font-size: 0.88rem;
   font-weight: 700;
 }
-.tf-btn-group {
-  display: flex;
-  gap: 4px;
-}
+.tf-btn-group { display: flex; gap: 4px; }
 .btn-tf {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border);
@@ -676,7 +696,7 @@ body {
 
 .main-footer {
   max-width: 1500px;
-  margin: 60px auto 30px;
+  margin: 50px auto 30px;
   padding: 24px;
   border-top: 1px solid var(--border);
   display: flex;
@@ -688,7 +708,6 @@ body {
   gap: 12px;
 }
 
-/* Responsive */
 @media (max-width: 900px) {
   .posters-grid { grid-template-columns: 1fr; }
   .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
