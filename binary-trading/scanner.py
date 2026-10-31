@@ -1,10 +1,12 @@
-"""Quotex 20-Pair Live Signal Scanner.
+"""Quotex 20-Pair Live Signal Scanner & Decision Engine.
 
 Scans the top 20 currency pairs, evaluates the 5 institutional binary strategies,
 and produces ranked CALL / PUT recommendations with 80%–95%+ confluence ratings.
+Provides direct helper functions for on-demand manual trading calls.
 """
 
 import concurrent.futures
+import sys
 import time
 from config import QUOTEX_PAIRS, MIN_PAYOUT_THRESHOLD
 from forex_sessions import get_current_sessions
@@ -13,14 +15,15 @@ from news_calendar import check_current_news_status
 from strategies import analyze_confluence
 
 
-def scan_single_pair(pair_config, news_status):
+def scan_single_pair(pair_config, news_status=None):
     """Fetches snapshot and analyzes confluence for a single pair."""
     try:
+        news = news_status or check_current_news_status()
         data = analyze_market_snapshot(pair_config)
         if not data:
             return None
-        return analyze_confluence(data, news_status)
-    except Exception as e:
+        return analyze_confluence(data, news)
+    except Exception:
         return None
 
 
@@ -43,7 +46,6 @@ def run_full_market_scan(limit=20):
             if res:
                 results.append(res)
 
-    # Sort results: First by CALL/PUT signals (excluding Neutral), then by Confidence %, then by Payout %
     actionable = [r for r in results if r["signal"] in ("CALL", "PUT")]
     neutral = [r for r in results if r["signal"] not in ("CALL", "PUT")]
 
@@ -64,7 +66,50 @@ def run_full_market_scan(limit=20):
     }
 
 
+def get_best_signal():
+    """Returns the single highest-probability actionable trade right now."""
+    scan = run_full_market_scan(20)
+    signals = scan["signals"]
+    actionable = [s for s in signals if s["signal"] in ("CALL", "PUT")]
+    if actionable:
+        return {
+            "status": "FOUND",
+            "best_trade": actionable[0],
+            "session": scan["session"]
+        }
+    return {
+        "status": "NO_CLEAR_SIGNAL",
+        "message": "Market is currently consolidating or neutral across pairs. Wait for next 5m candle close.",
+        "top_pairs_monitored": [s["symbol"] for s in signals[:5]],
+        "session": scan["session"]
+    }
+
+
+def check_pair_signal(symbol):
+    """Analyzes a specific currency pair requested by the user."""
+    target_symbol = symbol.strip().upper().replace("_", "/").replace("-", "/")
+    if "/" not in target_symbol and len(target_symbol) == 6:
+        target_symbol = target_symbol[:3] + "/" + target_symbol[3:]
+
+    pair_cfg = next((p for p in QUOTEX_PAIRS if p["symbol"] == target_symbol), None)
+    if not pair_cfg:
+        # Default lookup with yahoo ticker
+        pair_cfg = {
+            "symbol": target_symbol,
+            "ticker": f"{target_symbol.replace('/', '')}=X",
+            "payout": 85,
+            "category": "Custom"
+        }
+
+    return scan_single_pair(pair_cfg)
+
+
 if __name__ == "__main__":
     import json
-    report = run_full_market_scan(5)
-    print(json.dumps(report, indent=2))
+    if len(sys.argv) > 1:
+        pair_input = sys.argv[1]
+        res = check_pair_signal(pair_input)
+        print(json.dumps(res, indent=2))
+    else:
+        best = get_best_signal()
+        print(json.dumps(best, indent=2))
