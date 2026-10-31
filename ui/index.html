@@ -3,328 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CoinSwitch PRO - Crypto Futures & Scalper Terminal (INR ₹)</title>
+  <title>CoinSwitch PRO - Auto-Scalper Terminal</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- TradingView Chart Library -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     body { background-color: #0b0e14; color: #d1d5db; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .cs-card { background-color: #131722; border: 1px solid #232733; }
     .cs-input { background-color: #1a1f2c; border: 1px solid #2e3546; color: #fff; }
     .cs-input:focus { border-color: #00d09c; outline: none; }
-    .draggable-line { cursor: ns-resize; }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden select-none">
 
-  <!-- Top CoinSwitch Pro Header -->
-  <header class="h-14 border-b border-gray-800 bg-[#131722] px-4 flex items-center justify-between shrink-0">
+  <!-- Top CoinSwitch Pro Clean Navbar -->
+  <header class="h-14 border-b border-gray-800 bg-[#131722] px-5 flex items-center justify-between shrink-0">
     <div class="flex items-center space-x-6">
-      
       <!-- Brand -->
       <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-[#00d09c] flex items-center justify-center font-black text-black text-xl shadow-lg shadow-[#00d09c]/20">CS</div>
+        <div class="w-8 h-8 rounded-lg bg-[#00d09c] flex items-center justify-center font-black text-black text-xl shadow">CS</div>
         <span class="text-white font-bold text-lg tracking-wide">CoinSwitch <span class="text-[#00d09c] font-black text-xs px-1.5 py-0.5 rounded bg-[#00d09c]/10 border border-[#00d09c]/30">PRO</span></span>
       </div>
 
-      <!-- Mode Selector -->
-      <div class="flex items-center bg-[#1a1f2c] p-0.5 rounded-lg border border-gray-800 text-xs font-semibold">
-        <button class="px-3 py-1 text-gray-400 hover:text-white rounded">Spot</button>
-        <button class="px-3 py-1 bg-[#00d09c] text-black font-bold rounded shadow">Futures Scalper (INR)</button>
-      </div>
-
-      <!-- Live Symbol Ticker & Mark Price Explanation -->
-      <div class="flex items-center space-x-3 bg-[#1e2330] px-3 py-1.5 rounded-md border border-gray-700">
+      <!-- Live Symbol & Exact Prices -->
+      <div class="flex items-center space-x-3 bg-[#1e2330] px-3.5 py-1.5 rounded-lg border border-gray-700">
         <span class="text-white font-bold text-sm">BTC/USDT Perp</span>
-        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-sm transition-colors">$77,156.00</span>
-        <span id="livePriceInr" class="text-gray-300 font-mono text-xs font-bold">(₹65,58,260)</span>
-        <span class="text-[11px] text-gray-400 font-mono hidden md:inline">Spot: <span id="spotPriceHeader" class="text-gray-300">$77,106.00</span> (<span class="text-emerald-400 font-semibold">+$50 Mark Prem</span>)</span>
+        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-base transition-colors">$77,156.00</span>
+        <span id="livePriceInr" class="text-gray-300 font-mono text-xs font-semibold">(₹65,58,260)</span>
       </div>
-
     </div>
 
-    <!-- Wallet / Available Margin (INR ₹ with Deducted Fees) -->
-    <div class="flex items-center space-x-5">
+    <!-- Right Controls: Auto-Bot Switch & Wallet -->
+    <div class="flex items-center space-x-6">
+      
+      <!-- Auto-Trading Loop Toggle Switch -->
+      <div class="flex items-center space-x-2.5 bg-[#1a1f2c] px-3 py-1.5 rounded-lg border border-gray-700">
+        <span class="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+          <span id="autoBotDot" class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
+          <span>🤖 Auto-Scalp Loop:</span>
+        </span>
+        <button id="btnAutoToggle" onclick="toggleAutoScalp()" class="px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-[#00d09c] text-black">
+          ON
+        </button>
+      </div>
+
+      <!-- Available Wallet Cash -->
       <div class="text-right">
-        <div class="text-[11px] text-gray-400 flex items-center justify-end gap-1">
-          <span>Available Margin:</span>
-          <button onclick="resetBalance()" class="text-[#00d09c] hover:underline text-[10px] ml-1">Reset ₹10k</button>
-        </div>
-        <div class="flex items-center gap-1.5 justify-end">
-          <span id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹4,926.25</span>
-          <span class="text-[10px] text-amber-400 font-mono">(₹73.75 Fee Deducted)</span>
-        </div>
+        <div class="text-[11px] text-gray-400">Available Margin</div>
+        <div id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹4,926.25</div>
       </div>
 
-      <div class="h-8 w-px bg-gray-800"></div>
-
-      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-700/50 text-[#00d09c] text-xs font-mono">
-        <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
-        <span>Binance Feed Live</span>
-      </div>
+      <button onclick="resetBalance()" class="text-xs text-gray-400 hover:text-white px-2 py-1 bg-gray-800 rounded border border-gray-700" title="Reset wallet to ₹10,000">
+        Reset ₹10k
+      </button>
     </div>
   </header>
 
   <!-- Main Trading Area -->
   <div class="flex-1 flex overflow-hidden">
     
-    <!-- Left 70%: Chart Container with Interactive On-Chart Order Lines -->
+    <!-- Left 70%: TradingView Candlestick Chart with On-Chart Order Badges -->
     <div class="flex-1 flex flex-col min-w-0">
       
-      <!-- Chart Area -->
-      <div class="flex-1 relative bg-[#0b0e14] overflow-hidden" id="chart_wrapper">
-        
-        <!-- Underlying Real-Time TradingView Chart -->
+      <div class="flex-1 relative bg-[#0b0e14]" id="chart_wrapper">
+        <!-- TradingView Chart Container -->
         <div class="w-full h-full" id="chart_container"></div>
 
-        <!-- Interactive On-Chart Draggable TP, SL, Entry Overlay Lines -->
-        <div id="chartOverlay" class="absolute inset-0 pointer-events-none z-10 flex flex-col justify-between p-6">
-          
-          <!-- Top Overlay Banner: Quick Scalp Level Controllers -->
-          <div class="pointer-events-auto bg-[#131722]/90 border border-gray-700/80 rounded-lg p-2.5 backdrop-blur shadow-2xl flex items-center justify-between max-w-2xl text-xs font-mono">
-            <div class="flex items-center space-x-3">
-              <span class="px-2 py-0.5 rounded bg-emerald-950 text-[#00d09c] font-bold border border-emerald-700">
-                ACTIVE 25X SCALP
-              </span>
-              <span>Entry: <strong class="text-blue-400 font-bold">$77,121.63</strong></span>
-            </div>
-            <div class="flex items-center space-x-4">
-              <!-- TP controller -->
-              <div class="flex items-center space-x-1.5">
-                <span class="text-emerald-400 font-bold">TP:</span>
-                <input type="number" id="inpOverlayTp" value="77521.63" step="10" class="w-20 bg-gray-900 border border-emerald-700 text-emerald-300 font-mono text-xs px-1.5 py-0.5 rounded text-center" onchange="syncOverlayInputs()">
-                <button onclick="adjustOverlayLevel('tp', 50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-emerald-400 font-bold text-[10px]">+50</button>
-                <button onclick="adjustOverlayLevel('tp', -50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-emerald-400 font-bold text-[10px]">-50</button>
-              </div>
-              <!-- SL controller -->
-              <div class="flex items-center space-x-1.5">
-                <span class="text-red-400 font-bold">SL:</span>
-                <input type="number" id="inpOverlaySl" value="76961.63" step="10" class="w-20 bg-gray-900 border border-red-700 text-red-300 font-mono text-xs px-1.5 py-0.5 rounded text-center" onchange="syncOverlayInputs()">
-                <button onclick="adjustOverlayLevel('sl', 50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-red-400 font-bold text-[10px]">+50</button>
-                <button onclick="adjustOverlayLevel('sl', -50)" class="px-1.5 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-red-400 font-bold text-[10px]">-50</button>
-              </div>
-              <button onclick="saveBracketChanges()" class="px-2.5 py-1 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded text-[11px] shadow">
-                Save
-              </button>
-            </div>
+        <!-- Clean, Non-Cluttered Chart Badges Overlay -->
+        <div id="chartOverlay" class="absolute top-4 left-4 z-10 flex flex-col space-y-2 pointer-events-none">
+          <div class="pointer-events-auto bg-[#131722]/90 border border-gray-700 rounded-lg px-3 py-1.5 text-xs font-mono shadow-xl flex items-center space-x-4">
+            <span class="text-emerald-400 font-bold flex items-center gap-1">🎯 TP: <strong id="overlayTpText" class="text-white">$77,521.63</strong> (+400 pts)</span>
+            <span class="text-blue-400 font-bold flex items-center gap-1">🔵 Entry: <strong id="overlayEntryText" class="text-white">$77,121.63</strong></span>
+            <span class="text-red-400 font-bold flex items-center gap-1">🛡️ SL: <strong id="overlaySlText" class="text-white">$76,961.63</strong> (-160 pts)</span>
           </div>
-
-          <!-- On-Chart Visual Lines Container -->
-          <div class="relative flex-1 my-4 pointer-events-none" id="linesContainer">
-            
-            <!-- 1. Take Profit (TP) Green Line with Draggable Handle -->
-            <div id="lineTp" class="absolute left-0 right-0 border-b-2 border-dashed border-[#00d09c] flex items-center justify-between pointer-events-auto transition-all" style="top: 25%;">
-              <div class="bg-[#00d09c] text-black text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5 draggable-line" title="Drag to adjust TP" onmousedown="startDrag(event, 'tp')">
-                <span>🎯 TP: $<span id="lblOverlayTpVal">77,521.63</span> (+400 pts)</span>
-                <span class="px-1.5 py-0.2 bg-black/20 rounded font-mono text-[10px] text-black font-extrabold">+₹500.83 Net (+10.0%)</span>
-                <span class="cursor-grab text-xs ml-1">⬍ DRAG</span>
-              </div>
-              <div class="bg-gray-900/90 text-[#00d09c] text-[11px] font-mono px-2 py-0.5 rounded border border-emerald-800 mr-2">
-                Target Level: 77,521.63
-              </div>
-            </div>
-
-            <!-- 2. Entry Price Blue Line -->
-            <div id="lineEntry" class="absolute left-0 right-0 border-b-2 border-blue-400 flex items-center justify-between pointer-events-auto transition-all" style="top: 55%;">
-              <div class="bg-blue-600 text-white text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5">
-                <span>🔵 ENTRY: $77,121.63</span>
-                <span class="px-1.5 py-0.2 bg-black/30 rounded font-mono text-[10px] text-white">LONG 25x • ₹5,000 Margin</span>
-              </div>
-              <div class="bg-gray-900/90 text-blue-300 text-[11px] font-mono px-2 py-0.5 rounded border border-blue-800 mr-2">
-                Order Fill: 77,121.63
-              </div>
-            </div>
-
-            <!-- 3. Stop Loss (SL) Red Line with Draggable Handle -->
-            <div id="lineSl" class="absolute left-0 right-0 border-b-2 border-dashed border-[#f6465d] flex items-center justify-between pointer-events-auto transition-all" style="top: 80%;">
-              <div class="bg-[#f6465d] text-white text-[11px] font-black px-2.5 py-1 rounded shadow-lg flex items-center gap-1.5 draggable-line" title="Drag to adjust SL" onmousedown="startDrag(event, 'sl')">
-                <span>🛡️ SL: $<span id="lblOverlaySlVal">76,961.63</span> (-160 pts)</span>
-                <span class="px-1.5 py-0.2 bg-black/30 rounded font-mono text-[10px] text-white font-extrabold">-₹406.83 Net (-8.1%)</span>
-                <span class="cursor-grab text-xs ml-1">⬍ DRAG</span>
-              </div>
-              <div class="bg-gray-900/90 text-red-400 text-[11px] font-mono px-2 py-0.5 rounded border border-red-800 mr-2">
-                Stop Level: 76,961.63
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Bottom Notice -->
-          <div class="text-[10px] text-gray-400 bg-black/70 px-2 py-1 rounded w-fit pointer-events-auto font-mono">
-            💡 Drag green TP or red SL lines up/down on chart to dynamically adjust profit target and stop risk in real time.
-          </div>
-
         </div>
-
       </div>
 
-      <!-- Bottom Panel: Positions & Open Orders with Complete Fee Accounting -->
-      <div class="h-60 cs-card border-t border-gray-800 flex flex-col shrink-0">
-        
-        <div class="flex items-center justify-between border-b border-gray-800 px-4 py-2 bg-[#171b26]">
-          <div class="flex space-x-6 text-xs font-bold uppercase tracking-wider">
-            <button class="text-[#00d09c] border-b-2 border-[#00d09c] pb-2 flex items-center gap-1.5">
-              <span>Active Scalp Positions</span>
-              <span id="posCountBadge" class="px-1.5 py-0.2 bg-[#00d09c] text-black text-[10px] rounded-full">1</span>
-            </button>
-            <button class="text-gray-400 hover:text-white pb-2" onclick="refreshPositions()">Fee & GST Ledger</button>
+      <!-- Bottom Panel: Execution Log & Completed Trades -->
+      <div class="h-48 cs-card border-t border-gray-800 flex flex-col shrink-0">
+        <div class="flex items-center justify-between border-b border-gray-800 px-4 py-2 bg-[#171b26] text-xs font-bold uppercase tracking-wider">
+          <div class="flex space-x-6">
+            <button class="text-[#00d09c] border-b-2 border-[#00d09c] pb-1">Automated Scalp Activity Log</button>
+            <button class="text-gray-400 hover:text-white pb-1" onclick="refreshStatus()">Trade History</button>
           </div>
-          <div class="flex items-center space-x-3 text-xs">
-            <span class="text-gray-400">Total Net P&L: <strong id="totalPnlHeader" class="text-white font-mono">₹0.00</strong></span>
-            <button onclick="refreshPositions()" class="px-2 py-1 rounded bg-[#1e2330] hover:bg-gray-700 text-gray-300">🔄 Refresh</button>
-          </div>
+          <span class="text-[11px] text-gray-400 font-mono">Auto TP & SL Engine Active</span>
         </div>
 
-        <div class="flex-1 overflow-auto p-3">
-          <table class="w-full text-left text-xs font-mono">
-            <thead>
-              <tr class="text-gray-400 border-b border-gray-800 pb-2">
-                <th class="py-2">Contract</th>
-                <th>Type / Lev</th>
-                <th>Margin (₹)</th>
-                <th>Total Exposure (₹)</th>
-                <th>Entry Price</th>
-                <th>Mark Price</th>
-                <th>Target (TP)</th>
-                <th>Stop Loss (SL)</th>
-                <th>Fee Paid (₹)</th>
-                <th>Net P&L (₹)</th>
-                <th class="text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody id="positionsTableBody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
+        <div class="flex-1 overflow-auto p-3 text-xs font-mono space-y-1" id="logContainer">
+          <div class="text-gray-500">Connecting to automated execution feed...</div>
         </div>
-
       </div>
 
     </div>
 
-    <!-- Right 30%: CoinSwitch Pro Futures Scalper Desk -->
-    <div class="w-[380px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-4 space-y-4">
+    <!-- Right 30%: Clean Scalper Card & Controls -->
+    <div class="w-[360px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-5 space-y-4">
       
-      <!-- Order Side Selector (Long / Short) -->
-      <div class="grid grid-cols-2 gap-2 p-1 bg-[#1a1f2c] rounded-lg border border-gray-800">
-        <button id="btnSideLong" onclick="setSide('LONG')" class="py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#00d09c] text-black shadow transition">
-          🟢 Open Long (Buy)
+      <!-- Current Active Position Card -->
+      <div id="activePositionCard" class="p-4 rounded-xl bg-[#1a1f2c] border border-gray-700 shadow-xl space-y-3">
+        
+        <div class="flex justify-between items-center border-b border-gray-800 pb-2.5">
+          <span class="px-2.5 py-0.5 rounded font-extrabold text-xs bg-emerald-950 text-[#00d09c] border border-emerald-700/60" id="cardSideBadge">
+            🟢 LONG 25x ACTIVE
+          </span>
+          <span class="text-xs text-gray-400 font-mono">₹5,000 Margin</span>
+        </div>
+
+        <!-- Main Live P&L Display -->
+        <div class="text-center py-2 bg-[#131722] rounded-lg border border-gray-800">
+          <div class="text-xs text-gray-400 uppercase tracking-wider font-semibold">Live Net Unrealized P&L</div>
+          <div id="cardNetPnl" class="text-2xl font-black font-mono text-[#00d09c] mt-0.5">+₹54.20 (+1.08%)</div>
+          <div class="text-[10px] text-gray-400 mt-0.5">₹73.75 Fee Already Deducted</div>
+        </div>
+
+        <!-- Exact Target and Stop Levels Grid -->
+        <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+          <div class="p-2.5 rounded-lg bg-emerald-950/25 border border-emerald-900/50 space-y-0.5">
+            <div class="text-[#00d09c] font-bold text-[11px]">🎯 TAKE PROFIT</div>
+            <div id="cardTpPrice" class="text-sm font-bold text-white">$77,521.63</div>
+            <div id="cardTpGain" class="text-[10px] text-emerald-400 font-bold">+₹500.83 Net (+10.0%)</div>
+            <div class="text-[9px] text-gray-400">Trigger: Closes automatically</div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-red-950/25 border border-red-900/50 space-y-0.5">
+            <div class="text-[#f6465d] font-bold text-[11px]">🛡️ STOP LOSS</div>
+            <div id="cardSlPrice" class="text-sm font-bold text-white">$76,961.63</div>
+            <div id="cardSlLoss" class="text-[10px] text-red-400 font-bold">-₹406.83 Net (-8.1%)</div>
+            <div class="text-[9px] text-gray-400">Trigger: Closes automatically</div>
+          </div>
+        </div>
+
+        <!-- Position Details -->
+        <div class="text-[11px] font-mono text-gray-400 space-y-1 bg-[#131722] p-2.5 rounded-lg border border-gray-800">
+          <div class="flex justify-between">
+            <span>Entry Fill Price:</span>
+            <strong id="cardEntryPrice" class="text-white">$77,121.63</strong>
+          </div>
+          <div class="flex justify-between">
+            <span>Current Mark Price:</span>
+            <strong id="cardMarkPrice" class="text-[#00d09c]">$77,156.00</strong>
+          </div>
+          <div class="flex justify-between">
+            <span>Total Exposure:</span>
+            <span class="text-gray-300">₹1,25,000.00 (25x)</span>
+          </div>
+        </div>
+
+        <!-- Manual Close / Flatten Button -->
+        <button onclick="flattenPosition()" class="w-full py-2.5 bg-red-900/60 hover:bg-red-800 text-red-200 border border-red-700/60 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 cursor-pointer">
+          <span>⚡ Close / Flatten Position Now</span>
         </button>
-        <button id="btnSideShort" onclick="setSide('SHORT')" class="py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition">
-          🔴 Open Short (Sell)
-        </button>
+
       </div>
 
-      <!-- Leverage Selection -->
-      <div class="space-y-1.5">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-gray-400">Select Leverage:</span>
-          <span id="lblLeverage" class="text-[#00d09c] font-mono font-bold text-sm">25x</span>
+      <!-- Auto-Scalp Bot Status Info -->
+      <div class="p-3.5 rounded-xl bg-[#1a1f2c] border border-gray-700 text-xs space-y-2">
+        <div class="flex items-center justify-between font-bold text-white">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
+            <span>Continuous Auto-Trading Loop</span>
+          </span>
+          <span id="lblAutoLoopStatus" class="text-[#00d09c] font-mono">ACTIVE</span>
         </div>
-        <div class="grid grid-cols-5 gap-1.5">
-          <button onclick="setLeverage(10)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="10">10x</button>
-          <button onclick="setLeverage(25)" class="lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono" data-lev="25">25x</button>
-          <button onclick="setLeverage(50)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="50">50x</button>
-          <button onclick="setLeverage(75)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="75">75x</button>
-          <button onclick="setLeverage(100)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="100">100x</button>
-        </div>
-        <input type="range" id="sliderLeverage" min="1" max="100" value="25" class="w-full accent-[#00d09c] cursor-pointer" oninput="setLeverage(this.value)">
+        <p class="text-gray-400 text-[11px] leading-relaxed">
+          When this position hits the target or stop loss, it will <strong>automatically close, book the profit/loss into your wallet</strong>, and immediately analyze the next candle to take another scalp automatically!
+        </p>
       </div>
-
-      <!-- Margin Input in INR (₹) -->
-      <div class="space-y-2">
-        <div class="flex justify-between items-center text-xs">
-          <label class="text-gray-400">Investment Margin (INR ₹)</label>
-          <span class="text-gray-400">Avail: <strong id="lblMaxMargin" class="text-[#00d09c] font-mono">₹4,926.25</strong></span>
-        </div>
-        <div class="relative">
-          <span class="absolute left-3 top-2.5 text-gray-400 font-bold">₹</span>
-          <input type="number" id="inpMargin" value="5000" step="500" class="w-full cs-input pl-8 pr-3 py-2 rounded-lg font-mono text-white font-bold text-sm" oninput="recalcScalper()">
-        </div>
-
-        <!-- Quick Chips -->
-        <div class="grid grid-cols-4 gap-1.5 text-[11px] font-mono">
-          <button onclick="setMarginPct(0.25)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">25%</button>
-          <button onclick="setMarginPct(0.50)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">50%</button>
-          <button onclick="setMarginPct(0.75)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">75%</button>
-          <button onclick="setMarginPct(1.00)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">100%</button>
-        </div>
-
-        <div class="p-2 rounded bg-[#1a1f2c] border border-gray-800 text-xs flex justify-between">
-          <span class="text-gray-400">Total Position Exposure:</span>
-          <span id="lblExposure" class="text-white font-mono font-bold">₹1,25,000.00</span>
-        </div>
-      </div>
-
-      <!-- Target & Stop Settings -->
-      <div class="p-3 rounded-lg bg-emerald-950/20 border border-emerald-900/40 space-y-2">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-[#00d09c] font-bold">🎯 Scalp Target (TP)</span>
-          <span id="lblEstProfit" class="text-[#00d09c] font-mono font-bold">+₹500.83 Net (+10.0%)</span>
-        </div>
-        <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
-          <button onclick="setTargetPoints(200)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="200">+200 pts</button>
-          <button onclick="setTargetPoints(400)" class="tp-btn py-1 rounded bg-[#00d09c] text-black font-bold" data-pts="400">+400 pts</button>
-          <button onclick="setTargetPoints(800)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="800">+800 pts</button>
-        </div>
-        <div class="flex justify-between items-center text-[11px] text-gray-400">
-          <span>Target Price: <strong id="lblTpPrice" class="text-white font-mono">$77,521.63</strong></span>
-          <span id="lblPointsTarget" class="text-emerald-400 font-mono font-semibold">+400 pts</span>
-        </div>
-      </div>
-
-      <div class="p-3 rounded-lg bg-red-950/20 border border-red-900/40 space-y-2">
-        <div class="flex justify-between items-center text-xs">
-          <span class="text-[#f6465d] font-bold">🛡️ Scalp Stop Loss (SL)</span>
-          <span id="lblEstLoss" class="text-[#f6465d] font-mono font-bold">-₹406.83 Net (-8.1%)</span>
-        </div>
-        <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
-          <button onclick="setStopPoints(100)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="100">-100 pts</button>
-          <button onclick="setStopPoints(160)" class="sl-btn py-1 rounded bg-[#f6465d] text-white font-bold" data-pts="160">-160 pts</button>
-          <button onclick="setStopPoints(300)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="300">-300 pts</button>
-        </div>
-        <div class="flex justify-between items-center text-[11px] text-gray-400">
-          <span>Stop Price: <strong id="lblSlPrice" class="text-white font-mono">$76,961.63</strong></span>
-          <span id="lblPointsStop" class="text-[#f6465d] font-mono font-semibold">-160 pts</span>
-        </div>
-      </div>
-
-      <!-- Fees & Liquidation Summary -->
-      <div class="text-xs text-gray-400 space-y-1 bg-[#1a1f2c] p-2.5 rounded-lg border border-gray-800 font-mono">
-        <div class="flex justify-between">
-          <span>Entry Fee (0.05% + GST):</span>
-          <span class="text-amber-400 font-bold">₹73.75 (Deducted)</span>
-        </div>
-        <div class="flex justify-between">
-          <span>Roundtrip Charges:</span>
-          <span id="lblEstFee" class="text-white font-bold">₹147.50</span>
-        </div>
-        <div class="flex justify-between">
-          <span>Liquidation Price:</span>
-          <span id="lblLiqPrice" class="text-amber-400 font-bold">$74,345.25</span>
-        </div>
-      </div>
-
-      <!-- Action Button -->
-      <button id="btnExecuteOrder" onclick="executeScalpOrder()" class="w-full py-3.5 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer">
-        <span id="lblBtnAction">🟢 OPEN LONG 25x (BTC)</span>
-        <span id="lblBtnSub" class="text-[10px] font-semibold text-gray-800">Target: +400 pts • SL: -160 pts</span>
-      </button>
 
     </div>
 
   </div>
 
   <script>
-    let currentSide = "LONG";
-    let currentLeverage = 25;
-    let targetPts = 400;
-    let stopPts = 160;
-    let liveBtcPrice = 77156.00;
-    let availableCashInr = 4926.25;
+    let currentLivePrice = 77156.00;
     const USD_INR_RATE = 85.0;
+    let autoScalpActive = true;
 
-    // TradingView Widget Setup
+    // 1. Initialize TradingView 1m Scalp Chart
     function initTradingView() {
       new TradingView.widget({
         "container_id": "chart_container",
@@ -340,373 +194,159 @@
         "hide_side_toolbar": false,
         "allow_symbol_change": true,
         "studies": [
-          "RSI@tv-basicstudies",
-          "MASimple@tv-basicstudies"
+          "MASimple@tv-basicstudies",
+          "RSI@tv-basicstudies"
         ]
       });
     }
 
-    // Connect Binance WebSocket for Real-Time Price
+    // 2. Connect Binance WebSocket for Instant Real-Time Ticks
     function connectBinanceWs() {
       try {
         const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
           if (data && data.c) {
-            updateLivePrice(parseFloat(data.c));
+            updateTick(parseFloat(data.c));
           }
         };
         ws.onerror = () => setTimeout(connectBinanceWs, 5000);
       } catch (e) {
-        setInterval(async () => {
-          try {
-            const res = await fetch('/api/status');
-            const data = await res.json();
-            if (data.price_usd) updateLivePrice(data.price_usd);
-          } catch(err) {}
-        }, 1000);
+        setInterval(fetchStatus, 1000);
       }
     }
 
-    function updateLivePrice(price) {
-      liveBtcPrice = price;
+    function updateTick(price) {
+      currentLivePrice = price;
       document.getElementById('livePriceHeader').innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-      document.getElementById('spotPriceHeader').innerText = `$${(price - 50.0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
       document.getElementById('livePriceInr').innerText = `(₹${Math.round(price * USD_INR_RATE).toLocaleString('en-IN')})`;
-
-      recalcScalper();
-      updateOpenPositionsPnl();
+      document.getElementById('cardMarkPrice').innerText = `$${price.toFixed(2)}`;
     }
 
-    // Dragging Logic for On-Chart Horizontal Lines
-    let activeDrag = null;
-    let startY = 0;
-    let currentTpPrice = 77521.63;
-    let currentSlPrice = 76961.63;
-    const entryPrice = 77121.63;
-
-    function startDrag(e, type) {
-      e.preventDefault();
-      activeDrag = type;
-      startY = e.clientY;
-      window.addEventListener('mousemove', onDragMove);
-      window.addEventListener('mouseup', onDragEnd);
-    }
-
-    function onDragMove(e) {
-      if (!activeDrag) return;
-      const deltaY = startY - e.clientY;
-      startY = e.clientY;
-
-      // 1 pixel = ~5 USD move
-      const deltaPrice = deltaY * 4.0;
-
-      if (activeDrag === 'tp') {
-        currentTpPrice = Math.max(entryPrice + 50, Math.round(currentTpPrice + deltaPrice));
-        document.getElementById('inpOverlayTp').value = currentTpPrice.toFixed(2);
-        document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
-        // Move line visually
-        const line = document.getElementById('lineTp');
-        const currentTop = parseFloat(line.style.top) || 25;
-        line.style.top = `${Math.max(5, Math.min(45, currentTop - (deltaY * 0.15)))}%`;
-      } else if (activeDrag === 'sl') {
-        currentSlPrice = Math.min(entryPrice - 50, Math.round(currentSlPrice + deltaPrice));
-        document.getElementById('inpOverlaySl').value = currentSlPrice.toFixed(2);
-        document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
-        const line = document.getElementById('lineSl');
-        const currentTop = parseFloat(line.style.top) || 80;
-        line.style.top = `${Math.max(60, Math.min(95, currentTop - (deltaY * 0.15)))}%`;
-      }
-    }
-
-    function onDragEnd() {
-      if (!activeDrag) return;
-      activeDrag = null;
-      window.removeEventListener('mousemove', onDragMove);
-      window.removeEventListener('mouseup', onDragEnd);
-      saveBracketChanges();
-    }
-
-    function adjustOverlayLevel(type, pts) {
-      if (type === 'tp') {
-        currentTpPrice = Math.round(currentTpPrice + pts);
-        document.getElementById('inpOverlayTp').value = currentTpPrice.toFixed(2);
-        document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
-      } else {
-        currentSlPrice = Math.round(currentSlPrice + pts);
-        document.getElementById('inpOverlaySl').value = currentSlPrice.toFixed(2);
-        document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
-      }
-      saveBracketChanges();
-    }
-
-    function syncOverlayInputs() {
-      currentTpPrice = parseFloat(document.getElementById('inpOverlayTp').value) || currentTpPrice;
-      currentSlPrice = parseFloat(document.getElementById('inpOverlaySl').value) || currentSlPrice;
-      document.getElementById('lblOverlayTpVal').innerText = currentTpPrice.toFixed(2);
-      document.getElementById('lblOverlaySlVal').innerText = currentSlPrice.toFixed(2);
-      saveBracketChanges();
-    }
-
-    async function saveBracketChanges() {
-      try {
-        const resp = await fetch('/api/update_bracket', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            id: "SCALP-1",
-            tp_price: currentTpPrice,
-            sl_price: currentSlPrice
-          })
-        });
-        const res = await resp.json();
-        if (res.status === 'ok') {
-          refreshPositions();
-        }
-      } catch (err) {
-        console.error("Failed to update bracket:", err);
-      }
-    }
-
-    // Scalper UI Controls
-    function setSide(side) {
-      currentSide = side;
-      const btnLong = document.getElementById('btnSideLong');
-      const btnShort = document.getElementById('btnSideShort');
-      const btnExec = document.getElementById('btnExecuteOrder');
-
-      if (side === "LONG") {
-        btnLong.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#00d09c] text-black shadow transition";
-        btnShort.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition";
-        btnExec.className = "w-full py-3.5 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer";
-      } else {
-        btnShort.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#f6465d] text-white shadow transition";
-        btnLong.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition";
-        btnExec.className = "w-full py-3.5 bg-[#f6465d] hover:bg-[#d63d50] text-white font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer";
-      }
-      recalcScalper();
-    }
-
-    function setLeverage(lev) {
-      currentLeverage = parseInt(lev);
-      document.getElementById('lblLeverage').innerText = `${currentLeverage}x`;
-      document.getElementById('sliderLeverage').value = currentLeverage;
-      document.querySelectorAll('.lev-btn').forEach(btn => {
-        if (parseInt(btn.getAttribute('data-lev')) === currentLeverage) {
-          btn.className = "lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono";
-        } else {
-          btn.className = "lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold";
-        }
-      });
-      recalcScalper();
-    }
-
-    function setMarginPct(pct) {
-      const margin = Math.round(availableCashInr * pct);
-      document.getElementById('inpMargin').value = margin;
-      recalcScalper();
-    }
-
-    function setTargetPoints(pts) {
-      targetPts = pts;
-      document.querySelectorAll('.tp-btn').forEach(btn => {
-        if (parseInt(btn.getAttribute('data-pts')) === pts) {
-          btn.className = "tp-btn py-1 rounded bg-[#00d09c] text-black font-bold";
-        } else {
-          btn.className = "tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300";
-        }
-      });
-      recalcScalper();
-    }
-
-    function setStopPoints(pts) {
-      stopPts = pts;
-      document.querySelectorAll('.sl-btn').forEach(btn => {
-        if (parseInt(btn.getAttribute('data-pts')) === pts) {
-          btn.className = "sl-btn py-1 rounded bg-[#f6465d] text-white font-bold";
-        } else {
-          btn.className = "sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300";
-        }
-      });
-      recalcScalper();
-    }
-
-    function recalcScalper() {
-      const margin = parseFloat(document.getElementById('inpMargin').value) || 0;
-      const exposure = margin * currentLeverage;
-      document.getElementById('lblExposure').innerText = `₹${exposure.toLocaleString('en-IN', {minimumFractionDigits: 2})}`;
-
-      const tpPrice = currentSide === "LONG" ? (liveBtcPrice + targetPts) : (liveBtcPrice - targetPts);
-      const slPrice = currentSide === "LONG" ? (liveBtcPrice - stopPts) : (liveBtcPrice + stopPts);
-      const liqPrice = currentSide === "LONG" 
-        ? liveBtcPrice * (1 - (1.0 / currentLeverage) * 0.90)
-        : liveBtcPrice * (1 + (1.0 / currentLeverage) * 0.90);
-
-      document.getElementById('lblTpPrice').innerText = `$${tpPrice.toFixed(2)}`;
-      document.getElementById('lblSlPrice').innerText = `$${slPrice.toFixed(2)}`;
-      document.getElementById('lblLiqPrice').innerText = `$${liqPrice.toFixed(2)}`;
-      document.getElementById('lblPointsTarget').innerText = `+${targetPts} pts`;
-      document.getElementById('lblPointsStop').innerText = `-${stopPts} pts`;
-
-      const roundtripFee = exposure * 0.0005 * 2 * 1.18;
-      const estProfitInr = (targetPts / liveBtcPrice) * exposure - roundtripFee;
-      const estLossInr = (stopPts / liveBtcPrice) * exposure + roundtripFee;
-
-      const roiProfit = margin > 0 ? (estProfitInr / margin) * 100 : 0;
-      const roiLoss = margin > 0 ? (estLossInr / margin) * 100 : 0;
-
-      document.getElementById('lblEstProfit').innerText = `+₹${Math.round(estProfitInr).toLocaleString('en-IN')} Net (+${roiProfit.toFixed(1)}%)`;
-      document.getElementById('lblEstLoss').innerText = `-₹${Math.round(estLossInr).toLocaleString('en-IN')} Net (-${roiLoss.toFixed(1)}%)`;
-      document.getElementById('lblEstFee').innerText = `₹${roundtripFee.toFixed(2)}`;
-
-      document.getElementById('lblBtnAction').innerText = `${currentSide === "LONG" ? "🟢 OPEN LONG" : "🔴 OPEN SHORT"} ${currentLeverage}x (BTC)`;
-      document.getElementById('lblBtnSub').innerText = `Target: +${targetPts} pts • SL: -${stopPts} pts`;
-    }
-
-    async function executeScalpOrder() {
-      const margin = parseFloat(document.getElementById('inpMargin').value);
-      if (!margin || margin <= 0) return alert("Please enter investment margin.");
-
-      const btn = document.getElementById('btnExecuteOrder');
-      btn.disabled = true;
-
-      try {
-        const resp = await fetch('/api/order', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            symbol: "BTC/USDT",
-            side: currentSide,
-            margin_inr: margin,
-            leverage: currentLeverage,
-            entry_price: liveBtcPrice,
-            points_target: targetPts,
-            points_stop: stopPts
-          })
-        });
-
-        const res = await resp.json();
-        if (res.status === 'ok') {
-          alert(`⚡ Position Opened! ₹${res.fee_deducted_inr} exchange fee deducted from cash.`);
-          refreshPositions();
-        } else {
-          alert("Order Error: " + res.message);
-        }
-      } catch (err) {
-        alert("Failed to place order: " + err);
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
-    let activePositionsList = [];
-
-    async function refreshPositions() {
+    // 3. Regular Status Poll (Updates Position, P&L, Auto Triggers, and Logs)
+    async function fetchStatus() {
       try {
         const resp = await fetch('/api/status');
         const data = await resp.json();
 
-        availableCashInr = data.cash_inr;
-        document.getElementById('walletCashInr').innerText = `₹${availableCashInr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        document.getElementById('lblMaxMargin').innerText = `₹${availableCashInr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        if (data.price_usd) updateTick(data.price_usd);
 
-        activePositionsList = data.positions || [];
-        document.getElementById('posCountBadge').innerText = activePositionsList.length;
+        // Wallet
+        document.getElementById('walletCashInr').innerText = `₹${data.cash_inr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-        renderPositionsTable();
+        // Auto Toggle Status
+        autoScalpActive = data.auto_scalp_enabled;
+        const btnAuto = document.getElementById('btnAutoToggle');
+        const dotAuto = document.getElementById('autoBotDot');
+        const lblAuto = document.getElementById('lblAutoLoopStatus');
+        if (autoScalpActive) {
+          btnAuto.className = "px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-[#00d09c] text-black";
+          btnAuto.innerText = "ON";
+          dotAuto.className = "w-2 h-2 rounded-full bg-[#00d09c] animate-pulse";
+          lblAuto.innerText = "ACTIVE";
+          lblAuto.className = "text-[#00d09c] font-mono";
+        } else {
+          btnAuto.className = "px-2.5 py-0.5 rounded text-xs font-extrabold uppercase transition bg-gray-700 text-gray-300";
+          btnAuto.innerText = "OFF";
+          dotAuto.className = "w-2 h-2 rounded-full bg-gray-500";
+          lblAuto.innerText = "PAUSED";
+          lblAuto.className = "text-gray-400 font-mono";
+        }
+
+        // Active Position UI
+        const pos = (data.positions && data.positions.length > 0) ? data.positions[0] : null;
+        renderPositionCard(pos);
+
+        // Logs
+        renderLogs(data.logs || []);
+
       } catch (err) {
-        console.error("Failed to refresh positions:", err);
+        console.error("Status error:", err);
       }
     }
 
-    function renderPositionsTable() {
-      const tbody = document.getElementById('positionsTableBody');
-      if (activePositionsList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No active scalp positions.</td></tr>';
-        document.getElementById('totalPnlHeader').innerText = "₹0.00";
-        document.getElementById('chartOverlay').style.display = 'none';
+    function renderPositionCard(p) {
+      const card = document.getElementById('activePositionCard');
+      const overlay = document.getElementById('chartOverlay');
+
+      if (!p) {
+        card.innerHTML = `
+          <div class="text-center py-8 space-y-2">
+            <div class="text-3xl">🤖</div>
+            <div class="text-white font-bold text-sm">Auto-Scalp Bot Scanning...</div>
+            <div class="text-xs text-gray-400">Position closed. Next 25X scalp entry will be taken automatically.</div>
+          </div>
+        `;
+        overlay.style.display = 'none';
         return;
       }
 
-      document.getElementById('chartOverlay').style.display = 'flex';
-      let totalPnl = 0;
-      let html = '';
+      overlay.style.display = 'flex';
 
-      for (const p of activePositionsList) {
-        const sideColor = p.side === "LONG" ? "text-[#00d09c]" : "text-[#f6465d]";
-        const badgeBg = p.side === "LONG" ? "bg-emerald-950/80 border-emerald-700/60" : "bg-red-950/80 border-red-700/60";
-        
-        const entry = p.entry_price;
-        const mark = liveBtcPrice;
-        const pctMove = p.side === "LONG" ? ((mark - entry) / entry) : ((entry - mark) / entry);
-        const grossPnlInr = pctMove * p.exposure_inr;
-        const netPnlInr = grossPnlInr - (p.entry_fee_inr || 73.75);
-        const roi = (netPnlInr / p.margin_inr) * 100;
-        totalPnl += netPnlInr;
+      // Update overlay texts
+      document.getElementById('overlayTpText').innerText = `$${p.tp_price.toFixed(2)}`;
+      document.getElementById('overlayEntryText').innerText = `$${p.entry_price.toFixed(2)}`;
+      document.getElementById('overlaySlText').innerText = `$${p.sl_price.toFixed(2)}`;
 
-        const pnlColor = netPnlInr >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
-        const pnlSign = netPnlInr >= 0 ? "+" : "";
+      // Live Net PnL Calculation
+      const entry = p.entry_price;
+      const mark = currentLivePrice;
+      const pctMove = p.side === "LONG" ? ((mark - entry) / entry) : ((entry - mark) / entry);
+      const grossPnl = pctMove * p.exposure_inr;
+      const netPnl = grossPnl - (p.entry_fee_inr || 73.75);
+      const roi = (netPnl / p.margin_inr) * 100;
 
-        html += `
-          <tr class="border-b border-gray-800/60 hover:bg-[#1a1f2c]">
-            <td class="py-2.5 font-bold text-white">${p.symbol} Perp</td>
-            <td><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${badgeBg} ${sideColor}">${p.side} ${p.leverage}x</span></td>
-            <td class="text-white font-semibold">₹${p.margin_inr.toLocaleString('en-IN')}</td>
-            <td class="text-gray-300">₹${p.exposure_inr.toLocaleString('en-IN')}</td>
-            <td class="text-gray-200">$${p.entry_price.toFixed(2)}</td>
-            <td class="text-white font-bold">$${mark.toFixed(2)}</td>
-            <td class="text-[#00d09c] font-bold">$${p.tp_price.toFixed(2)}</td>
-            <td class="text-[#f6465d] font-bold">$${p.sl_price.toFixed(2)}</td>
-            <td class="text-amber-400 font-semibold">₹${(p.entry_fee_inr || 73.75).toFixed(2)}</td>
-            <td class="${pnlColor} font-bold text-sm">${pnlSign}₹${netPnlInr.toFixed(2)} (${pnlSign}${roi.toFixed(1)}%)</td>
-            <td class="text-right">
-              <button onclick="flattenPosition('${p.id}')" class="px-3 py-1 bg-red-900/40 hover:bg-red-800 text-red-200 rounded border border-red-700/60 transition font-bold">
-                ⚡ Flatten
-              </button>
-            </td>
-          </tr>
-        `;
-      }
-      tbody.innerHTML = html;
+      const pnlColor = netPnl >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
+      const pnlSign = netPnl >= 0 ? "+" : "";
 
-      const totalHeader = document.getElementById('totalPnlHeader');
-      totalHeader.innerText = `${totalPnl >= 0 ? "+" : ""}₹${totalPnl.toFixed(2)}`;
-      totalHeader.className = totalPnl >= 0 ? "text-[#00d09c] font-mono font-bold" : "text-[#f6465d] font-mono font-bold";
+      document.getElementById('cardNetPnl').innerText = `${pnlSign}₹${netPnl.toFixed(2)} (${pnlSign}${roi.toFixed(2)}%)`;
+      document.getElementById('cardNetPnl').className = `text-2xl font-black font-mono ${pnlColor} mt-0.5`;
+
+      document.getElementById('cardTpPrice').innerText = `$${p.tp_price.toFixed(2)}`;
+      document.getElementById('cardSlPrice').innerText = `$${p.sl_price.toFixed(2)}`;
+      document.getElementById('cardEntryPrice').innerText = `$${p.entry_price.toFixed(2)}`;
+      document.getElementById('cardMarkPrice').innerText = `$${mark.toFixed(2)}`;
+      document.getElementById('cardSideBadge').innerText = `🟢 ${p.side} ${p.leverage}x ACTIVE`;
     }
 
-    function updateOpenPositionsPnl() {
-      if (activePositionsList.length > 0) renderPositionsTable();
+    function renderLogs(logs) {
+      const container = document.getElementById('logContainer');
+      if (logs.length === 0) return;
+
+      container.innerHTML = logs.map(l => {
+        const isTp = l.includes("TARGET HIT");
+        const isSl = l.includes("STOP LOSS");
+        const isEntry = l.includes("Auto-Scalp Bot: Entered");
+        const color = isTp ? "text-[#00d09c] font-bold" : isSl ? "text-[#f6465d] font-bold" : isEntry ? "text-blue-300" : "text-gray-300";
+        return `<div class="${color}">${l}</div>`;
+      }).join('');
     }
 
-    async function flattenPosition(posId) {
-      if (!confirm("Close and flatten this scalp position? Remaining exit fee will be settled.")) return;
-      try {
-        const resp = await fetch('/api/flatten', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ id: posId })
-        });
-        const res = await resp.json();
-        if (res.status === 'ok') {
-          alert(`⚡ Position Closed at $${res.exit_price.toFixed(2)}!\nNet Realized P&L: ₹${res.realized_pnl_inr.toFixed(2)}\nAvailable Wallet Margin: ₹${res.new_cash_inr.toLocaleString('en-IN')}`);
-          refreshPositions();
-        }
-      } catch (err) {
-        alert("Error closing position: " + err);
-      }
+    // 4. Toggle Auto-Trading Loop
+    async function toggleAutoScalp() {
+      await fetch('/api/toggle_auto', {method: 'POST'});
+      fetchStatus();
     }
 
+    // 5. Flatten / Manual Close
+    async function flattenPosition() {
+      if (!confirm("Close position at current market price?")) return;
+      await fetch('/api/flatten', {method: 'POST'});
+      fetchStatus();
+    }
+
+    // 6. Reset Balance
     async function resetBalance() {
       if (!confirm("Reset Paper Margin to ₹10,000.00 INR?")) return;
       await fetch('/api/reset', {method: 'POST'});
-      refreshPositions();
+      fetchStatus();
     }
 
     window.onload = function() {
       initTradingView();
       connectBinanceWs();
-      refreshPositions();
-      recalcScalper();
+      fetchStatus();
+      setInterval(fetchStatus, 2000); // 2-second background poll
     };
   </script>
 </body>
