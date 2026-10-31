@@ -142,3 +142,17 @@ watch: nobody is there to say yes.
   (Customize > Connectors > tool permissions). Never set an order tool to "Always allow".
 - No options, margin, short selling or leverage unless the config allows it and the user confirms.
 - Broker keys live in environment variables or the Claude Desktop config, never in the chat.
+
+
+## Binary Trading Protocol (Keyword: "binary trading entry")
+
+When the user prompts with the exact keyword `binary trading entry`:
+1. Run the institutional scanner (`binary-trading/scanner.py`) across all 20 Quotex currency pairs.
+2. Filter strictly for high-confluence institutional criteria:
+   - SMC / ICT Liquidity Sweeps, Order Blocks, and Fair Value Gaps.
+   - Traditional strategy alignment (EMA 20/50, RSI exhaustion, Bollinger Bands).
+   - Session danger window check (IST).
+3. Enforce Strict Behavioral Rules:
+   - **RULE 1 - NO FORCED TRADES**: If confluence is below 88% or market is in a dangerous/choppy zone, DO NOT recommend a trade. Explicitly reply: `NO ENTRY RIGHT NOW. MARKET IS CHOPPY / DANGEROUS. WAIT.`
+   - **RULE 2 - EXACTLY ONE TRADE**: Never offer Option 1 and Option 2. Provide strictly the single highest-probability setup.
+   - **RULE 3 - CANDLE 00-SECOND EXECUTION**: Explicitly specify pair, direction (CALL / PUT), 5-minute expiry, and waiting for the current candle to close to enter at `:00` seconds.
