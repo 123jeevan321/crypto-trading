@@ -3,197 +3,258 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CoinSwitch Pro Trading Terminal - Crypto Day Trader</title>
+  <title>CoinSwitch PRO - Crypto Futures & Scalper Terminal (INR ₹)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- TradingView Library -->
+  <!-- TradingView Chart Widget Library -->
   <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
   <style>
     body { background-color: #0b0e14; color: #d1d5db; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     .cs-card { background-color: #131722; border: 1px solid #232733; }
     .cs-input { background-color: #1a1f2c; border: 1px solid #2e3546; color: #fff; }
-    .cs-input:focus { border-color: #10b981; outline: none; }
-    .cs-btn-buy { background-color: #059669; hover: #047857; }
-    .cs-btn-sell { background-color: #dc2626; hover: #b91c1c; }
+    .cs-input:focus { border-color: #00d09c; outline: none; }
+    .price-up { color: #00d09c; }
+    .price-down { color: #f6465d; }
+    .bg-up { background-color: rgba(0, 208, 156, 0.15); }
+    .bg-down { background-color: rgba(246, 70, 93, 0.15); }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
-  <!-- Top Navbar -->
+  <!-- Top CoinSwitch Pro Header -->
   <header class="h-14 border-b border-gray-800 bg-[#131722] px-4 flex items-center justify-between shrink-0">
     <div class="flex items-center space-x-6">
+      
+      <!-- Brand -->
       <div class="flex items-center space-x-2">
-        <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center font-bold text-black text-xl">⚡</div>
-        <span class="text-white font-bold text-lg tracking-wide">CoinSwitch <span class="text-emerald-400 font-semibold text-sm">PRO</span></span>
+        <div class="w-8 h-8 rounded-lg bg-[#00d09c] flex items-center justify-center font-black text-black text-xl shadow-lg shadow-[#00d09c]/20">CS</div>
+        <span class="text-white font-bold text-lg tracking-wide">CoinSwitch <span class="text-[#00d09c] font-black text-xs px-1.5 py-0.5 rounded bg-[#00d09c]/10 border border-[#00d09c]/30">PRO</span></span>
       </div>
+
+      <!-- Mode Selector -->
+      <div class="flex items-center bg-[#1a1f2c] p-0.5 rounded-lg border border-gray-800 text-xs font-semibold">
+        <button class="px-3 py-1 text-gray-400 hover:text-white rounded">Spot</button>
+        <button class="px-3 py-1 bg-[#00d09c] text-black font-bold rounded shadow">Futures (Scalper)</button>
+      </div>
+
+      <!-- Live Symbol Ticker -->
       <div class="flex items-center space-x-3 bg-[#1e2330] px-3 py-1.5 rounded-md border border-gray-700">
-        <select id="symbolSelect" class="bg-transparent text-white font-semibold text-sm focus:outline-none cursor-pointer" onchange="changeSymbol(this.value)">
-          <option value="BTC-USD" selected>BTC/USD (Bitcoin)</option>
-          <option value="ETH-USD">ETH/USD (Ethereum)</option>
-          <option value="SOL-USD">SOL/USD (Solana)</option>
-        </select>
-        <span id="livePrice" class="text-emerald-400 font-mono font-bold text-sm">$77,105.00</span>
-        <span id="priceChange" class="text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">+0.12%</span>
+        <span class="text-white font-bold text-sm">BTC/USDT Perp</span>
+        <span id="livePriceHeader" class="text-[#00d09c] font-mono font-bold text-sm transition-colors">$77,080.00</span>
+        <span id="livePriceInr" class="text-gray-400 font-mono text-xs">(₹65,51,800)</span>
+        <span id="livePriceBadge" class="text-xs px-1.5 py-0.5 rounded bg-emerald-500/10 text-[#00d09c] font-mono font-semibold">+0.24%</span>
       </div>
+
     </div>
 
-    <div class="flex items-center space-x-4">
+    <!-- Wallet / Available Margin (INR ₹) -->
+    <div class="flex items-center space-x-5">
       <div class="text-right">
-        <div class="text-xs text-gray-400">Paper Balance: <span id="cashBalance" class="text-white font-mono font-bold">$1,251.02</span></div>
-        <div class="text-xs text-gray-500">Max Loss: <span class="text-amber-400 font-mono">$50.00</span> / trade</div>
+        <div class="text-[11px] text-gray-400 flex items-center justify-end gap-1">
+          <span>Available Margin:</span>
+          <button onclick="resetBalance()" class="text-[#00d09c] hover:underline text-[10px] ml-1">Reset ₹10k</button>
+        </div>
+        <div id="walletCashInr" class="text-white font-mono font-bold text-base text-[#00d09c]">₹10,000.00</div>
       </div>
-      <span class="px-2.5 py-1 text-xs rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700/50 flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> 24/7 Engine Active
-      </span>
+
+      <div class="h-8 w-px bg-gray-800"></div>
+
+      <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-700/50 text-[#00d09c] text-xs font-mono">
+        <span id="wsStatusDot" class="w-2 h-2 rounded-full bg-[#00d09c] animate-pulse"></span>
+        <span id="wsStatusText">Tick Stream Live</span>
+      </div>
     </div>
   </header>
 
-  <!-- Main Trading Area -->
+  <!-- Main Workspace -->
   <div class="flex-1 flex overflow-hidden">
     
-    <!-- Left: TradingView Chart + Bottom Positions -->
+    <!-- Left 70%: TradingView 1m Scalper Chart + Bottom Positions -->
     <div class="flex-1 flex flex-col min-w-0">
       
-      <!-- Real-Time TradingView Chart -->
+      <!-- Real-Time TradingView Candlestick Chart (1m Scalp View) -->
       <div class="flex-1 relative bg-[#0b0e14]" id="chart_container">
         <!-- TradingView widget loads here -->
       </div>
 
-      <!-- Bottom Panel: Positions & Live Alerts -->
-      <div class="h-56 cs-card border-t border-gray-800 flex flex-col shrink-0">
+      <!-- Bottom Panel: Positions & Open Scalp Orders -->
+      <div class="h-64 cs-card border-t border-gray-800 flex flex-col shrink-0">
+        
         <div class="flex items-center justify-between border-b border-gray-800 px-4 py-2 bg-[#171b26]">
-          <div class="flex space-x-6 text-sm font-medium">
-            <button class="text-emerald-400 border-b-2 border-emerald-400 pb-2">Active Position (<span id="posCount">1</span>)</button>
-            <button class="text-gray-400 hover:text-white pb-2" onclick="refreshAlerts()">System Alerts</button>
+          <div class="flex space-x-6 text-xs font-bold uppercase tracking-wider">
+            <button class="text-[#00d09c] border-b-2 border-[#00d09c] pb-2 flex items-center gap-1.5">
+              <span>Open Scalp Positions</span>
+              <span id="posCountBadge" class="px-1.5 py-0.2 bg-[#00d09c] text-black text-[10px] rounded-full">0</span>
+            </button>
+            <button class="text-gray-400 hover:text-white pb-2" onclick="refreshPositions()">Orders & History</button>
           </div>
-          <button onclick="refreshData()" class="text-xs text-gray-400 hover:text-white flex items-center gap-1">
-            🔄 Refresh
-          </button>
+          <div class="flex items-center space-x-3 text-xs">
+            <span class="text-gray-400">Total Unrealized P&L: <strong id="totalPnlHeader" class="text-white font-mono">₹0.00</strong></span>
+            <button onclick="refreshPositions()" class="px-2 py-1 rounded bg-[#1e2330] hover:bg-gray-700 text-gray-300">🔄 Refresh</button>
+          </div>
         </div>
 
         <div class="flex-1 overflow-auto p-3">
           <table class="w-full text-left text-xs font-mono">
             <thead>
               <tr class="text-gray-400 border-b border-gray-800 pb-2">
-                <th class="py-1">Symbol</th>
-                <th>Side</th>
-                <th>Units (BTC)</th>
+                <th class="py-2">Contract</th>
+                <th>Type / Lev</th>
+                <th>Margin (₹)</th>
+                <th>Total Exposure (₹)</th>
                 <th>Entry Price</th>
                 <th>Mark Price</th>
-                <th>Auto Stop-Loss (SL)</th>
-                <th>Auto Take-Profit (TP)</th>
-                <th>Unrealized P&L</th>
+                <th>Liq. Price</th>
+                <th>Target (TP)</th>
+                <th>Stop Loss (SL)</th>
+                <th>Unrealized P&L (₹)</th>
                 <th class="text-right">Action</th>
               </tr>
             </thead>
             <tbody id="positionsTableBody">
               <tr>
-                <td colspan="9" class="text-center py-6 text-gray-500">Loading open positions...</td>
+                <td colspan="11" class="text-center py-8 text-gray-500">
+                  No active scalp positions. Select Long/Short and leverage on the right to enter.
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+
       </div>
 
     </div>
 
-    <!-- Right: CoinSwitch Style Order & Auto-Bracket Panel -->
-    <div class="w-96 cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-4 space-y-4">
+    <!-- Right 30%: CoinSwitch Pro Futures Scalper Desk -->
+    <div class="w-[390px] cs-card border-l border-gray-800 flex flex-col overflow-y-auto shrink-0 p-4 space-y-4">
       
-      <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-        <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-          <span>⚡ Place Bracket Order</span>
-        </h2>
-        <span class="text-xs bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded border border-blue-700/50">Auto SL & TP</span>
-      </div>
-
-      <!-- Auto Calculate Button -->
-      <button onclick="autoCalculate()" class="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded font-medium text-xs shadow flex items-center justify-center gap-2 transition">
-        <span>⚡ Calculate Optimal SL & TP (2R Strategy)</span>
-      </button>
-
-      <!-- Order Form -->
-      <div class="space-y-3 text-xs">
-        
-        <div>
-          <label class="text-gray-400 block mb-1">Target Asset</label>
-          <input type="text" id="orderSymbol" value="BTC-USD" readonly class="w-full cs-input px-3 py-2 rounded font-mono font-semibold text-gray-300">
-        </div>
-
-        <div>
-          <label class="text-gray-400 block mb-1">Entry Price (USD)</label>
-          <input type="number" step="0.01" id="orderEntry" class="w-full cs-input px-3 py-2 rounded font-mono text-white" placeholder="77110.00" oninput="recalcBracket()">
-        </div>
-
-        <div>
-          <label class="text-gray-400 block mb-1">Position Size (BTC Units)</label>
-          <input type="number" step="0.0001" id="orderQty" class="w-full cs-input px-3 py-2 rounded font-mono text-emerald-400 font-bold" placeholder="0.0486" oninput="recalcBracket()">
-          <span class="text-[11px] text-gray-500 mt-1 block">Cost: $<span id="orderCost">3,748.98</span> (75% Position Cap)</span>
-        </div>
-
-        <!-- Automatic Stop-Loss Section -->
-        <div class="p-2.5 rounded bg-red-950/20 border border-red-900/40 space-y-1">
-          <div class="flex justify-between items-center">
-            <span class="text-red-400 font-semibold">🛡️ Auto Stop-Loss (SL)</span>
-            <span id="slDistance" class="text-red-400 font-mono text-[11px]">-$7.75 max loss</span>
-          </div>
-          <input type="number" step="0.01" id="orderSL" class="w-full cs-input px-3 py-1.5 rounded font-mono text-red-300 text-sm border-red-900/50" placeholder="76980.00" oninput="recalcBracket()">
-          <span class="text-[10px] text-gray-400 block">Anchored below session low & range midpoint</span>
-        </div>
-
-        <!-- Automatic Take-Profit Section -->
-        <div class="p-2.5 rounded bg-emerald-950/20 border border-emerald-900/40 space-y-1">
-          <div class="flex justify-between items-center">
-            <span class="text-emerald-400 font-semibold">🎯 Auto Take-Profit (2R TP)</span>
-            <span id="tpReward" class="text-emerald-400 font-mono text-[11px]">+$15.50 profit</span>
-          </div>
-          <input type="number" step="0.01" id="orderTP" class="w-full cs-input px-3 py-1.5 rounded font-mono text-emerald-300 text-sm border-emerald-900/50" placeholder="77458.23" oninput="recalcBracket()">
-          <span class="text-[10px] text-gray-400 block">Strict 2.0x Reward-to-Risk target</span>
-        </div>
-
-        <!-- Risk Ratio Check Badge -->
-        <div class="flex justify-between items-center py-1 text-xs">
-          <span class="text-gray-400">Risk Manager Verdict:</span>
-          <span id="riskVerdict" class="px-2 py-0.5 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-700">PASS (2.0 R:R)</span>
-        </div>
-
-        <!-- Submit Buy Bracket Order -->
-        <button onclick="placeOrder()" id="btnPlaceOrder" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow-lg text-sm transition flex flex-col items-center justify-center">
-          <span>BUY / LONG BTC (Bracket)</span>
-          <span class="text-[10px] font-normal text-emerald-200">Enforces Stop-Loss & Target Immediately</span>
+      <!-- Order Side Selector (Long / Short) -->
+      <div class="grid grid-cols-2 gap-2 p-1 bg-[#1a1f2c] rounded-lg border border-gray-800">
+        <button id="btnSideLong" onclick="setSide('LONG')" class="py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#00d09c] text-black shadow transition">
+          🟢 Open Long (Buy)
         </button>
-
+        <button id="btnSideShort" onclick="setSide('SHORT')" class="py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition">
+          🔴 Open Short (Sell)
+        </button>
       </div>
 
-      <!-- Quick Session Flat Info -->
-      <div class="mt-auto border-t border-gray-800 pt-3 text-[11px] text-gray-400 space-y-1">
-        <div class="flex justify-between">
-          <span>Session Flat-By:</span>
-          <span class="text-white font-mono">15:55 UTC</span>
+      <!-- Leverage Selection -->
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-gray-400">Select Leverage:</span>
+          <span id="lblLeverage" class="text-[#00d09c] font-mono font-bold text-sm">50x</span>
         </div>
-        <div class="flex justify-between">
-          <span>Trading Mode:</span>
-          <span class="text-emerald-400 font-semibold">Paper Portfolio (Safe)</span>
+        <div class="grid grid-cols-5 gap-1.5">
+          <button onclick="setLeverage(10)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="10">10x</button>
+          <button onclick="setLeverage(25)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="25">25x</button>
+          <button onclick="setLeverage(50)" class="lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono" data-lev="50">50x</button>
+          <button onclick="setLeverage(75)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="75">75x</button>
+          <button onclick="setLeverage(100)" class="lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold" data-lev="100">100x</button>
+        </div>
+        <input type="range" id="sliderLeverage" min="1" max="100" value="50" class="w-full accent-[#00d09c] cursor-pointer" oninput="setLeverage(this.value)">
+      </div>
+
+      <!-- Margin Input in INR (₹) -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <label class="text-gray-400">Investment Margin (INR ₹)</label>
+          <span class="text-gray-400">Max: <strong id="lblMaxMargin" class="text-white font-mono">₹10,000.00</strong></span>
+        </div>
+        <div class="relative">
+          <span class="absolute left-3 top-2.5 text-gray-400 font-bold">₹</span>
+          <input type="number" id="inpMargin" value="5000" step="500" class="w-full cs-input pl-8 pr-3 py-2 rounded-lg font-mono text-white font-bold text-sm" oninput="recalcScalper()">
+        </div>
+
+        <!-- Quick Margin Percentage Chips -->
+        <div class="grid grid-cols-4 gap-1.5 text-[11px] font-mono">
+          <button onclick="setMarginPct(0.25)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">25% (₹2.5k)</button>
+          <button onclick="setMarginPct(0.50)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">50% (₹5k)</button>
+          <button onclick="setMarginPct(0.75)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">75% (₹7.5k)</button>
+          <button onclick="setMarginPct(1.00)" class="py-1 rounded bg-[#1a1f2c] hover:bg-gray-700 text-gray-300">100% (₹10k)</button>
+        </div>
+
+        <div class="p-2 rounded bg-[#1a1f2c] border border-gray-800 text-xs flex justify-between">
+          <span class="text-gray-400">Total Position Exposure:</span>
+          <span id="lblExposure" class="text-white font-mono font-bold">₹2,50,000.00</span>
         </div>
       </div>
+
+      <!-- Scalper Target Points (TP) -->
+      <div class="p-3 rounded-lg bg-emerald-950/20 border border-emerald-900/40 space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-[#00d09c] font-bold">🎯 Scalp Target (Take Profit)</span>
+          <span id="lblEstProfit" class="text-[#00d09c] font-mono font-bold">+₹1,621.00 (+32.4%)</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
+          <button onclick="setTargetPoints(300)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="300">+300 pts</button>
+          <button onclick="setTargetPoints(500)" class="tp-btn py-1 rounded bg-[#00d09c] text-black font-bold" data-pts="500">+500 pts</button>
+          <button onclick="setTargetPoints(1000)" class="tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300" data-pts="1000">+1000 pts</button>
+        </div>
+        <div class="flex justify-between items-center text-[11px] text-gray-400">
+          <span>Target Price: <strong id="lblTpPrice" class="text-white font-mono">$77,580.00</strong></span>
+          <span id="lblPointsTarget" class="text-emerald-400 font-mono font-semibold">500 pts</span>
+        </div>
+      </div>
+
+      <!-- Scalper Stop Loss (SL) -->
+      <div class="p-3 rounded-lg bg-red-950/20 border border-red-900/40 space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-[#f6465d] font-bold">🛡️ Scalp Stop Loss (SL)</span>
+          <span id="lblEstLoss" class="text-[#f6465d] font-mono font-bold">-₹810.00 (-16.2%)</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 text-xs font-mono">
+          <button onclick="setStopPoints(150)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="150">-150 pts</button>
+          <button onclick="setStopPoints(250)" class="sl-btn py-1 rounded bg-[#f6465d] text-white font-bold" data-pts="250">-250 pts</button>
+          <button onclick="setStopPoints(500)" class="sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300" data-pts="500">-500 pts</button>
+        </div>
+        <div class="flex justify-between items-center text-[11px] text-gray-400">
+          <span>Stop Price: <strong id="lblSlPrice" class="text-white font-mono">$76,830.00</strong></span>
+          <span id="lblPointsStop" class="text-[#f6465d] font-mono font-semibold">-250 pts</span>
+        </div>
+      </div>
+
+      <!-- Fees & Liquidation Summary -->
+      <div class="text-xs text-gray-400 space-y-1 bg-[#1a1f2c] p-2.5 rounded-lg border border-gray-800 font-mono">
+        <div class="flex justify-between">
+          <span>Est. Exchange Fee:</span>
+          <span id="lblEstFee" class="text-white font-bold">₹125.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Liquidation Price:</span>
+          <span id="lblLiqPrice" class="text-amber-400 font-bold">$75,690.00</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Reward : Risk Ratio:</span>
+          <span class="text-[#00d09c] font-bold">2.00x</span>
+        </div>
+      </div>
+
+      <!-- Big Action Order Placement Button -->
+      <button id="btnExecuteOrder" onclick="executeScalpOrder()" class="w-full py-3.5 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer">
+        <span id="lblBtnAction">🟢 OPEN LONG 50x (BTC)</span>
+        <span id="lblBtnSub" class="text-[10px] font-semibold text-gray-800">Target: +500 pts • SL: -250 pts</span>
+      </button>
 
     </div>
 
   </div>
 
   <script>
-    let currentSymbol = "BTC-USD";
-    let widgetInstance = null;
+    let currentSide = "LONG";
+    let currentLeverage = 50;
+    let targetPts = 500;
+    let stopPts = 250;
+    let liveBtcPrice = 77080.00;
+    let availableCashInr = 10000.00;
+    const USD_INR_RATE = 85.0;
 
-    // Load TradingView Chart
-    function initTradingView(symbol) {
-      const tvSymbol = symbol.startsWith("BTC") ? "BINANCE:BTCUSDT" : symbol.startsWith("ETH") ? "BINANCE:ETHUSDT" : "BINANCE:SOLUSDT";
-      document.getElementById("chart_container").innerHTML = '<div id="tv_chart" class="w-full h-full"></div>';
-      widgetInstance = new TradingView.widget({
-        "container_id": "tv_chart",
+    // 1. Initialize TradingView 1-Minute Scalp Chart
+    function initTradingView() {
+      new TradingView.widget({
+        "container_id": "chart_container",
         "autosize": true,
-        "symbol": tvSymbol,
-        "interval": "5",
-        "timezone": "Etc/UTC",
+        "symbol": "BINANCE:BTCUSDT",
+        "interval": "1", // 1 minute scalping timeframe
+        "timezone": "Asia/Kolkata",
         "theme": "dark",
         "style": "1",
         "locale": "en",
@@ -203,188 +264,326 @@
         "allow_symbol_change": true,
         "studies": [
           "RSI@tv-basicstudies",
-          "MASimple@tv-basicstudies"
+          "MASimple@tv-basicstudies",
+          "Volume@tv-basicstudies"
         ]
       });
     }
 
-    function changeSymbol(sym) {
-      currentSymbol = sym;
-      document.getElementById("orderSymbol").value = sym;
-      initTradingView(sym);
-      autoCalculate();
-    }
-
-    // Auto-calculate optimal SL & 2R TP using Python backend
-    async function autoCalculate() {
+    // 2. Real-Time Dynamic Price Stream (Binance WebSocket for Instant Ticks)
+    function connectBinanceWs() {
       try {
-        const resp = await fetch('/api/calculate', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ symbol: currentSymbol })
-        });
-        const data = await resp.json();
-        if (data.status === 'ok') {
-          document.getElementById('orderEntry').value = data.entry.toFixed(2);
-          document.getElementById('orderQty').value = data.qty.toFixed(4);
-          document.getElementById('orderSL').value = data.stop.toFixed(2);
-          document.getElementById('orderTP').value = data.target.toFixed(2);
-          recalcBracket();
-        }
-      } catch (e) {
-        console.error("AutoCalculate failed:", e);
+        const ws = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
+        ws.onopen = () => {
+          document.getElementById('wsStatusDot').className = "w-2 h-2 rounded-full bg-[#00d09c] animate-pulse";
+          document.getElementById('wsStatusText').innerText = "Live Tick Stream (Binance)";
+        };
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data && data.c) {
+            const newPrice = parseFloat(data.c);
+            updateLivePrice(newPrice);
+          }
+        };
+        ws.onerror = (e) => {
+          console.warn("WebSocket error, falling back to polling", e);
+          fallbackPolling();
+        };
+        ws.onclose = () => {
+          setTimeout(connectBinanceWs, 5000);
+        };
+      } catch (err) {
+        fallbackPolling();
       }
     }
 
-    function recalcBracket() {
-      const entry = parseFloat(document.getElementById('orderEntry').value) || 0;
-      const qty = parseFloat(document.getElementById('orderQty').value) || 0;
-      const sl = parseFloat(document.getElementById('orderSL').value) || 0;
-      const tp = parseFloat(document.getElementById('orderTP').value) || 0;
+    function fallbackPolling() {
+      setInterval(async () => {
+        try {
+          const res = await fetch('/api/status');
+          const data = await res.json();
+          if (data.price_usd) updateLivePrice(data.price_usd);
+        } catch(e) {}
+      }, 1000);
+    }
 
-      const cost = entry * qty;
-      document.getElementById('orderCost').innerText = cost.toFixed(2);
+    function updateLivePrice(price) {
+      const oldPrice = liveBtcPrice;
+      liveBtcPrice = price;
 
-      const riskPerUnit = entry - sl;
-      const rewardPerUnit = tp - entry;
-      const totalRisk = riskPerUnit * qty;
-      const totalReward = rewardPerUnit * qty;
-      const rr = riskPerUnit > 0 ? (rewardPerUnit / riskPerUnit).toFixed(2) : 0;
+      const headerEl = document.getElementById('livePriceHeader');
+      headerEl.innerText = `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+      
+      const inrPrice = price * USD_INR_RATE;
+      document.getElementById('livePriceInr').innerText = `(₹${Math.round(inrPrice).toLocaleString('en-IN')})`;
 
-      document.getElementById('slDistance').innerText = `-$${totalRisk.toFixed(2)} max loss`;
-      document.getElementById('tpReward').innerText = `+$${totalReward.toFixed(2)} profit`;
+      // Dynamic flash
+      if (price > oldPrice) {
+        headerEl.className = "text-[#00d09c] font-mono font-bold text-sm transition-colors";
+      } else if (price < oldPrice) {
+        headerEl.className = "text-[#f6465d] font-mono font-bold text-sm transition-colors";
+      }
 
-      const badge = document.getElementById('riskVerdict');
-      if (rr >= 2.0 && totalRisk <= 50.0) {
-        badge.innerText = `PASS (${rr} R:R)`;
-        badge.className = "px-2 py-0.5 rounded font-bold bg-emerald-950 text-emerald-400 border border-emerald-700";
+      recalcScalper();
+      updateOpenPositionsPnl();
+    }
+
+    // 3. Scalper Parameters Control
+    function setSide(side) {
+      currentSide = side;
+      const btnLong = document.getElementById('btnSideLong');
+      const btnShort = document.getElementById('btnSideShort');
+      const btnExec = document.getElementById('btnExecuteOrder');
+
+      if (side === "LONG") {
+        btnLong.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#00d09c] text-black shadow transition";
+        btnShort.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition";
+        btnExec.className = "w-full py-3.5 bg-[#00d09c] hover:bg-[#00b084] text-black font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer";
       } else {
-        badge.innerText = `BLOCK (R:R ${rr} < 2.0)`;
-        badge.className = "px-2 py-0.5 rounded font-bold bg-red-950 text-red-400 border border-red-700";
+        btnShort.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-[#f6465d] text-white shadow transition";
+        btnLong.className = "py-2 rounded font-bold text-xs uppercase tracking-wide bg-transparent text-gray-400 hover:text-white transition";
+        btnExec.className = "w-full py-3.5 bg-[#f6465d] hover:bg-[#d63d50] text-white font-extrabold rounded-lg shadow-lg text-sm transition flex flex-col items-center justify-center cursor-pointer";
       }
+      recalcScalper();
     }
 
-    // Place Order via API
-    async function placeOrder() {
-      const entry = parseFloat(document.getElementById('orderEntry').value);
-      const qty = parseFloat(document.getElementById('orderQty').value);
-      const stop = parseFloat(document.getElementById('orderSL').value);
-      const target = parseFloat(document.getElementById('orderTP').value);
+    function setLeverage(lev) {
+      currentLeverage = parseInt(lev);
+      document.getElementById('lblLeverage').innerText = `${currentLeverage}x`;
+      document.getElementById('sliderLeverage').value = currentLeverage;
 
-      if (!entry || !qty || !stop || !target) {
-        alert("Please complete Entry, Quantity, Stop-Loss, and Target.");
+      document.querySelectorAll('.lev-btn').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-lev')) === currentLeverage) {
+          btn.className = "lev-btn py-1.5 rounded bg-[#00d09c] text-black font-bold text-xs font-mono";
+        } else {
+          btn.className = "lev-btn py-1.5 rounded bg-[#1a1f2c] hover:bg-gray-700 text-xs font-mono text-gray-300 font-semibold";
+        }
+      });
+      recalcScalper();
+    }
+
+    function setMarginPct(pct) {
+      const margin = Math.round(availableCashInr * pct);
+      document.getElementById('inpMargin').value = margin;
+      recalcScalper();
+    }
+
+    function setTargetPoints(pts) {
+      targetPts = pts;
+      document.querySelectorAll('.tp-btn').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-pts')) === pts) {
+          btn.className = "tp-btn py-1 rounded bg-[#00d09c] text-black font-bold";
+        } else {
+          btn.className = "tp-btn py-1 rounded bg-[#1a1f2c] hover:bg-emerald-900/40 text-gray-300";
+        }
+      });
+      recalcScalper();
+    }
+
+    function setStopPoints(pts) {
+      stopPts = pts;
+      document.querySelectorAll('.sl-btn').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-pts')) === pts) {
+          btn.className = "sl-btn py-1 rounded bg-[#f6465d] text-white font-bold";
+        } else {
+          btn.className = "sl-btn py-1 rounded bg-[#1a1f2c] hover:bg-red-900/40 text-gray-300";
+        }
+      });
+      recalcScalper();
+    }
+
+    // 4. Mathematical Calculations for Scalper Bracket
+    function recalcScalper() {
+      const margin = parseFloat(document.getElementById('inpMargin').value) || 0;
+      const exposure = margin * currentLeverage;
+      document.getElementById('lblExposure').innerText = `₹${exposure.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const tpPrice = currentSide === "LONG" ? (liveBtcPrice + targetPts) : (liveBtcPrice - targetPts);
+      const slPrice = currentSide === "LONG" ? (liveBtcPrice - stopPts) : (liveBtcPrice - stopPts);
+      const liqPrice = currentSide === "LONG" 
+        ? liveBtcPrice * (1 - (1.0 / currentLeverage) * 0.90)
+        : liveBtcPrice * (1 + (1.0 / currentLeverage) * 0.90);
+
+      document.getElementById('lblTpPrice').innerText = `$${tpPrice.toFixed(2)}`;
+      document.getElementById('lblSlPrice').innerText = `$${slPrice.toFixed(2)}`;
+      document.getElementById('lblLiqPrice').innerText = `$${liqPrice.toFixed(2)}`;
+      document.getElementById('lblPointsTarget').innerText = `${targetPts} pts`;
+      document.getElementById('lblPointsStop').innerText = `-${stopPts} pts`;
+
+      // Expected Profit & Loss in INR (₹)
+      const estProfitInr = (targetPts / liveBtcPrice) * exposure;
+      const estLossInr = (stopPts / liveBtcPrice) * exposure;
+      const estFeeInr = exposure * 0.0005;
+
+      const roiProfit = margin > 0 ? (estProfitInr / margin) * 100 : 0;
+      const roiLoss = margin > 0 ? (estLossInr / margin) * 100 : 0;
+
+      document.getElementById('lblEstProfit').innerText = `+₹${Math.round(estProfitInr).toLocaleString('en-IN')} (+${roiProfit.toFixed(1)}%)`;
+      document.getElementById('lblEstLoss').innerText = `-₹${Math.round(estLossInr).toLocaleString('en-IN')} (-${roiLoss.toFixed(1)}%)`;
+      document.getElementById('lblEstFee').innerText = `₹${estFeeInr.toFixed(2)}`;
+
+      // Update Button Label
+      document.getElementById('lblBtnAction').innerText = `${currentSide === "LONG" ? "🟢 OPEN LONG" : "🔴 OPEN SHORT"} ${currentLeverage}x (BTC)`;
+      document.getElementById('lblBtnSub').innerText = `Target: +${targetPts} pts • SL: -${stopPts} pts • Fee: ₹${estFeeInr.toFixed(0)}`;
+    }
+
+    // 5. Execute Scalp Order
+    async function executeScalpOrder() {
+      const margin = parseFloat(document.getElementById('inpMargin').value);
+      if (!margin || margin <= 0) {
+        alert("Please enter a valid investment margin.");
+        return;
+      }
+      if (margin > availableCashInr) {
+        alert(`Insufficient margin! Available: ₹${availableCashInr.toLocaleString('en-IN')}`);
         return;
       }
 
-      const btn = document.getElementById('btnPlaceOrder');
+      const btn = document.getElementById('btnExecuteOrder');
       btn.disabled = true;
-      btn.innerText = "Placing Bracket Order...";
 
       try {
         const resp = await fetch('/api/order', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ symbol: currentSymbol, entry, qty, stop, target })
+          body: JSON.stringify({
+            symbol: "BTC/USDT",
+            side: currentSide,
+            margin_inr: margin,
+            leverage: currentLeverage,
+            entry_price: liveBtcPrice,
+            points_target: targetPts,
+            points_stop: stopPts
+          })
         });
+
         const res = await resp.json();
         if (res.status === 'ok') {
-          alert(`Success! Order placed and filled in paper portfolio at $${entry}.\nStop: $${stop} | Target: $${target}`);
-          refreshData();
+          alert(`⚡ ${currentSide} ${currentLeverage}x Scalp Position Opened!\nMargin: ₹${margin.toLocaleString('en-IN')} | Entry: $${liveBtcPrice.toFixed(2)}\nTarget: +${targetPts} pts | Stop Loss: -${stopPts} pts`);
+          refreshPositions();
         } else {
-          alert(`Order Blocked: ${res.message}`);
+          alert("Order Error: " + res.message);
         }
       } catch (err) {
-        alert("Network or server error placing order: " + err);
+        alert("Failed to place order: " + err);
       } finally {
         btn.disabled = false;
-        btn.innerHTML = '<span>BUY / LONG BTC (Bracket)</span><span class="text-[10px] font-normal text-emerald-200">Enforces Stop-Loss & Target Immediately</span>';
       }
     }
 
-    // Flatten Position
-    async function flattenPosition(symbol) {
-      if (!confirm(`Are you sure you want to close and flatten your ${symbol} position now?`)) return;
-      try {
-        const resp = await fetch('/api/flatten', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ symbol })
-        });
-        const res = await resp.json();
-        if (res.status === 'ok') {
-          alert(`Position closed at $${res.price.toFixed(2)}. Realized P&L: $${res.pnl.toFixed(2)}`);
-          refreshData();
-        } else {
-          alert("Error closing position: " + res.message);
-        }
-      } catch (e) {
-        alert("Error: " + e);
-      }
-    }
+    // 6. Refresh Positions & Wallet
+    let activePositionsList = [];
 
-    // Refresh Data
-    async function refreshData() {
+    async function refreshPositions() {
       try {
         const resp = await fetch('/api/status');
         const data = await resp.json();
 
-        // Update Header
-        if (data.price) {
-          document.getElementById('livePrice').innerText = `$${data.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-        if (data.cash !== undefined) {
-          document.getElementById('cashBalance').innerText = `$${data.cash.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
+        availableCashInr = data.cash_inr;
+        document.getElementById('walletCashInr').innerText = `₹${availableCashInr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('lblMaxMargin').innerText = `₹${availableCashInr.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
-        // Render Open Positions
-        const tbody = document.getElementById('positionsTableBody');
-        const positions = data.positions || [];
-        document.getElementById('posCount').innerText = positions.length;
+        activePositionsList = data.positions || [];
+        document.getElementById('posCountBadge').innerText = activePositionsList.length;
 
-        if (positions.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-gray-500">No open positions. Use the right panel to execute a trade.</td></tr>';
-          return;
-        }
-
-        let html = '';
-        for (const p of positions) {
-          const mark = data.price || p.entry;
-          const pnlVal = (mark - p.entry) * p.shares;
-          const pnlPct = ((mark - p.entry) / p.entry) * 100;
-          const pnlColor = pnlVal >= 0 ? "text-emerald-400" : "text-red-400";
-          const pnlSign = pnlVal >= 0 ? "+" : "";
-
-          html += `
-            <tr class="border-b border-gray-800/60 hover:bg-[#1a1f2c]">
-              <td class="py-2.5 font-bold text-white">${p.ticker}</td>
-              <td class="text-emerald-400 font-semibold">BUY</td>
-              <td class="text-gray-200">${p.shares.toFixed(4)}</td>
-              <td class="text-gray-200">$${p.entry.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-              <td class="text-white font-bold">$${mark.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-              <td class="text-red-400">$${(p.stop || data.plan_stop || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-              <td class="text-emerald-400">$${(p.target || data.plan_target || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-              <td class="${pnlColor} font-bold">${pnlSign}$${pnlVal.toFixed(2)} (${pnlSign}${pnlPct.toFixed(2)}%)</td>
-              <td class="text-right">
-                <button onclick="flattenPosition('${p.ticker}')" class="px-2.5 py-1 bg-red-900/40 hover:bg-red-800 text-red-200 rounded border border-red-700/60 transition">
-                  Flatten
-                </button>
-              </td>
-            </tr>
-          `;
-        }
-        tbody.innerHTML = html;
-
+        renderPositionsTable();
       } catch (err) {
-        console.error("Failed to load status:", err);
+        console.error("Failed to refresh positions:", err);
       }
     }
 
-    // Init on page load
+    function renderPositionsTable() {
+      const tbody = document.getElementById('positionsTableBody');
+      if (activePositionsList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-gray-500">No active scalp positions. Select Long/Short and leverage on the right to enter.</td></tr>';
+        document.getElementById('totalPnlHeader').innerText = "₹0.00";
+        document.getElementById('totalPnlHeader').className = "text-white font-mono";
+        return;
+      }
+
+      let totalPnl = 0;
+      let html = '';
+
+      for (const p of activePositionsList) {
+        const sideColor = p.side === "LONG" ? "text-[#00d09c]" : "text-[#f6465d]";
+        const badgeBg = p.side === "LONG" ? "bg-emerald-950/80 border-emerald-700/60" : "bg-red-950/80 border-red-700/60";
+        
+        // Dynamic PnL calculation
+        const entry = p.entry_price;
+        const mark = liveBtcPrice;
+        const pctMove = p.side === "LONG" ? ((mark - entry) / entry) : ((entry - mark) / entry);
+        const pnlInr = pctMove * p.exposure_inr;
+        const roi = (pnlInr / p.margin_inr) * 100;
+        totalPnl += pnlInr;
+
+        const pnlColor = pnlInr >= 0 ? "text-[#00d09c]" : "text-[#f6465d]";
+        const pnlSign = pnlInr >= 0 ? "+" : "";
+
+        html += `
+          <tr class="border-b border-gray-800/60 hover:bg-[#1a1f2c]">
+            <td class="py-2.5 font-bold text-white">${p.symbol} Perp</td>
+            <td><span class="px-2 py-0.5 rounded text-[11px] font-bold border ${badgeBg} ${sideColor}">${p.side} ${p.leverage}x</span></td>
+            <td class="text-white font-semibold">₹${p.margin_inr.toLocaleString('en-IN')}</td>
+            <td class="text-gray-300">₹${p.exposure_inr.toLocaleString('en-IN')}</td>
+            <td class="text-gray-200">$${p.entry_price.toFixed(2)}</td>
+            <td class="text-white font-bold">$${mark.toFixed(2)}</td>
+            <td class="text-amber-400 font-semibold">$${p.liq_price.toFixed(2)}</td>
+            <td class="text-[#00d09c]">$${p.tp_price.toFixed(2)}</td>
+            <td class="text-[#f6465d]">$${p.sl_price.toFixed(2)}</td>
+            <td class="${pnlColor} font-bold text-sm">${pnlSign}₹${pnlInr.toFixed(2)} (${pnlSign}${roi.toFixed(1)}%)</td>
+            <td class="text-right">
+              <button onclick="flattenPosition('${p.id}')" class="px-3 py-1 bg-red-900/40 hover:bg-red-800 text-red-200 rounded border border-red-700/60 transition font-bold">
+                ⚡ Flatten
+              </button>
+            </td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html;
+
+      const totalHeader = document.getElementById('totalPnlHeader');
+      totalHeader.innerText = `${totalPnl >= 0 ? "+" : ""}₹${totalPnl.toFixed(2)}`;
+      totalHeader.className = totalPnl >= 0 ? "text-[#00d09c] font-mono font-bold" : "text-[#f6465d] font-mono font-bold";
+    }
+
+    function updateOpenPositionsPnl() {
+      if (activePositionsList.length > 0) {
+        renderPositionsTable();
+      }
+    }
+
+    // 7. Flatten Position
+    async function flattenPosition(posId) {
+      if (!confirm("Close and flatten this scalp position at market price?")) return;
+      try {
+        const resp = await fetch('/api/flatten', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ id: posId })
+        });
+        const res = await resp.json();
+        if (res.status === 'ok') {
+          alert(`⚡ Position Closed at $${res.exit_price.toFixed(2)}!\nRealized P&L: ₹${res.realized_pnl_inr.toFixed(2)}\nNew Available Margin: ₹${res.new_cash_inr.toLocaleString('en-IN')}`);
+          refreshPositions();
+        }
+      } catch (err) {
+        alert("Error closing position: " + err);
+      }
+    }
+
+    // 8. Reset Balance
+    async function resetBalance() {
+      if (!confirm("Reset Paper Margin Balance to ₹10,000.00 INR?")) return;
+      await fetch('/api/reset', {method: 'POST'});
+      refreshPositions();
+    }
+
+    // Page Load
     window.onload = function() {
-      initTradingView(currentSymbol);
-      refreshData();
-      autoCalculate();
-      setInterval(refreshData, 3000); // Polling every 3s
+      initTradingView();
+      connectBinanceWs();
+      refreshPositions();
+      recalcScalper();
     };
   </script>
 </body>

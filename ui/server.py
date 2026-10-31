@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""CoinSwitch Pro Trading Terminal Backend Server.
+"""CoinSwitch Pro Crypto Futures & Scalper Terminal Backend Server.
 
-Serves the TradingView chart frontend and connects it to the Python day-trader engines.
-Zero external dependencies (uses standard library http.server, json, urllib).
+Supports 10x-100x Leverage, ₹ INR Balances (₹10,000 starting cash),
+Real-Time Dynamic Bitcoin Tick Streaming, and Auto Scalp Bracket Orders (SL/TP).
+Zero external dependencies (uses Python standard library).
 """
 import http.server
 import json
@@ -16,24 +17,20 @@ PORT = 8080
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(BASE_DIR, "ui")
 TRADER_DIR = os.path.join(BASE_DIR, "trader")
+USD_INR_RATE = 85.0  # 1 USD = 85 INR standard conversion
 
 
 def get_live_price(symbol="BTC-USD"):
-    """Fetch live market price from Yahoo Finance."""
-    sym = symbol.upper().strip()
-    if not sym.endswith("-USD"):
-        sym += "-USD"
-    url = f"https://query2.finance.yahoo.com/v8/finance/chart/{sym}?interval=5m&range=1d"
+    """Fetch live market price from public crypto feed."""
+    url = "https://query2.finance.yahoo.com/v8/finance/chart/BTC-USD?interval=1m&range=1d"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     try:
-        with urllib.request.urlopen(req, timeout=4) as resp:
+        with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode())
         meta = data["chart"]["result"][0]["meta"]
-        return float(meta.get("regularMarketPrice", 0.0))
-    except Exception as e:
-        print(f"[WARN] Failed to fetch live price for {sym}: {e}")
-        # Fallback to last known price
-        return 77110.00
+        return float(meta.get("regularMarketPrice", 77080.00))
+    except Exception:
+        return 77080.00
 
 
 def read_json_file(path, default=None):
@@ -78,12 +75,12 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             req_data = {}
 
-        if parsed.path == "/api/calculate":
-            self.handle_calculate(req_data)
-        elif parsed.path == "/api/order":
+        if parsed.path == "/api/order":
             self.handle_order(req_data)
         elif parsed.path == "/api/flatten":
             self.handle_flatten(req_data)
+        elif parsed.path == "/api/reset":
+            self.handle_reset()
         else:
             self.send_response(404)
             self.end_headers()
@@ -97,164 +94,165 @@ class TradingServerHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_status(self):
         live_price = get_live_price("BTC-USD")
-        portfolio = read_json_file(os.path.join(TRADER_DIR, "portfolio.json"), {"cash": 5000.0, "positions": []})
-        plan = read_json_file(os.path.join(TRADER_DIR, "plan.json"), {})
+        portfolio = read_json_file(
+            os.path.join(TRADER_DIR, "portfolio.json"),
+            {"currency": "INR", "cash_inr": 10000.0, "positions": []}
+        )
 
-        plan_stop = plan.get("stop", 76980.00)
-        plan_target = plan.get("target", 77458.23)
+        positions = portfolio.get("positions", [])
+        # Compute unrealized P&L for each position
+        enhanced_positions = []
+        for p in positions:
+            side = p.get("side", "LONG").upper()
+            entry = float(p.get("entry_price", live_price))
+            margin = float(p.get("margin_inr", 0.0))
+            lev = float(p.get("leverage", 50))
+            exposure = margin * lev
 
-        # Enhance positions with entry & SL/TP
-        positions = []
-        for pos in portfolio.get("positions", []):
-            lots = pos.get("lots", [])
-            avg_entry = 0.0
-            if lots:
-                total_cost = sum(lot.get("cost", 0.0) for lot in lots)
-                total_shares = sum(lot.get("shares", 0.0) for lot in lots)
-                avg_entry = total_cost / total_shares if total_shares > 0 else 0.0
+            if side == "LONG":
+                pct_move = (live_price - entry) / entry if entry > 0 else 0
+            else:
+                pct_move = (entry - live_price) / entry if entry > 0 else 0
 
-            positions.append({
-                "ticker": pos.get("ticker", "BTC-USD"),
-                "shares": float(pos.get("shares", 0.0)),
-                "entry": avg_entry,
-                "stop": plan_stop,
-                "target": plan_target
-            })
+            unrealized_pnl = round(pct_move * exposure, 2)
+            roi_pct = round((unrealized_pnl / margin) * 100, 2) if margin > 0 else 0
 
-        self.send_json({
-            "status": "ok",
-            "price": live_price,
-            "cash": float(portfolio.get("cash", 5000.0)),
-            "positions": positions,
-            "plan_stop": plan_stop,
-            "plan_target": plan_target
-        })
-
-    def handle_calculate(self, req):
-        sym = req.get("symbol", "BTC-USD")
-        price = get_live_price(sym)
-        
-        # Risk management parameters:
-        # Distance to stop: $150 or ~0.2%
-        stop_distance = max(120.0, round(price * 0.002, 2))
-        stop_price = round(price - stop_distance, 2)
-        target_price = round(price + (2.0 * stop_distance), 2)
-
-        # Budget $5000, Max loss $50, 75% cap = $3750
-        qty_by_risk = 50.0 / stop_distance
-        qty_by_cap = 3750.0 / price
-        qty = round(min(qty_by_risk, qty_by_cap), 4)
+            p_copy = dict(p)
+            p_copy["mark_price"] = live_price
+            p_copy["unrealized_pnl_inr"] = unrealized_pnl
+            p_copy["roi_pct"] = roi_pct
+            enhanced_positions.append(p_copy)
 
         self.send_json({
             "status": "ok",
-            "symbol": sym,
-            "entry": price,
-            "stop": stop_price,
-            "target": target_price,
-            "qty": qty,
-            "rr": 2.0
+            "price_usd": live_price,
+            "usd_inr_rate": USD_INR_RATE,
+            "price_inr": round(live_price * USD_INR_RATE, 2),
+            "cash_inr": float(portfolio.get("cash_inr", 10000.0)),
+            "positions": enhanced_positions
         })
 
     def handle_order(self, req):
-        sym = req.get("symbol", "BTC-USD")
-        entry = float(req.get("entry", 0))
-        qty = float(req.get("qty", 0))
-        stop = float(req.get("stop", 0))
-        target = float(req.get("target", 0))
+        symbol = req.get("symbol", "BTC/USDT")
+        side = req.get("side", "LONG").upper()
+        margin_inr = float(req.get("margin_inr", 5000.0))
+        leverage = int(req.get("leverage", 50))
+        entry_price = float(req.get("entry_price", get_live_price()))
+        points_target = float(req.get("points_target", 500))
+        points_stop = float(req.get("points_stop", 250))
 
-        if not (entry > stop and target > entry and qty > 0):
-            self.send_json({"status": "error", "message": "Invalid prices or quantity"}, 400)
-            return
-
-        risk = (entry - stop) * qty
-        reward = (target - entry) * qty
-        rr = reward / risk if risk > 0 else 0
-
-        if risk > 50.0:
-            self.send_json({"status": "error", "message": f"Risk ${risk:.2f} exceeds $50.00 max loss limit"}, 400)
-            return
-        if rr < 1.90:
-            self.send_json({"status": "error", "message": f"Reward:Risk ratio {rr:.2f} is under 2.0x requirement"}, 400)
-            return
-
-        cost = round(entry * qty, 2)
         portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
-        portfolio = read_json_file(portfolio_path, {"cash": 5000.0, "positions": []})
+        portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": 10000.0, "positions": []})
+        current_cash = float(portfolio.get("cash_inr", 10000.0))
 
-        if portfolio["cash"] < cost:
-            self.send_json({"status": "error", "message": f"Insufficient cash: have ${portfolio['cash']:.2f}, need ${cost:.2f}"}, 400)
+        if margin_inr > current_cash:
+            self.send_json({
+                "status": "error",
+                "message": f"Insufficient INR margin: Available ₹{current_cash:,.2f}, required ₹{margin_inr:,.2f}"
+            }, 400)
             return
 
-        # Deduct cash and record position
-        portfolio["cash"] = round(portfolio["cash"] - cost, 2)
-        found = False
-        for p in portfolio["positions"]:
-            if p["ticker"] == sym:
-                p["shares"] = round(p["shares"] + qty, 4)
-                p.setdefault("lots", []).append({"id": f"{sym}-lot", "date": "today", "shares": qty, "cost": cost})
-                found = True
-                break
-        if not found:
-            portfolio["positions"].append({
-                "ticker": sym,
-                "shares": qty,
-                "lots": [{"id": f"{sym}-1", "date": "today", "shares": qty, "cost": cost}]
-            })
+        # Calculate TP and SL prices based on side
+        if side == "LONG":
+            tp_price = round(entry_price + points_target, 2)
+            sl_price = round(entry_price - points_stop, 2)
+            # Liquidation price = entry * (1 - 1/leverage * 0.9)
+            liq_price = round(entry_price * (1 - (1.0 / leverage) * 0.90), 2)
+        else:
+            tp_price = round(entry_price - points_target, 2)
+            sl_price = round(entry_price + points_stop, 2)
+            liq_price = round(entry_price * (1 + (1.0 / leverage) * 0.90), 2)
+
+        exposure_inr = round(margin_inr * leverage, 2)
+        est_fee_inr = round(exposure_inr * 0.0005, 2)  # 0.05% taker fee
+        est_profit_inr = round((points_target / entry_price) * exposure_inr, 2)
+        est_loss_inr = round((points_stop / entry_price) * exposure_inr, 2)
+
+        # Deduct margin from available cash
+        portfolio["cash_inr"] = round(current_cash - margin_inr, 2)
+        position_record = {
+            "id": f"SCALP-{len(portfolio.get('positions', [])) + 1}",
+            "symbol": symbol,
+            "side": side,
+            "margin_inr": margin_inr,
+            "leverage": leverage,
+            "exposure_inr": exposure_inr,
+            "entry_price": entry_price,
+            "tp_price": tp_price,
+            "sl_price": sl_price,
+            "liq_price": liq_price,
+            "points_target": points_target,
+            "points_stop": points_stop,
+            "est_profit_inr": est_profit_inr,
+            "est_loss_inr": est_loss_inr,
+            "fee_inr": est_fee_inr
+        }
+        portfolio.setdefault("positions", []).append(position_record)
         write_json_file(portfolio_path, portfolio)
 
-        # Update plan
-        plan_path = os.path.join(TRADER_DIR, "plan.json")
-        write_json_file(plan_path, {
-            "symbol": sym,
-            "entry": entry,
-            "stop": stop,
-            "target": target,
-            "reward_risk": rr,
-            "flat_by": "15:55 UTC"
+        self.send_json({
+            "status": "ok",
+            "position": position_record,
+            "new_cash_inr": portfolio["cash_inr"]
         })
-
-        # Arm alerts
-        alerts_path = os.path.join(TRADER_DIR, "alerts.json")
-        write_json_file(alerts_path, {
-            "rules": [
-                {"id": f"{sym}-stop", "symbol": sym, "type": "stop", "price": stop},
-                {"id": f"{sym}-target", "symbol": sym, "type": "target", "price": target}
-            ]
-        })
-
-        self.send_json({"status": "ok", "cost": cost, "risk": risk, "cash_left": portfolio["cash"]})
 
     def handle_flatten(self, req):
-        sym = req.get("symbol", "BTC-USD")
-        live_price = get_live_price(sym)
+        pos_id = req.get("id")
+        live_price = get_live_price("BTC-USD")
         portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
-        portfolio = read_json_file(portfolio_path, {"cash": 5000.0, "positions": []})
+        portfolio = read_json_file(portfolio_path, {"currency": "INR", "cash_inr": 10000.0, "positions": []})
 
-        total_pnl = 0.0
+        positions = portfolio.get("positions", [])
         new_positions = []
-        for p in portfolio["positions"]:
-            if p["ticker"] == sym:
-                shares = p["shares"]
-                lots = p.get("lots", [])
-                cost = sum(lot.get("cost", 0.0) for lot in lots) if lots else shares * live_price
-                proceeds = shares * live_price
-                total_pnl = proceeds - cost
-                portfolio["cash"] = round(portfolio["cash"] + proceeds, 2)
+        total_pnl = 0.0
+        cash_return = 0.0
+
+        for p in positions:
+            if pos_id is None or p.get("id") == pos_id:
+                side = p.get("side", "LONG").upper()
+                entry = float(p.get("entry_price", live_price))
+                margin = float(p.get("margin_inr", 0.0))
+                lev = float(p.get("leverage", 50))
+                exposure = margin * lev
+
+                if side == "LONG":
+                    pct_move = (live_price - entry) / entry if entry > 0 else 0
+                else:
+                    pct_move = (entry - live_price) / entry if entry > 0 else 0
+
+                pnl = round(pct_move * exposure, 2)
+                fee = round(exposure * 0.0005, 2)
+                pnl_after_fee = pnl - fee
+
+                total_pnl += pnl_after_fee
+                cash_return += max(0.0, margin + pnl_after_fee)
             else:
                 new_positions.append(p)
 
+        portfolio["cash_inr"] = round(portfolio.get("cash_inr", 0.0) + cash_return, 2)
         portfolio["positions"] = new_positions
         write_json_file(portfolio_path, portfolio)
 
-        self.send_json({"status": "ok", "price": live_price, "pnl": total_pnl, "new_cash": portfolio["cash"]})
+        self.send_json({
+            "status": "ok",
+            "realized_pnl_inr": total_pnl,
+            "new_cash_inr": portfolio["cash_inr"],
+            "exit_price": live_price
+        })
+
+    def handle_reset(self):
+        portfolio_path = os.path.join(TRADER_DIR, "portfolio.json")
+        data = {"currency": "INR", "cash_inr": 10000.0, "initial_capital_inr": 10000.0, "positions": []}
+        write_json_file(portfolio_path, data)
+        self.send_json({"status": "ok", "cash_inr": 10000.0})
 
 
 def main():
-    print(f"=======================================================")
-    print(f"  CoinSwitch Pro Crypto Day Trading Terminal")
-    print(f"  Live TradingView Candlestick Chart + Auto SL & 2R TP")
+    print("================================================================")
+    print("  CoinSwitch Pro - Crypto Futures & Scalper Terminal (INR)")
+    print(f"  Available Margin: INR 10,000.00 | Leverage: 10x - 100x")
     print(f"  URL: http://127.0.0.1:{PORT}")
-    print(f"=======================================================")
+    print("================================================================")
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("127.0.0.1", PORT), TradingServerHandler) as server:
         server.serve_forever()
