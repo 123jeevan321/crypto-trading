@@ -1,7 +1,7 @@
 /**
  * J1 TRADER — Institutional Dashboard JavaScript
- * Minimal Front Face Posters with Smooth Drill-Down Accordion Drawer,
- * Live Dynamic Quotes, Module Visibility Toggles, and Collapsible Navbar.
+ * Displays Exact CMP, Setup Trigger Entry, Strict Mathematical Target Gain,
+ * and '>' Bullet Drill-Down Details.
  */
 
 let currentChartSymbol = 'NSE:PCJEWELLER';
@@ -95,7 +95,6 @@ function toggleNavCollapse() {
 function updateModuleVisibility(moduleKey) {
   const checkbox = document.getElementById(`toggle${capitalize(moduleKey)}`);
   const navBtn = document.getElementById(`navBtn-${moduleKey}`);
-  const view = document.getElementById(`tab-${moduleKey}`);
 
   if (checkbox && navBtn) {
     if (checkbox.checked) {
@@ -103,7 +102,6 @@ function updateModuleVisibility(moduleKey) {
     } else {
       navBtn.style.display = 'none';
       if (navBtn.classList.contains('active')) {
-        // Switch to the first visible module
         const firstVisible = document.querySelector('.nav-btn:not([style*="display: none"])');
         if (firstVisible) firstVisible.click();
       }
@@ -173,7 +171,7 @@ function updateTickerItem(id, item) {
 }
 
 // -----------------------------------------------------------------------------
-// MODULE 1: SWING TRADE POSTERS (CLEAN FRONT FACE WITH DRILL-DOWN)
+// MODULE 1: SWING TRADE POSTERS
 // -----------------------------------------------------------------------------
 async function fetchSwingSignals() {
   const priorityWrap = document.getElementById('swingPriorityPosterWrap');
@@ -190,14 +188,14 @@ async function fetchSwingSignals() {
       return;
     }
 
-    countEl.innerText = `${signals.length} Institutional setups synced with live market`;
+    countEl.innerText = `${signals.length} Institutional Setups Verified`;
 
-    // 1. Render Priority #1 Poster at Top
-    priorityWrap.innerHTML = renderCompactPosterCard(signals[0], true, 1, 'swing');
+    // 1. Render Priority #1 Setup at Top
+    priorityWrap.innerHTML = renderAccuratePosterCard(signals[0], true, 1, 'swing');
 
-    // 2. Render Remaining Posters (Rank 2 to 15)
+    // 2. Render Remaining Setups (Rank 2 to 15)
     const remaining = signals.slice(1);
-    grid.innerHTML = remaining.map((s, idx) => renderCompactPosterCard(s, false, idx + 2, 'swing')).join('');
+    grid.innerHTML = remaining.map((s, idx) => renderAccuratePosterCard(s, false, idx + 2, 'swing')).join('');
 
   } catch (err) {
     console.error('Swing fetch error:', err);
@@ -253,17 +251,17 @@ function renderIntradayView() {
   }
 
   // Render Priority #1
-  priorityWrap.innerHTML = renderCompactPosterCard(list[0], true, 1, 'intraday');
+  priorityWrap.innerHTML = renderAccuratePosterCard(list[0], true, 1, 'intraday');
 
   // Render Remaining
   const remaining = list.slice(1);
-  grid.innerHTML = remaining.map((s, idx) => renderCompactPosterCard(s, false, idx + 2, 'intraday')).join('');
+  grid.innerHTML = remaining.map((s, idx) => renderAccuratePosterCard(s, false, idx + 2, 'intraday')).join('');
 }
 
 // -----------------------------------------------------------------------------
-// MINIMAL FRONT-FACE POSTER WITH DRILL-DOWN DRAWER
+// ACCURATE POSTER CARD WITH '>' ARROW DRILL-DOWN DETAILS
 // -----------------------------------------------------------------------------
-function renderCompactPosterCard(s, isMaster = false, rank = 1, moduleType = 'swing') {
+function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 'swing') {
   const isBuy = s.direction === 'BUY';
   const cardBorderClass = isBuy ? 'card-buy' : 'card-sell';
   const pillClass = isBuy ? 'pill-buy' : 'pill-sell';
@@ -278,6 +276,8 @@ function renderCompactPosterCard(s, isMaster = false, rank = 1, moduleType = 'sw
   const timeLabel = s.holding_period || s.time_window || 'Immediate Execution';
   const uniqueId = `drawer-${moduleType}-${rank}-${s.symbol}`;
 
+  const triggerPrefix = isBuy ? 'Above' : 'Below';
+
   return `
     <div class="poster-card ${cardBorderClass} ${masterClass}">
       <!-- Crown / Time Bar -->
@@ -290,60 +290,80 @@ function renderCompactPosterCard(s, isMaster = false, rank = 1, moduleType = 'sw
       <div class="poster-head">
         <div>
           <h3 class="poster-stock-sym">${s.symbol}</h3>
-          <p class="poster-stock-name">${s.nse_name || s.symbol}</p>
+          <p class="poster-stock-name">${s.nse_name || s.symbol} • <span class="cmp-text">CMP: ₹${s.cmp.toFixed(2)}</span></p>
         </div>
         <div class="poster-dir-pill ${pillClass}">${dirText}</div>
       </div>
 
-      <!-- 4-Level Matrix (Entry, Target, Stop Loss, Risk:Reward) -->
+      <!-- 4-Level Matrix (Exact Trigger Entry, Target, Stop Loss, Risk:Reward) -->
       <div class="poster-levels-grid">
         <div class="lvl-cell">
-          <span class="lvl-lbl">ENTRY (LTP)</span>
-          <span class="lvl-num">₹${s.entry_price.toFixed(2)}</span>
+          <span class="lvl-lbl">TRIGGER ENTRY</span>
+          <span class="lvl-num" style="color:#00e5ff;">₹${s.entry_price.toFixed(2)}</span>
+          <span class="lvl-sub">${triggerPrefix} ₹${s.entry_price.toFixed(2)}</span>
         </div>
         <div class="lvl-cell">
-          <span class="lvl-lbl">TARGET</span>
+          <span class="lvl-lbl">TARGET PRICE</span>
           <span class="lvl-num text-green">₹${s.target_price.toFixed(2)}</span>
+          <span class="lvl-sub text-green">+${s.potential_percent.toFixed(1)}%</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">STOP LOSS</span>
           <span class="lvl-num text-red">₹${s.stop_loss.toFixed(2)}</span>
+          <span class="lvl-sub text-red">-2.0%</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">RISK:REWARD</span>
           <span class="lvl-num text-accent">1 : ${s.risk_reward}</span>
+          <span class="lvl-sub">R:R Ratio</span>
         </div>
       </div>
 
-      <!-- Financial Execution Strip -->
+      <!-- Exact Financial Strip -->
       <div class="poster-finance-strip">
         <div>Capital: <strong>₹${(s.capital || 100000).toLocaleString('en-IN')}</strong> (${s.quantity} Qty)</div>
-        <div>Target Gain: <strong class="text-green">+₹${s.potential_profit ? s.potential_profit.toLocaleString('en-IN') : '--'} (+${s.potential_percent || ''}%)</strong></div>
-        <div>Max Risk: <strong class="text-red">-₹${s.max_loss ? s.max_loss.toLocaleString('en-IN') : '--'}</strong></div>
+        <div>Target Gain: <strong class="text-green">+₹${s.potential_profit.toLocaleString('en-IN')} (+${s.potential_percent.toFixed(2)}%)</strong></div>
+        <div>Max Risk: <strong class="text-red">-₹${s.max_loss.toLocaleString('en-IN')}</strong></div>
       </div>
 
-      <!-- Interactive Drill-Down Arrow Button -->
-      <button class="btn-drilldown-toggle" onclick="toggleCardDrawer('${uniqueId}', this)">
-        <span>⬇️ Analysis, Institutional Buyer &amp; Monday Setup</span>
+      <!-- '>' Arrow Drill-Down Toggle Button -->
+      <button class="btn-arrow-toggle" onclick="toggleCardDrawer('${uniqueId}', this)">
+        <span class="arrow-symbol">&gt;</span>
+        <span class="toggle-text">View Setup Trigger Reason, News &amp; Chart Logic</span>
       </button>
 
-      <!-- Expandable Drill-Down Details Drawer (Hidden by default) -->
+      <!-- Expandable Drill-Down Details Drawer with '>' Arrow Bullets -->
       <div class="drilldown-drawer" id="${uniqueId}" style="display:none;">
-        <div class="callout-row">
-          <div class="callout-tag-title text-gold">📅 MONDAY SETUP PREDICTION (${s.confidence}% CHANCE):</div>
-          <div style="color:#fff9c4;">${s.monday_prediction}</div>
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-gold">WHEN &amp; HOW TO ENTER (SETUP TRIGGER):</span>
+            <p class="bullet-text">${s.trigger_condition}</p>
+          </div>
         </div>
-        <div class="callout-row">
-          <div class="callout-tag-title text-purple">🏛️ INSTITUTIONAL ACCUMULATION &amp; BUYER:</div>
-          <div style="color:#ede7f6;">${s.institutional_buyer || 'Institutional DII/FII Active Accumulation'}</div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-purple">TECHNICAL REASON &amp; CHART STRUCTURE:</span>
+            <p class="bullet-text">${s.technical_reason}</p>
+          </div>
         </div>
-        <div class="callout-row">
-          <div class="callout-tag-title text-accent">📰 RECENT NEWS &amp; EVENT CATALYST:</div>
-          <div style="color:#e3f2fd;">${s.catalyst}</div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-accent">LIVE NEWS SPREADING FOR THIS STOCK ALONE:</span>
+            <p class="bullet-text">${s.stock_news}</p>
+          </div>
         </div>
-        <div class="callout-row">
-          <div class="callout-tag-title text-green">⚡ ORDER FLOW DELTA:</div>
-          <div class="text-green">${s.orderflow_delta || '+75% Inflow'}</div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-green">INSTITUTIONAL ACCUMULATION &amp; FLOW:</span>
+            <p class="bullet-text">${s.institutional_flow}</p>
+          </div>
         </div>
       </div>
 
@@ -359,12 +379,19 @@ function toggleCardDrawer(drawerId, btn) {
   const drawer = document.getElementById(drawerId);
   if (!drawer) return;
 
+  const arrow = btn.querySelector('.arrow-symbol');
+  const text = btn.querySelector('.toggle-text');
+
   if (drawer.style.display === 'none' || !drawer.style.display) {
     drawer.style.display = 'block';
-    btn.innerHTML = '<span>⬆️ Hide Details</span>';
+    if (arrow) arrow.innerHTML = 'v';
+    if (text) text.innerText = 'Hide Setup Trigger Reason & News';
+    btn.classList.add('open');
   } else {
     drawer.style.display = 'none';
-    btn.innerHTML = '<span>⬇️ Analysis, Institutional Buyer &amp; Monday Setup</span>';
+    if (arrow) arrow.innerHTML = '&gt;';
+    if (text) text.innerText = 'View Setup Trigger Reason, News & Chart Logic';
+    btn.classList.remove('open');
   }
 }
 
@@ -436,11 +463,16 @@ function renderIpoPoster(ipo) {
       </div>
 
       <div class="drilldown-drawer" style="display:block; margin-top:8px;">
-        <div class="callout-tag-title text-green">🎯 ALLOTMENT STRATEGY &amp; ACTION PLAN:</div>
-        <div style="font-weight:800; font-size:0.85rem; color:#fff; margin-bottom:4px;">${ipo.recommendation}</div>
-        <ul style="padding-left:18px; margin:0; font-size:0.75rem; color:#cfd8dc;">
-          ${(ipo.action_plan || []).map(step => `<li>${step}</li>`).join('')}
-        </ul>
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-green">ALLOTMENT STRATEGY &amp; ACTION PLAN:</span>
+            <p class="bullet-text" style="font-weight:700; color:#fff;">${ipo.recommendation}</p>
+            <ul style="padding-left:18px; margin:4px 0 0; font-size:0.75rem; color:#cfd8dc;">
+              ${(ipo.action_plan || []).map(step => `<li>${step}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
 
       <div class="poster-finance-strip" style="margin-top:10px;">
@@ -534,7 +566,7 @@ function changeChartTf(tf) {
 // MODULE 5: PAPER TRADING PORTFOLIO (₹1,00,000)
 // -----------------------------------------------------------------------------
 async function executePaperTrade(symbol, direction, entry, qty, target, stop_loss) {
-  if (!confirm(`Confirm Paper Trade Execution:\n${direction} ${qty} shares of ${symbol} at ₹${entry.toFixed(2)}?\nTarget: ₹${target.toFixed(2)} | Stop Loss: ₹${stop_loss.toFixed(2)}`)) {
+  if (!confirm(`Confirm Paper Trade Execution:\n${direction} ${qty} shares of ${symbol} at Trigger ₹${entry.toFixed(2)}?\nTarget: ₹${target.toFixed(2)} | Stop Loss: ₹${stop_loss.toFixed(2)}`)) {
     return;
   }
 
@@ -583,7 +615,7 @@ async function fetchPortfolio() {
         <table class="data-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
           <thead>
             <tr style="text-align:left; color:#78909c; border-bottom:1px solid var(--border);">
-              <th style="padding:10px;">Symbol</th><th>Side</th><th>Qty</th><th>Entry</th><th>Target</th><th>SL</th><th>Unrealized P&amp;L</th><th>Action</th>
+              <th style="padding:10px;">Symbol</th><th>Side</th><th>Qty</th><th>Trigger</th><th>Target</th><th>SL</th><th>Unrealized P&amp;L</th><th>Action</th>
             </tr>
           </thead>
           <tbody>

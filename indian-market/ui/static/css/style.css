@@ -373,6 +373,14 @@ body {
   margin-top: 2px;
   font-weight: 500;
 }
+.cmp-text {
+  color: #cfd8dc;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
 .poster-dir-pill {
   padding: 5px 16px;
   border-radius: 100px;
@@ -417,6 +425,14 @@ body {
   font-size: 1.05rem;
   font-weight: 800;
   font-family: var(--font-mono);
+  display: block;
+}
+.lvl-sub {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
 }
 
 /* Financial Strip */
@@ -432,36 +448,47 @@ body {
   font-size: 0.8rem;
 }
 
-/* Drill-Down Toggle Button */
-.btn-drilldown-toggle {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px dashed rgba(255, 255, 255, 0.18);
-  color: #b0bec5;
+/* '>' Arrow Drill-Down Toggle Button */
+.btn-arrow-toggle {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cfd8dc;
   font-family: var(--font-main);
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 7px;
+  padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 12px;
   transition: all 0.2s ease;
 }
-.btn-drilldown-toggle:hover {
-  background: rgba(255, 255, 255, 0.09);
+.btn-arrow-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+.btn-arrow-toggle.open {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.3);
+  color: #00e676;
+}
+.arrow-symbol {
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.9rem;
+  color: var(--gold);
 }
 
-/* Drill-Down Drawer (Smooth Accordion Slide) */
+/* Drill-Down Drawer with '>' Arrow Bullets */
 .drilldown-drawer {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 12px;
+  padding: 14px;
   margin-bottom: 14px;
   animation: slideDown 0.2s ease forwards;
 }
@@ -469,15 +496,36 @@ body {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.callout-row {
-  margin-bottom: 8px;
-  font-size: 0.77rem;
+
+.drill-bullet {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
   line-height: 1.45;
 }
-.callout-row:last-child { margin-bottom: 0; }
-.callout-tag-title {
-  font-size: 0.68rem;
+.drill-bullet:last-child { margin-bottom: 0; }
+.bullet-arrow {
+  color: var(--gold);
+  font-family: var(--font-mono);
+  font-weight: 900;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+.bullet-content { flex: 1; }
+.bullet-label {
+  font-size: 0.7rem;
   font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 2px;
+}
+.bullet-text {
+  font-size: 0.78rem;
+  color: #eceff1;
+  margin: 0;
+}
   letter-spacing: 0.5px;
   text-transform: uppercase;
   margin-bottom: 2px;
