@@ -365,6 +365,50 @@ def api_intraday_signals():
         return _error(str(exc))
 
 
+@app.route("/api/alerts")
+def api_alerts():
+    """GET /api/alerts — Real-time event notifications from trader-alerts skill."""
+    try:
+        from analysis.skills_engine import SkillsPipelineEngine
+        pipeline = getattr(_swing_engine, "pipeline", None) or getattr(_intraday_engine, "pipeline", None)
+        alerts = pipeline.alerts_log if pipeline else []
+        return _success(alerts)
+    except Exception as exc:
+        logger.exception("api_alerts error")
+        return _error(str(exc))
+
+
+@app.route("/api/backtest/results")
+def api_backtest_results():
+    """GET /api/backtest/results — Comprehensive strategy backtesting and empirical validation."""
+    try:
+        from analysis.backtester import backtester
+        results = backtester.simulate_historical_validation()
+        return _success(results)
+    except Exception as exc:
+        logger.exception("api_backtest_results error")
+        return _error(str(exc))
+
+
+@app.route("/api/re-rank", methods=["POST", "GET"])
+def api_re_rank():
+    """POST /api/re-rank — Forces immediate news re-ranking and setup invalidation check."""
+    try:
+        _refresh_signals()
+        with _cache_lock:
+            swing_count = len(_signal_cache["swing"])
+            intraday_count = len(_signal_cache["intraday"])
+        return _success({
+            "message": "Re-ranking completed successfully",
+            "qualified_swing_setups": swing_count,
+            "qualified_intraday_setups": intraday_count,
+            "timestamp": datetime.datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S IST")
+        })
+    except Exception as exc:
+        logger.exception("api_re_rank error")
+        return _error(str(exc))
+
+
 @app.route("/api/nifty50")
 def api_nifty50():
     """GET /api/nifty50 — Nifty 50 spot price, trend, PCR, bias, gainers/losers."""

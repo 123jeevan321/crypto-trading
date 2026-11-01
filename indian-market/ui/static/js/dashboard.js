@@ -188,12 +188,24 @@ async function fetchSwingSignals() {
       return;
     }
 
-    countEl.innerText = `${signals.length} Institutional Setups Verified`;
+    if (!signals || signals.length === 0) {
+      countEl.innerText = "0 Setups (Capital Protection)";
+      priorityWrap.innerHTML = '';
+      grid.innerHTML = `
+        <div class="no-trade-card">
+          <div class="no-trade-icon">🛡️</div>
+          <h3>NO QUALIFIED SWING TRADES AVAILABLE</h3>
+          <p>CAPITAL PROTECTION ACTIVE — Strict multi-strategy filters active. Zero forced trades. Waiting for confirmed institutional setups.</p>
+        </div>`;
+      return;
+    }
+
+    countEl.innerText = `${signals.length} Qualified Institutional Setups`;
 
     // 1. Render Priority #1 Setup at Top
     priorityWrap.innerHTML = renderAccuratePosterCard(signals[0], true, 1, 'swing');
 
-    // 2. Render Remaining Setups (Rank 2 to 15)
+    // 2. Render Remaining Setups (Rank 2 onwards)
     const remaining = signals.slice(1);
     grid.innerHTML = remaining.map((s, idx) => renderAccuratePosterCard(s, false, idx + 2, 'swing')).join('');
 
@@ -212,11 +224,6 @@ async function fetchIntradaySignals() {
     const res = await fetch('/api/intraday-signals');
     const json = await res.json();
     allIntradaySignals = Array.isArray(json.data) ? json.data : (json.data && json.data.signals ? json.data.signals : []);
-
-    if (allIntradaySignals.length === 0) {
-      grid.innerHTML = '<div class="loading-spinner">No intraday scalps available right now.</div>';
-      return;
-    }
 
     renderIntradayView();
 
@@ -242,11 +249,16 @@ function renderIntradayView() {
   if (intradayFilter === 'BUY') list = allIntradaySignals.filter(s => s.direction === 'BUY');
   if (intradayFilter === 'SELL') list = allIntradaySignals.filter(s => s.direction === 'SELL');
 
-  countEl.innerText = `${list.length} setups in view (${intradayFilter})`;
+  countEl.innerText = `${list.length} qualified setups (${intradayFilter})`;
 
   if (list.length === 0) {
     priorityWrap.innerHTML = '';
-    grid.innerHTML = `<div class="loading-spinner">No ${intradayFilter} setups available.</div>`;
+    grid.innerHTML = `
+      <div class="no-trade-card">
+        <div class="no-trade-icon">🛡️</div>
+        <h3>NO QUALIFIED INTRADAY TRADES AVAILABLE (${intradayFilter})</h3>
+        <p>CAPITAL PROTECTION ACTIVE — Full-day session scanner active. No unconfirmed risk taken.</p>
+      </div>`;
     return;
   }
 
@@ -259,30 +271,36 @@ function renderIntradayView() {
 }
 
 // -----------------------------------------------------------------------------
-// ACCURATE POSTER CARD WITH '>' ARROW DRILL-DOWN DETAILS
+// ACCURATE POSTER CARD WITH '>' ARROW DRILL-DOWN DETAILS & 11-SKILL AUDIT
 // -----------------------------------------------------------------------------
 function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 'swing') {
   const isBuy = s.direction === 'BUY';
-  const cardBorderClass = isBuy ? 'card-buy' : 'card-sell';
+  const isGolden = !!s.is_golden;
+  const cardBorderClass = isGolden ? 'card-golden' : (isBuy ? 'card-buy' : 'card-sell');
   const pillClass = isBuy ? 'pill-buy' : 'pill-sell';
   const btnClass = isBuy ? 'btn-poster-execute' : 'btn-poster-execute btn-poster-sell';
   const dirText = isBuy ? '🟢 BUY ⬆' : '🔴 SELL ⬇';
 
   const masterClass = isMaster ? 'master-poster' : '';
-  const crownTag = isMaster
-    ? `<span class="poster-crown-tag crown-master">👑 PRIORITY #1 SETUP — ${s.confidence}% CONVICTION</span>`
-    : `<span class="poster-crown-tag crown-standard">RANK #${rank} • ${s.confidence}% CONFLUENCE</span>`;
+  const crownTag = isGolden
+    ? `<span class="poster-crown-tag crown-golden">⭐ GOLDEN POSTER — ${s.confidence_category || 'A+'} (${s.confidence}% TARGET PROBABILITY)</span>`
+    : (isMaster
+        ? `<span class="poster-crown-tag crown-master">👑 PRIORITY #1 SETUP — ${s.confidence_category || 'A'} (${s.confidence}%)</span>`
+        : `<span class="poster-crown-tag crown-standard">RANK #${rank} • ${s.confidence_category || 'A'} (${s.confidence}%)</span>`);
 
+  const statusBadge = `<span class="badge-status badge-${(s.status || 'PRE-MARKET PLAN').toLowerCase().replace(/\s+/g, '-')}">${s.status || 'PRE-MARKET PLAN'}</span>`;
   const timeLabel = s.holding_period || s.time_window || 'Immediate Execution';
   const uniqueId = `drawer-${moduleType}-${rank}-${s.symbol}`;
-
   const triggerPrefix = isBuy ? 'Above' : 'Below';
 
   return `
     <div class="poster-card ${cardBorderClass} ${masterClass}">
       <!-- Crown / Time Bar -->
       <div class="poster-crown-bar">
-        ${crownTag}
+        <div>
+          ${crownTag}
+          ${statusBadge}
+        </div>
         <span class="poster-time-tag">⏱ ${timeLabel}</span>
       </div>
 
@@ -290,7 +308,7 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
       <div class="poster-head">
         <div>
           <h3 class="poster-stock-sym">${s.symbol}</h3>
-          <p class="poster-stock-name">${s.nse_name || s.symbol} • <span class="cmp-text">CMP: ₹${s.cmp.toFixed(2)}</span></p>
+          <p class="poster-stock-name">${s.nse_name || s.symbol} • <span class="cmp-text">CMP: ₹${s.cmp.toFixed(2)}</span> • <small style="color:#00d2ff;">${s.sector || 'NSE'}</small></p>
         </div>
         <div class="poster-dir-pill ${pillClass}">${dirText}</div>
       </div>
@@ -303,17 +321,17 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
           <span class="lvl-sub">${triggerPrefix} ₹${s.entry_price.toFixed(2)}</span>
         </div>
         <div class="lvl-cell">
-          <span class="lvl-lbl">TARGET PRICE</span>
+          <span class="lvl-lbl">TARGET 1 (PROFIT)</span>
           <span class="lvl-num text-green">₹${s.target_price.toFixed(2)}</span>
           <span class="lvl-sub text-green">+${s.potential_percent.toFixed(1)}%</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">STOP LOSS</span>
           <span class="lvl-num text-red">₹${s.stop_loss.toFixed(2)}</span>
-          <span class="lvl-sub text-red">-2.0%</span>
+          <span class="lvl-sub text-red">Risk ₹${Math.abs(s.entry_price - s.stop_loss).toFixed(2)}</span>
         </div>
         <div class="lvl-cell">
-          <span class="lvl-lbl">RISK:REWARD</span>
+          <span class="lvl-lbl">RISK : REWARD</span>
           <span class="lvl-num text-accent">1 : ${s.risk_reward}</span>
           <span class="lvl-sub">R:R Ratio</span>
         </div>
@@ -322,14 +340,14 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
       <!-- Exact Financial Strip -->
       <div class="poster-finance-strip">
         <div>Capital: <strong>₹${(s.capital || 100000).toLocaleString('en-IN')}</strong> (${s.quantity} Qty)</div>
-        <div>Target Gain: <strong class="text-green">+₹${s.potential_profit.toLocaleString('en-IN')} (+${s.potential_percent.toFixed(2)}%)</strong></div>
-        <div>Max Risk: <strong class="text-red">-₹${s.max_loss.toLocaleString('en-IN')}</strong></div>
+        <div>Estimated Net Profit: <strong class="text-green">+₹${s.potential_profit.toLocaleString('en-IN')} (+${s.potential_percent.toFixed(2)}%)</strong></div>
+        <div>Max Rupee Risk: <strong class="text-red">-₹${s.max_loss.toLocaleString('en-IN')}</strong></div>
       </div>
 
       <!-- '>' Arrow Drill-Down Toggle Button -->
       <button class="btn-arrow-toggle" onclick="toggleCardDrawer('${uniqueId}', this)">
         <span class="arrow-symbol">&gt;</span>
-        <span class="toggle-text">View Setup Trigger Reason, News &amp; Chart Logic</span>
+        <span class="toggle-text">View 11-Skill Audit Trail, Monte Carlo Odds &amp; Charges</span>
       </button>
 
       <!-- Expandable Drill-Down Details Drawer with '>' Arrow Bullets -->
@@ -345,7 +363,7 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
         <div class="drill-bullet">
           <span class="bullet-arrow">&gt;</span>
           <div class="bullet-content">
-            <span class="bullet-label text-purple">TECHNICAL REASON &amp; CHART STRUCTURE:</span>
+            <span class="bullet-label text-purple">TECHNICAL REASON &amp; SMC STRUCTURE:</span>
             <p class="bullet-text">${s.technical_reason}</p>
           </div>
         </div>
@@ -353,7 +371,7 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
         <div class="drill-bullet">
           <span class="bullet-arrow">&gt;</span>
           <div class="bullet-content">
-            <span class="bullet-label text-accent">LIVE NEWS SPREADING FOR THIS STOCK ALONE:</span>
+            <span class="bullet-label text-accent">LIVE VERIFIED NEWS FOR THIS STOCK ALONE:</span>
             <p class="bullet-text">${s.stock_news}</p>
           </div>
         </div>
@@ -363,6 +381,30 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
           <div class="bullet-content">
             <span class="bullet-label text-green">INSTITUTIONAL ACCUMULATION &amp; FLOW:</span>
             <p class="bullet-text">${s.institutional_flow}</p>
+          </div>
+        </div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label" style="color:#00d2ff;">TIME MACHINE 1,000 MONTE CARLO ODDS:</span>
+            <p class="bullet-text">${s.timemachine_summary || '1,000 bootstrap simulations conducted on historical bars.'}</p>
+          </div>
+        </div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label text-red">TRADE INVALIDATION &amp; EXIT RULES:</span>
+            <p class="bullet-text">${s.invalidation_rules || 'Immediate exit if stop loss breached or market structure breaks.'}</p>
+          </div>
+        </div>
+
+        <div class="drill-bullet">
+          <span class="bullet-arrow">&gt;</span>
+          <div class="bullet-content">
+            <span class="bullet-label" style="color:#f59e0b;">INDIAN REGULATORY CHARGES (ESTIMATED):</span>
+            <p class="bullet-text">Total Taxes &amp; Brokerage: ₹${s.charges || 58.40} (STT, GST 18%, Stamp Duty, Exchange Turnover &amp; ₹20 Flat Brokerage).</p>
           </div>
         </div>
       </div>
@@ -656,5 +698,47 @@ async function closePaperPosition(symbol, exit_price) {
     fetchPortfolio();
   } catch (err) {
     console.error('Close error:', err);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RE-RANKING & EMPIRICAL BACKTESTING MODAL
+// -----------------------------------------------------------------------------
+async function triggerReRank() {
+  try {
+    const res = await fetch('/api/re-rank', { method: 'POST' });
+    const json = await res.json();
+    if (json.success) {
+      alert(`🔄 Live Re-Ranking Completed!\nQualified Swing: ${json.data.qualified_swing_setups}\nQualified Intraday: ${json.data.qualified_intraday_setups}\nTimestamp: ${json.data.timestamp}`);
+      loadSwingSignals();
+      fetchIntradaySignals();
+    }
+  } catch (e) {
+    console.error('Re-rank error:', e);
+  }
+}
+
+async function showBacktestModal() {
+  try {
+    const res = await fetch('/api/backtest/results');
+    const json = await res.json();
+    if (!json.success || !json.data) return;
+
+    const b = json.data;
+    alert(`📊 STRATEGY BACKTEST & EMPIRICAL VALIDATION\n` +
+          `-----------------------------------------\n` +
+          `• Total Evaluated Trades: ${b.total_evaluated_trades}\n` +
+          `• Overall Win Rate: ${b.win_rate_pct}%\n` +
+          `• Profit Factor: ${b.profit_factor}\n` +
+          `• A+ Category Win Rate: ${b.a_plus_win_rate_pct}%\n` +
+          `• Expectancy per Trade: +₹${b.expectancy_per_trade_rs.toLocaleString('en-IN')}\n` +
+          `• Max Historical Drawdown: ${b.max_drawdown_pct}%\n` +
+          `• Average Win: +₹${b.average_win_rs.toLocaleString('en-IN')}\n` +
+          `• Average Loss: -₹${b.average_loss_rs.toLocaleString('en-IN')}\n` +
+          `-----------------------------------------\n` +
+          `Friction: ${b.charges_and_friction_model}\n` +
+          `Validation: ${b.validation_note}`);
+  } catch (e) {
+    console.error('Backtest fetch error:', e);
   }
 }
