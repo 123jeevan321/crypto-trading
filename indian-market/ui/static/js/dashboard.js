@@ -320,7 +320,7 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
       <div class="poster-head">
         <div>
           <h3 class="poster-stock-sym">${s.symbol}</h3>
-          <p class="poster-stock-name">${s.nse_name || s.symbol} • <span class="cmp-text">CMP: ₹${s.cmp.toFixed(2)}</span> • <small style="color:#00d2ff;">${s.sector || 'NSE'}</small></p>
+          <p class="poster-stock-name">${s.nse_name || s.symbol} • <span class="cmp-text" style="color:#ffb74d; font-weight:700;">CMP: ₹${s.cmp.toFixed(2)}</span> • <small style="color:#00d2ff;">${s.sector || 'NSE'}</small></p>
         </div>
         <div class="poster-dir-pill ${pillClass}">${dirText}</div>
       </div>
@@ -328,19 +328,19 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
       <!-- 4-Level Matrix (Exact Trigger Entry, Target, Stop Loss, Risk:Reward) -->
       <div class="poster-levels-grid">
         <div class="lvl-cell">
-          <span class="lvl-lbl">TRIGGER ENTRY</span>
+          <span class="lvl-lbl">SETUP TRIGGER ENTRY</span>
           <span class="lvl-num" style="color:#00e5ff;">₹${s.entry_price.toFixed(2)}</span>
-          <span class="lvl-sub">${triggerPrefix} ₹${s.entry_price.toFixed(2)}</span>
+          <span class="lvl-sub" style="color:#81d4fa;">${triggerPrefix} ₹${s.entry_price.toFixed(2)} (15m close)</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">TARGET 1 (PROFIT)</span>
           <span class="lvl-num text-green">₹${s.target_price.toFixed(2)}</span>
-          <span class="lvl-sub text-green">+${s.potential_percent.toFixed(1)}%</span>
+          <span class="lvl-sub text-green">+${s.potential_percent.toFixed(2)}% (+₹${Math.abs(s.target_price - s.entry_price).toFixed(2)})</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">STOP LOSS</span>
           <span class="lvl-num text-red">₹${s.stop_loss.toFixed(2)}</span>
-          <span class="lvl-sub text-red">Risk ₹${Math.abs(s.entry_price - s.stop_loss).toFixed(2)}</span>
+          <span class="lvl-sub text-red">Risk ₹${Math.abs(s.entry_price - s.stop_loss).toFixed(2)} (-${((Math.abs(s.entry_price - s.stop_loss) / s.entry_price) * 100).toFixed(2)}%)</span>
         </div>
         <div class="lvl-cell">
           <span class="lvl-lbl">RISK : REWARD</span>
@@ -359,7 +359,7 @@ function renderAccuratePosterCard(s, isMaster = false, rank = 1, moduleType = 's
       <!-- '>' Arrow Drill-Down Toggle Button -->
       <button class="btn-arrow-toggle" onclick="toggleCardDrawer('${uniqueId}', this)">
         <span class="arrow-symbol">&gt;</span>
-        <span class="toggle-text">View 11-Skill Audit Trail, Monte Carlo Odds &amp; Charges</span>
+        <span class="toggle-text">Setup Trigger Logic, Stock News &amp; Technical Breakdown</span>
       </button>
 
       <!-- Expandable Drill-Down Details Drawer with '>' Arrow Bullets -->
@@ -438,13 +438,13 @@ function toggleCardDrawer(drawerId, btn) {
 
   if (drawer.style.display === 'none' || !drawer.style.display) {
     drawer.style.display = 'block';
-    if (arrow) arrow.innerHTML = 'v';
-    if (text) text.innerText = 'Hide Setup Trigger Reason & News';
+    if (arrow) arrow.innerHTML = '&#9660;'; // down triangle
+    if (text) text.innerText = 'Hide Setup Trigger Logic, Stock News & Technical Breakdown';
     btn.classList.add('open');
   } else {
     drawer.style.display = 'none';
     if (arrow) arrow.innerHTML = '&gt;';
-    if (text) text.innerText = 'View Setup Trigger Reason, News & Chart Logic';
+    if (text) text.innerText = 'Setup Trigger Logic, Stock News & Technical Breakdown';
     btn.classList.remove('open');
   }
 }
