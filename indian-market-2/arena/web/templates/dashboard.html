@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breaking Money — AI Trading Arena (15-Day Challenge)</title>
+    <link rel="stylesheet" href="/static/css/arena.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-dot"></div>
+                <div>
+                    <h2>AI TRADING ARENA</h2>
+                    <span class="sub">Breaking Money Edition</span>
+                </div>
+            </div>
+
+            <div class="challenge-pill">
+                <span class="pill-label">CHALLENGE STATUS</span>
+                <span id="challenge-status" class="pill-value status-badge">READY</span>
+                <div class="day-progress">
+                    <span>Day <strong id="current-day">1</strong> of <strong id="target-days">15</strong></span>
+                    <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 6.6%;"></div></div>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#overview" class="active">📊 Overview</a>
+                <a href="#positions">⚡ Open Positions (<span id="open-count">0</span>)</a>
+                <a href="#watchlist">📈 Market Watchlist</a>
+                <a href="#journal">📓 Trade Audit Journal</a>
+                <a href="/api/reports/generate" target="_blank">📄 View HTML Report</a>
+            </nav>
+
+            <div class="engine-badge-box">
+                <div class="engine-title">ACTIVE DECISION ENGINE</div>
+                <div id="active-brain-display" class="engine-name">Auto (Claude CLI / API / Rules)</div>
+                <div id="active-profile-display" class="profile-name">Risk Profile: Balanced</div>
+            </div>
+
+            <div class="sidebar-actions">
+                <button id="btn-start" class="btn btn-primary" onclick="startChallenge()">▶ Start Trading Session</button>
+                <button id="btn-pause" class="btn btn-secondary" onclick="pauseChallenge()">⏸ Pause Session</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="top-stats">
+                    <div class="stat-item">
+                        <span class="lbl">Virtual Capital</span>
+                        <span class="val">₹<span id="initial-cap">1,00,000.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="lbl">Total Equity</span>
+                        <span class="val highlight">₹<span id="total-equity">1,00,000.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="lbl">Available Cash</span>
+                        <span class="val">₹<span id="available-cash">1,00,000.00</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="lbl">Today's P&L</span>
+                        <span id="daily-pnl" class="val positive">₹0.00 (+0.0%)</span>
+                    </div>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-sm btn-report" onclick="window.open('/api/reports/generate', '_blank')">📥 Download 15-Day Audit</button>
+                </div>
+            </header>
+
+            <div class="content-body">
+                <!-- KPI Row -->
+                <div class="kpi-row">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Win Rate</div>
+                        <div class="kpi-val"><span id="win-rate">0.0</span>%</div>
+                        <div class="kpi-meta"><span id="win-loss-count">0 W / 0 L</span></div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total Realized Net P&L</div>
+                        <div class="kpi-val"><span id="net-pnl">₹0.00</span></div>
+                        <div class="kpi-meta">After Taxes & Slippage</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Max Drawdown</div>
+                        <div class="kpi-val danger"><span id="max-dd">0.0</span>%</div>
+                        <div class="kpi-meta">Strict Cap: 3.0% / Day</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Execution Model</div>
+                        <div class="kpi-val" style="font-size:1.1rem; color:#00d2ff;">0.05% Slippage + NSE Taxes</div>
+                        <div class="kpi-meta">STT, Stamp Duty, GST, Turnover</div>
+                    </div>
+                </div>
+
+                <!-- Section: Open Positions -->
+                <section id="positions" class="panel">
+                    <div class="panel-header">
+                        <h3>⚡ Active Portfolio Positions</h3>
+                        <span class="badge" id="pos-badge">0 Open</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="arena-table">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Side</th>
+                                    <th>Qty</th>
+                                    <th>Entry Price</th>
+                                    <th>Current LTP</th>
+                                    <th>Stop Loss</th>
+                                    <th>Take Profit</th>
+                                    <th>Unrealized P&L</th>
+                                    <th>Brain</th>
+                                </tr>
+                            </thead>
+                            <tbody id="open-positions-body">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">No positions currently open. Waiting for market setup trigger.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Section: Live Watchlist & Signal Status -->
+                <section id="watchlist" class="panel">
+                    <div class="panel-header">
+                        <h3>📈 Monitored Watchlist & Real-Time Quotes</h3>
+                        <span class="text-muted" style="font-size:0.85rem;">Refreshed via Yahoo Finance / NSE Feed</span>
+                    </div>
+                    <div class="watchlist-grid" id="watchlist-container">
+                        <!-- Populated dynamically -->
+                    </div>
+                </section>
+
+                <!-- Section: Trade Journal -->
+                <section id="journal" class="panel">
+                    <div class="panel-header">
+                        <h3>📓 Challenge Trade Journal (Audited)</h3>
+                        <span class="badge" id="journal-count">0 Closed</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="arena-table">
+                            <thead>
+                                <tr>
+                                    <th>Exit Time</th>
+                                    <th>Symbol</th>
+                                    <th>Side</th>
+                                    <th>Qty</th>
+                                    <th>Entry</th>
+                                    <th>Exit</th>
+                                    <th>Charges & STT</th>
+                                    <th>Net P&L</th>
+                                    <th>Exit Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trade-journal-body">
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted">No completed trades recorded for this challenge session yet.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/arena.js"></script>
+</body>
+</html>

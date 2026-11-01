@@ -1,0 +1,36 @@
+{
+  "challenge_id": "arena_15d_1793521099",
+  "status": "ACTIVE",
+  "target_days": 15,
+  "current_day": 2,
+  "profile_name": "balanced",
+  "active_brain": "Rules Baseline",
+  "initial_capital": 100000.0,
+  "current_cash": 100000.0,
+  "current_equity": 100000.0,
+  "session_start_equity": 100000.0,
+  "created_at": "2026-11-01 13:48:19",
+  "daily_history": [
+    {
+      "day": 1,
+      "date": "2026-11-01",
+      "start_equity": 100000.0,
+      "end_equity": 100000.0,
+      "session_pnl": 0.0,
+      "trades_count": 0
+    }
+  ],
+  "open_positions": [],
+  "trade_journal": [],
+  "metrics": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "win_rate_pct": 0.0,
+    "total_net_pnl": 0,
+    "roi_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "peak_equity": 100000.0,
+    "nifty_benchmark_return_pct": 0.0
+  }
+}

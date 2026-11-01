@@ -1,0 +1,67 @@
+# ==============================================================================
+# BREAKING MONEY / THE AI TRADING ARENA
+# Complete Setup & 15-Day Challenge Configuration
+# Educational Paper Trading | Not Investment Advice
+# ==============================================================================
+
+[challenge]
+name = "Breaking Money Challenge"
+virtual_capital = 100000.0          # Starting virtual balance: Rs 1,00,000
+duration_sessions = 15              # 15 trading sessions challenge
+brain = "auto"                      # "auto", "rules", "claude-code", "claude-api"
+risk_profile = "balanced"           # "balanced" or "aggressive"
+mode = "intraday"                   # "intraday" (squares off at 15:15) or "delivery"
+strategy_note = "Only trade confirmed breakouts above opening range with positive volume delta."
+
+[market]
+poll_interval_seconds = 30          # Price polling frequency
+decision_interval_minutes = 15      # AI brain decision request interval
+market_open = "09:15"
+market_close = "15:30"
+entry_cutoff = "14:45"              # Blocks new entries after 14:45 IST
+square_off_time = "15:15"           # Targets square-off at 15:15 IST
+timezone = "Asia/Kolkata"
+feed = "yahoo"                      # "yahoo" (live quotes via yfinance) or "demo" (synthetic)
+
+watchlist = [
+    "RELIANCE.NS",
+    "HDFCBANK.NS",
+    "ICICIBANK.NS",
+    "SBIN.NS",
+    "INFY.NS",
+    "TCS.NS",
+    "BHARTIARTL.NS",
+    "TATASTEEL.NS",
+    "SUZLON.NS",
+    "PCJEWELLER.NS",
+    "IRFC.NS",
+    "HUDCO.NS",
+    "BEL.NS",
+    "TATAPOWER.NS",
+    "HAL.NS"
+]
+
+[risk.balanced]
+max_position_equity_pct = 20.0      # Limits each position to max 20% of equity (Rs 20,000 on 1 Lakh)
+stop_loss_pct = 1.5                 # 1.5% stop-loss
+target_pct = 3.0                    # 3.0% target (1:2 Risk-to-Reward)
+max_daily_loss_pct = 3.0            # 3.0% maximum daily loss cap (Rs 3,000 hard stop per day)
+
+[risk.aggressive]
+max_position_equity_pct = 35.0      # Up to 35% per stock
+stop_loss_pct = 2.0                 # 2.0% stop-loss
+target_pct = 5.0                    # 5.0% target
+max_daily_loss_pct = 5.0            # 5.0% max daily drawdown
+
+[costs]
+# Realistic modeled Indian market transaction charges & friction
+stt_pct = 0.025                     # Securities Transaction Tax (delivery 0.1%, intraday 0.025% sell-side)
+exchange_turnover_pct = 0.00345     # NSE turnover charges
+gst_pct = 18.0                      # GST on brokerage and turnover charges
+stamp_duty_pct = 0.003              # Stamp duty (buy-side)
+simulated_slippage_pct = 0.05       # 0.05% realistic fill slippage
+
+[web]
+host = "127.0.0.1"
+port = 5003                         # Web dashboard port
+debug = true
