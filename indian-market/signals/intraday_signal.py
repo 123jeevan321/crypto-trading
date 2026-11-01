@@ -37,12 +37,15 @@ from analysis.skills_engine import (
 logger = logging.getLogger("j1trader.intraday")
 IST = pytz.timezone("Asia/Kolkata")
 
-# Candidate universe for high-liquidity Intraday trading
+# Candidate universe for high-liquidity Intraday trading across full 09:15 - 15:00 session
 INTRADAY_CANDIDATE_UNIVERSE = [
     {
         "symbol": "RELIANCE",
         "name": "Reliance Industries Ltd",
         "direction": "BUY",
+        "session_phase": "MORNING",
+        "time_window": "09:30 AM – 11:00 AM",
+        "strategy_type": "Morning Momentum & 5m ORB Breakout",
         "news": "Jio Financial bonus shares settlement completed; retail business revenue up 18% YoY; refining crack spreads firming up.",
         "flow": "FII institutional basket buying recorded on Friday with aggressive buy delta reaching +82.4%."
     },
@@ -50,13 +53,29 @@ INTRADAY_CANDIDATE_UNIVERSE = [
         "symbol": "HDFCBANK",
         "name": "HDFC Bank Ltd",
         "direction": "BUY",
+        "session_phase": "MORNING",
+        "time_window": "09:30 AM – 11:00 AM",
+        "strategy_type": "Opening Range Breakout (ORB) above VWAP",
         "news": "MSCI weighting increase attracting $1.8B passive FII inflows; post-merger retail deposit accretion accelerating.",
         "flow": "Morgan Stanley Institutional Equity and LIC active net buyers on domestic exchanges; +79% buy delta."
+    },
+    {
+        "symbol": "TCS",
+        "name": "Tata Consultancy Services",
+        "direction": "BUY",
+        "session_phase": "MORNING",
+        "time_window": "09:30 AM – 11:00 AM",
+        "strategy_type": "Morning Support Bounce & Level Breakout",
+        "news": "Total Contract Value (TCV) stood at $8.6B with massive banking tech transformation mandates in the US and UK.",
+        "flow": "Domestic mutual funds absorbed supply at the 200 EMA support with institutional block trades."
     },
     {
         "symbol": "TATASTEEL",
         "name": "Tata Steel Ltd",
         "direction": "SELL",
+        "session_phase": "MIDDAY",
+        "time_window": "11:00 AM – 12:30 PM",
+        "strategy_type": "Midday Resistance Rejection & Breakdown Short",
         "news": "Weak Chinese steel export prices creating intense margin pressure; UK blast furnace restructuring expenses weighing on operations.",
         "flow": "FII institutional profit booking noted in metal index components; sell order flow delta standing at -76.5%."
     },
@@ -64,13 +83,39 @@ INTRADAY_CANDIDATE_UNIVERSE = [
         "symbol": "ICICIBANK",
         "name": "ICICI Bank Ltd",
         "direction": "BUY",
+        "session_phase": "MIDDAY",
+        "time_window": "11:00 AM – 12:30 PM",
+        "strategy_type": "VWAP Pullback & Reclaim Long",
         "news": "Q2 loan growth clocked 15.2% with net NPA declining to record low 0.42%; return on assets leading the private banking universe.",
         "flow": "SBI Mutual Fund and HDFC Life active buyers; institutional bid depth dominated ask orders 2.8:1."
+    },
+    {
+        "symbol": "BHARTIARTL",
+        "name": "Bharti Airtel Ltd",
+        "direction": "BUY",
+        "session_phase": "MIDDAY",
+        "time_window": "12:30 PM – 02:00 PM",
+        "strategy_type": "Midday Consolidation Breakout",
+        "news": "Industry-leading ARPU reached Rs 233 per user; prepaid tariff hike flow-through boosting wireless EBITDA margins.",
+        "flow": "Consistent institutional delivery buying seen over 10 trading sessions; institutional delta +74%."
+    },
+    {
+        "symbol": "WIPRO",
+        "name": "Wipro Ltd",
+        "direction": "SELL",
+        "session_phase": "MIDDAY",
+        "time_window": "12:30 PM – 02:00 PM",
+        "strategy_type": "Midday Range Fade Short",
+        "news": "Consulting business segment remains sluggish; large deal ramp-up experiencing client project delays.",
+        "flow": "Institutional desks hedging long IT exposure with selective shorts in mid-tier large caps."
     },
     {
         "symbol": "INFY",
         "name": "Infosys Ltd",
         "direction": "BUY",
+        "session_phase": "AFTERNOON",
+        "time_window": "01:00 PM – 02:30 PM",
+        "strategy_type": "Afternoon Trend Continuation Long",
         "news": "Raised full-year revenue growth guidance to 4.75%; signed mega $1.2B enterprise cloud AI modernization contract.",
         "flow": "Foreign Portfolio Investors turned net buyers in tier-1 IT names; delivery accumulation rose to 61%."
     },
@@ -78,36 +123,21 @@ INTRADAY_CANDIDATE_UNIVERSE = [
         "symbol": "SBIN",
         "name": "State Bank of India",
         "direction": "BUY",
+        "session_phase": "AFTERNOON",
+        "time_window": "01:00 PM – 02:30 PM",
+        "strategy_type": "Afternoon Institutional Expansion",
         "news": "Quarterly net profit crossed Rs 18,300 Cr; net interest margins resilient with retail loan book expanding +14% YoY.",
         "flow": "Government pension funds and domestic institutions absorbed all intraday supply at key VWAP support."
-    },
-    {
-        "symbol": "BHARTIARTL",
-        "name": "Bharti Airtel Ltd",
-        "direction": "BUY",
-        "news": "Industry-leading ARPU reached Rs 233 per user; prepaid tariff hike flow-through boosting wireless EBITDA margins.",
-        "flow": "Consistent institutional delivery buying seen over 10 trading sessions; institutional delta +74%."
-    },
-    {
-        "symbol": "TCS",
-        "name": "Tata Consultancy Services",
-        "direction": "BUY",
-        "news": "Total Contract Value (TCV) stood at $8.6B with massive banking tech transformation mandates in the US and UK.",
-        "flow": "Domestic mutual funds absorbed supply at the 200 EMA support with institutional block trades."
     },
     {
         "symbol": "BAJFINANCE",
         "name": "Bajaj Finance Ltd",
         "direction": "BUY",
+        "session_phase": "AFTERNOON",
+        "time_window": "01:30 PM – 02:45 PM",
+        "strategy_type": "Afternoon High-Beta Breakout Long",
         "news": "Assets Under Management (AUM) crossed Rs 3.7 Lakh Cr; new customer acquisition hit record 3.9 Million in Q2.",
         "flow": "Citigroup and Goldman Sachs domestic desks increased institutional buy orders; CVD +78%."
-    },
-    {
-        "symbol": "WIPRO",
-        "name": "Wipro Ltd",
-        "direction": "SELL",
-        "news": "Consulting business segment remains sluggish; large deal ramp-up experiencing client project delays.",
-        "flow": "Institutional desks hedging long IT exposure with selective shorts in mid-tier large caps."
     }
 ]
 
@@ -238,12 +268,15 @@ class IntradaySignalEngine:
 
             per_share_gain = abs(plan["target_1"] - plan["trigger_entry"])
             target_gain_pct = round((per_share_gain / plan["trigger_entry"]) * 100, 2)
+            display_window = f"{item['time_window']} • {item.get('strategy_type', 'ORB Setup')}"
 
             signal = {
                 "symbol": symbol,
                 "nse_name": item["name"],
                 "signal_type": "INTRADAY",
                 "direction": direction,
+                "session_phase": item.get("session_phase", "ALL"),
+                "strategy_type": item.get("strategy_type", "ORB Setup"),
                 "cmp": cmp_price,
                 "entry_price": plan["trigger_entry"],
                 "stop_loss": plan["stop_loss"],
@@ -256,7 +289,7 @@ class IntradaySignalEngine:
                 "stop_probability": tm_res["stop_first_pct"],
                 "is_golden": is_golden,
                 "status": entry_status,
-                "time_window": window_desc,
+                "time_window": display_window,
                 "capital": self.CAPITAL,
                 "quantity": budget["quantity"],
                 "allocated_capital": budget["allocated_capital"],
@@ -267,8 +300,8 @@ class IntradaySignalEngine:
                 "charges": budget["charges_breakdown"]["total_charges"],
                 "charges_breakdown": budget["charges_breakdown"],
                 # Drill-Down 11-Skill Audit fields
-                "trigger_condition": f"Trigger {direction} when a 5-min candle CLOSES {'above' if direction=='BUY' else 'below'} ₹{plan['trigger_entry']:.2f}. Mandatory square-off before 15:15 IST.",
-                "technical_reason": f"SMC 5-minute Opening Range Breakout (ORB) aligned with VWAP. 20 EMA at ₹{scan_res.get('ema20', cmp_price):.2f}, RSI={scan_res.get('rsi', 50):.1f}.",
+                "trigger_condition": f"Optimal Trading Window: {item['time_window']}. Trigger {direction} when 5-min candle CLOSES {'above' if direction=='BUY' else 'below'} ₹{plan['trigger_entry']:.2f} with volume > 1.2x. MIS square-off at 15:15 IST.",
+                "technical_reason": f"SMC setup ({item.get('strategy_type')}) aligned with VWAP. 20 EMA at ₹{scan_res.get('ema20', cmp_price):.2f}, RSI={scan_res.get('rsi', 50):.1f}.",
                 "stock_news": catalyst["news_headline"],
                 "institutional_flow": catalyst["institutional_flow"],
                 "timemachine_summary": f"1,000 Monte Carlo Replays: {tm_res['target_first_pct']}% Target First vs {tm_res['stop_first_pct']}% Stop First. Expected R: +{tm_res['empirical_r']:.2f}R.",

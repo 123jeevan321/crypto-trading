@@ -233,9 +233,20 @@ async function fetchIntradaySignals() {
   }
 }
 
+let intradayWindowFilter = 'ALL';
+
 function filterIntradayCards(mode) {
   intradayFilter = mode;
-  document.querySelectorAll('.intraday-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  const bar = event.target.closest('.intraday-filter-bar');
+  if (bar) bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderIntradayView();
+}
+
+function filterIntradayWindow(phase) {
+  intradayWindowFilter = phase;
+  const bar = event.target.closest('.intraday-filter-bar');
+  if (bar) bar.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
   event.target.classList.add('active');
   renderIntradayView();
 }
@@ -246,18 +257,19 @@ function renderIntradayView() {
   const countEl = document.getElementById('intradayLiveCount');
 
   let list = allIntradaySignals;
-  if (intradayFilter === 'BUY') list = allIntradaySignals.filter(s => s.direction === 'BUY');
-  if (intradayFilter === 'SELL') list = allIntradaySignals.filter(s => s.direction === 'SELL');
+  if (intradayFilter === 'BUY') list = list.filter(s => s.direction === 'BUY');
+  if (intradayFilter === 'SELL') list = list.filter(s => s.direction === 'SELL');
+  if (intradayWindowFilter !== 'ALL') list = list.filter(s => s.session_phase === intradayWindowFilter);
 
-  countEl.innerText = `${list.length} qualified setups (${intradayFilter})`;
+  countEl.innerText = `${list.length} setups in view (${intradayFilter} • ${intradayWindowFilter})`;
 
   if (list.length === 0) {
     priorityWrap.innerHTML = '';
     grid.innerHTML = `
       <div class="no-trade-card">
         <div class="no-trade-icon">🛡️</div>
-        <h3>NO QUALIFIED INTRADAY TRADES AVAILABLE (${intradayFilter})</h3>
-        <p>CAPITAL PROTECTION ACTIVE — Full-day session scanner active. No unconfirmed risk taken.</p>
+        <h3>NO QUALIFIED INTRADAY TRADES AVAILABLE (${intradayFilter} • ${intradayWindowFilter})</h3>
+        <p>CAPITAL PROTECTION ACTIVE — Full-day session scanner active across 09:15 - 15:00 IST. No unconfirmed risk taken.</p>
       </div>`;
     return;
   }

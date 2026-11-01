@@ -133,9 +133,15 @@
     <section class="module-view" id="tab-intraday">
       <div class="intraday-controls-row">
         <div class="intraday-filter-bar">
-          <button class="filter-btn active" onclick="filterIntradayCards('ALL')">All Setups</button>
-          <button class="filter-btn btn-filter-buy" onclick="filterIntradayCards('BUY')">🟢 BUY Posters</button>
-          <button class="filter-btn btn-filter-sell" onclick="filterIntradayCards('SELL')">🔴 SELL Posters</button>
+          <button class="filter-btn active" id="btnFilterAll" onclick="filterIntradayCards('ALL')">All Setups</button>
+          <button class="filter-btn btn-filter-buy" id="btnFilterBuy" onclick="filterIntradayCards('BUY')">🟢 BUY</button>
+          <button class="filter-btn btn-filter-sell" id="btnFilterSell" onclick="filterIntradayCards('SELL')">🔴 SELL</button>
+        </div>
+        <div class="intraday-filter-bar window-filter-bar" style="margin-left: 8px;">
+          <button class="filter-btn active" id="btnWindowAll" onclick="filterIntradayWindow('ALL')">⏰ Full Day (09:15 - 15:00)</button>
+          <button class="filter-btn" id="btnWindowMorning" onclick="filterIntradayWindow('MORNING')">🌅 09:30 - 11:00 (ORB)</button>
+          <button class="filter-btn" id="btnWindowMidday" onclick="filterIntradayWindow('MIDDAY')">☀️ 11:00 - 12:30 (Pullback)</button>
+          <button class="filter-btn" id="btnWindowAfternoon" onclick="filterIntradayWindow('AFTERNOON')">📈 01:00 - 02:45 (Trend)</button>
         </div>
         <span class="text-muted" id="intradayLiveCount">Live prices synchronized</span>
       </div>
