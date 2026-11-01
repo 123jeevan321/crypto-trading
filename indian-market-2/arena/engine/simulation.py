@@ -45,7 +45,7 @@ class Position:
 class SimulationEngine:
     """Manages virtual trading portfolio, order execution, and fee calculation."""
 
-    def __init__(self, initial_capital: float = 100000.0):
+    def __init__(self, initial_capital: float = 100000.0, saved_state: Optional[Dict[str, Any]] = None):
         self.cfg = get_config()
         self.initial_capital = initial_capital
         self.cash = initial_capital
@@ -57,6 +57,22 @@ class SimulationEngine:
         self.turnover_rate = self.cfg.turnover_charge_pct / 100.0
         self.gst_rate = self.cfg.gst_pct / 100.0
         self.stamp_duty_rate = self.cfg.stamp_duty_buy_pct / 100.0
+
+        if saved_state:
+            self.restore_state(saved_state)
+
+    def restore_state(self, state: Dict[str, Any]):
+        """Restore cash and positions from saved state."""
+        self.cash = float(state.get("current_cash", self.initial_capital))
+        self.positions.clear()
+        for p in state.get("open_positions", []):
+            pos = Position(**p)
+            self.positions[pos.id] = pos
+
+        self.closed_positions.clear()
+        for p in state.get("trade_journal", []):
+            pos = Position(**p)
+            self.closed_positions.append(pos)
 
     @property
     def total_unrealized_pnl(self) -> float:

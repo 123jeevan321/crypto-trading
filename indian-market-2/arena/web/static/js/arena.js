@@ -13,6 +13,20 @@ async function fetchStatus() {
         document.getElementById("current-day").innerText = data.current_day;
         document.getElementById("target-days").innerText = data.target_days;
 
+        // Market status indicator
+        const mktPill = document.getElementById("market-status-pill");
+        if (data.is_market_open) {
+            mktPill.innerText = "🟢 NSE LIVE";
+            mktPill.style.color = "#00f298";
+        } else {
+            mktPill.innerText = "🟡 24/7 SIM ACTIVE";
+            mktPill.style.color = "#f59e0b";
+        }
+
+        if (data.server_time_ist) {
+            document.getElementById("server-time").innerText = `IST ${data.server_time_ist.split(' ')[1]}`;
+        }
+
         const pct = Math.min(100, (data.current_day / data.target_days) * 100);
         document.getElementById("progress-fill").style.width = `${pct}%`;
 
@@ -37,8 +51,21 @@ async function fetchStatus() {
         document.getElementById("open-count").innerText = data.open_positions_count;
         document.getElementById("pos-badge").innerText = `${data.open_positions_count} Open`;
 
-        document.getElementById("active-brain-display").innerText = data.active_brain.toUpperCase();
-        document.getElementById("active-profile-display").innerText = `Risk Profile: ${data.profile_name}`;
+        // Update selector value if not matching
+        const sel = document.getElementById("engine-selector");
+        if (sel && sel.value !== data.active_brain) {
+            sel.value = data.active_brain;
+        }
+
+        const startBtn = document.getElementById("btn-start");
+        if (data.status === "ACTIVE") {
+            startBtn.innerText = "🟢 Session Running...";
+            startBtn.style.opacity = "0.85";
+        } else {
+            startBtn.innerText = "▶ Start Trading Session";
+            startBtn.style.opacity = "1.0";
+        }
+
     } catch (e) {
         console.error("Status fetch error", e);
     }
@@ -52,7 +79,7 @@ async function fetchPositions() {
 
         const openBody = document.getElementById("open-positions-body");
         if (data.open.length === 0) {
-            openBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No positions currently open. Waiting for market setup trigger.</td></tr>';
+            openBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No positions currently open. Click "▶ Start Trading Session" or "⚡ Scan & Execute Setup" to trade.</td></tr>';
         } else {
             openBody.innerHTML = data.open.map(p => {
                 const pnl = p.unrealized_pnl || 0;
@@ -68,6 +95,7 @@ async function fetchPositions() {
                     <td style="color:#00f298;">₹${formatINR(p.take_profit)}</td>
                     <td style="color:${pnlColor}; font-weight:bold;">${pnl >= 0 ? '+' : ''}₹${formatINR(pnl)}</td>
                     <td><small style="color:#94a3b8;">${p.engine_name}</small></td>
+                    <td><button class="btn btn-sm btn-secondary" onclick="closePosition('${p.id}')" style="padding:2px 8px; font-size:0.75rem;">Close</button></td>
                 </tr>
                 `;
             }).join("");
@@ -110,7 +138,7 @@ async function fetchQuotes() {
 
         const keys = Object.keys(quotes);
         if (keys.length === 0) {
-            container.innerHTML = '<div class="text-muted">No quote data available yet.</div>';
+            container.innerHTML = '<div class="text-muted">Loading live quotes...</div>';
             return;
         }
 
@@ -132,12 +160,27 @@ async function fetchQuotes() {
 }
 
 async function startChallenge() {
+    const sel = document.getElementById("engine-selector");
+    const brain = sel ? sel.value : "auto";
     await fetch("/api/challenge/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({ brain: brain })
     });
     fetchStatus();
+    fetchPositions();
+}
+
+async function scanNow() {
+    const btn = document.getElementById("btn-scan");
+    btn.innerText = "⏳ Scanning...";
+    try {
+        await fetch("/api/scan_now", { method: "POST" });
+        await fetchStatus();
+        await fetchPositions();
+    } finally {
+        btn.innerText = "⚡ Scan & Execute Setup";
+    }
 }
 
 async function pauseChallenge() {
@@ -149,16 +192,58 @@ async function pauseChallenge() {
     fetchStatus();
 }
 
+async function resetChallenge() {
+    if (confirm("Reset challenge balance back to ₹1,00,000 and clear trade journal?")) {
+        await fetch("/api/challenge/reset", { method: "POST" });
+        fetchStatus();
+        fetchPositions();
+    }
+}
+
+async function closePosition(posId) {
+    await fetch(`/api/position/close/${posId}`, { method: "POST" });
+    fetchStatus();
+    fetchPositions();
+}
+
+async function changeEngine(brainName) {
+    await fetch("/api/engine/select", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brain: brainName })
+    });
+    fetchStatus();
+}
+
 function formatINR(num) {
     if (num === null || num === undefined || isNaN(num)) return "0.00";
     return Number(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-// Polling interval
+// Styling for engine-select in CSS
+const style = document.createElement('style');
+style.innerHTML = `
+.engine-select {
+    width: 100%;
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.engine-select:focus { outline: 1px solid #00f298; }
+`;
+document.head.appendChild(style);
+
+// Initial load
 fetchStatus();
 fetchPositions();
 fetchQuotes();
 
+// Fast live polling
 setInterval(() => {
     fetchStatus();
     fetchPositions();
@@ -166,4 +251,4 @@ setInterval(() => {
 
 setInterval(() => {
     fetchQuotes();
-}, 5000);
+}, 4000);

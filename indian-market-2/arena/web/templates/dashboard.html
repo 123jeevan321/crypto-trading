@@ -21,7 +21,10 @@
 
             <div class="challenge-pill">
                 <span class="pill-label">CHALLENGE STATUS</span>
-                <span id="challenge-status" class="pill-value status-badge">READY</span>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span id="challenge-status" class="pill-value status-badge">READY</span>
+                    <span id="market-status-pill" class="badge" style="background:#1e293b; color:#00d2ff; font-size:0.7rem;">NSE FEED</span>
+                </div>
                 <div class="day-progress">
                     <span>Day <strong id="current-day">1</strong> of <strong id="target-days">15</strong></span>
                     <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 6.6%;"></div></div>
@@ -38,13 +41,20 @@
 
             <div class="engine-badge-box">
                 <div class="engine-title">ACTIVE DECISION ENGINE</div>
-                <div id="active-brain-display" class="engine-name">Auto (Claude CLI / API / Rules)</div>
-                <div id="active-profile-display" class="profile-name">Risk Profile: Balanced</div>
+                <select id="engine-selector" class="engine-select" onchange="changeEngine(this.value)">
+                    <option value="auto">Auto (Claude CLI / API / Rules)</option>
+                    <option value="rules">Rules Baseline (Deterministic ORB)</option>
+                    <option value="claude-code">Claude Code (CLI)</option>
+                    <option value="claude-api">Anthropic API (Claude 3.5)</option>
+                </select>
+                <div id="active-profile-display" class="profile-name">Risk Profile: Balanced (Max 20% / Pos)</div>
             </div>
 
             <div class="sidebar-actions">
                 <button id="btn-start" class="btn btn-primary" onclick="startChallenge()">▶ Start Trading Session</button>
+                <button id="btn-scan" class="btn btn-secondary" onclick="scanNow()" style="background:#00d2ff; color:#000;">⚡ Scan & Execute Setup</button>
                 <button id="btn-pause" class="btn btn-secondary" onclick="pauseChallenge()">⏸ Pause Session</button>
+                <button id="btn-reset" class="btn btn-secondary" onclick="resetChallenge()" style="font-size:0.75rem; color:#ff3366;">🔄 Reset Challenge State</button>
             </div>
         </aside>
 
@@ -70,6 +80,7 @@
                     </div>
                 </div>
                 <div class="top-actions">
+                    <span id="server-time" style="font-size:0.8rem; color:#94a3b8; margin-right:12px;">IST --:--:--</span>
                     <button class="btn btn-sm btn-report" onclick="window.open('/api/reports/generate', '_blank')">📥 Download 15-Day Audit</button>
                 </div>
             </header>
@@ -118,11 +129,12 @@
                                     <th>Take Profit</th>
                                     <th>Unrealized P&L</th>
                                     <th>Brain</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="open-positions-body">
                                 <tr>
-                                    <td colspan="9" class="text-center text-muted">No positions currently open. Waiting for market setup trigger.</td>
+                                    <td colspan="10" class="text-center text-muted">No positions currently open. Click "▶ Start Trading Session" or "⚡ Scan & Execute Setup" to trade.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -133,7 +145,7 @@
                 <section id="watchlist" class="panel">
                     <div class="panel-header">
                         <h3>📈 Monitored Watchlist & Real-Time Quotes</h3>
-                        <span class="text-muted" style="font-size:0.85rem;">Refreshed via Yahoo Finance / NSE Feed</span>
+                        <span class="text-muted" style="font-size:0.85rem;">Continuous live price stream</span>
                     </div>
                     <div class="watchlist-grid" id="watchlist-container">
                         <!-- Populated dynamically -->
