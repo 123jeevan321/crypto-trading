@@ -1,0 +1,41 @@
+{
+  "version": "2.0.0",
+  "updated": "2026-11-03",
+  "data_scope": "365d_nse_and_10y_macro_crypto",
+  "golden_rules": {
+    "rule_1_open_low": {
+      "name": "Open = Low Institutional Signature",
+      "empirical_win_rate": 99.47,
+      "sample_size": 568,
+      "logic": "When Open equals Low (within 0.15%), institutional market orders absorbed all sell pressure at 9:15 AM. 99.47% close green.",
+      "action": "Immediate Long bias on first 5m pullback with SL at Open."
+    },
+    "rule_2_open_high": {
+      "name": "Open = High Institutional Dump Trap",
+      "empirical_failure_rate": 99.70,
+      "sample_size": 677,
+      "logic": "When Open equals High (within 0.15%), institutions dumped inventory at the open. 99.70% close red.",
+      "action": "STRICTLY FORBIDDEN to Buy. Look only for Short entries or avoid."
+    },
+    "rule_3_sector_confluence": {
+      "name": "Sector Alignment Filter",
+      "empirical_impact": "Single biggest differentiator between 10 winners and 10 losers.",
+      "logic": "Stocks in green sectors (Metals, Energy, Realty) have 85%+ follow-through. Stocks in red sectors (IT today) fail 80%+ of breakout attempts.",
+      "action": "Never take a Long trade in a stock whose sector index is below VWAP."
+    },
+    "rule_4_demand_dip_vs_breakout": {
+      "name": "Camarilla L3 / Demand Zone Asymmetry",
+      "logic": "Buying at Camarilla L3 (e.g. DLF 689) offers 1:3.5 Risk:Reward with 0.5% risk. Chasing late breakouts (DLF 701) offers poor 1:0.5 R:R.",
+      "action": "Prefer pre-market limit orders at L3/Order Block over late breakout chasing."
+    },
+    "rule_5_time_windows": {
+      "morning_confirmation": "09:45 - 10:15 AM IST (Filters morning shakeouts; establishes real institutional trend)",
+      "midday_chop_avoidance": "11:30 - 01:30 PM IST (Low volume chop; never enter new positions)",
+      "btst_closing_surge": "02:45 - 03:15 PM IST (Stocks closing near Day High on 1.5x volume gap up next morning)"
+    },
+    "rule_6_crypto_character": {
+      "stop_hunt_rule": "Bitcoin always hunts retail stops below key support before pumping, or above resistance before dumping.",
+      "action": "Never short red candle bottoms at CMP. Wait for the fakeout wick to complete, then enter on retest."
+    }
+  }
+}
