@@ -170,3 +170,10 @@ treats a PASS as the user's yes.
   (Customize > Connectors > tool permissions). Never set an order tool to "Always allow".
 - No options, margin, short selling or leverage unless the config allows it and the user confirms.
 - Broker keys live in environment variables or the Claude Desktop config, never in the chat.
+
+
+## Institutional Risk & Jeevan Protocol
+- **Zero SL Widening in Drawdown**: Never increase risk percentage or widen a Stop Loss when a trade is negative. A planned small loss preserves capital.
+- **Leverage Cap (5x–10x Max)**: Avoid 50x fee penalties where fees on notional value consume capital.
+- **Breakeven Trailing**: Move SL to entry at +1R to lock in risk-free status.
+- **Asymmetric R:R**: Every setup must offer at least 1:1.5 to 1:3 reward-to-risk.

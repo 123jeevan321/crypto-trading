@@ -156,3 +156,9 @@ When the user prompts with the exact keyword `binary trading entry`:
    - **RULE 1 - NO FORCED TRADES**: If confluence is below 88% or market is in a dangerous/choppy zone, DO NOT recommend a trade. Explicitly reply: `NO ENTRY RIGHT NOW. MARKET IS CHOPPY / DANGEROUS. WAIT.`
    - **RULE 2 - EXACTLY ONE TRADE**: Never offer Option 1 and Option 2. Provide strictly the single highest-probability setup.
    - **RULE 3 - CANDLE 00-SECOND EXECUTION**: Explicitly specify pair, direction (CALL / PUT), 5-minute expiry, and waiting for the current candle to close to enter at `:00` seconds.
+
+
+## Institutional Liquidity & Intimation Protocol
+- **No Chasing CMP**: Never enter during strong momentum candles. Always wait for the fakeout / stop-hunt wick to complete.
+- **Limit / Maker Preference**: Prioritize limit orders at Fair Value Gaps (FVG) and Order Blocks to minimize fees.
+- **3-Phase Intimation**: (1) Heads-up institutional alert, (2) Confirmed ticket with exact levels, (3) Live coaching to trail SL to cost.
