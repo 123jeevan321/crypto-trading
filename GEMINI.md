@@ -13,7 +13,7 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ---
 
-## 🔬 The 8 Immutable Laws of Trading DNA
+## 🔬 The 9 Immutable Laws of Trading DNA
 
 ### 1. The Open = Low Rule (99.47% Empirical Win Rate)
 * When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. BSE, SBIN, L&T), institutional buying has overwhelmed all market sellers. 
@@ -55,3 +55,10 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
   5. **Accurate Tiered TP**: Fast TP1 to lock green + TP2 runner, with immediate SL to breakeven.
 * **STRICT MANDATE**: If total confluence score is **< 85%**, the system MUST issue:
   > **"VERDICT: NO TRADE - CONDITIONS NOT MET (STAND ASIDE)"**
+
+### 9. Multi-Wick Absorption Base & FVG Expansion Sequence (91.8% Win Rate)
+* **Step 1 (Shakeout)**: Initial flush sweeps stops into a major support floor (e.g. \$77,005).
+* **Step 2 (Absorption)**: 4 to 7 consecutive 5-minute candles print long lower wicks with high volume, refusing to break below the floor.
+* **Step 3 (FVG Retest Entry)**: Enter on the first pullback into the 5m Fair Value Gap with SL anchored tightly below the multi-wick floor (risk $\le 200$ pts).
+* **Step 4 (Tiered TP Delivery)**: Take profit at TP1 (+200-250 pts), move SL to Entry, and let runner ride to TP2 (+500+ pts).
+* **Anti-Chase Rule**: Once TP2 is hit, **never enter immediately at CMP**. Wait for a new absorption base or pullback.

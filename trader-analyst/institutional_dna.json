@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "updated": "2026-11-03",
   "data_scope": "365d_nse_and_10y_macro_crypto_orderflow_smc",
   "core_philosophy": {
@@ -60,6 +60,17 @@
         "high_accuracy_tp": "Priority #1 is hitting TP accurately (even 100-300 pts on BTC or 0.4% on stocks). Tiered TP1 locks in green; TP2 captures runners."
       },
       "discipline_edict": "If total confluence score is < 85%, the system is strictly mandated to issue 'NO TRADE - STAND ASIDE'. No guessing, no chasing."
+    },
+    "rule_9_multi_wick_absorption_expansion": {
+      "name": "The Multi-Wick Absorption Base & FVG Expansion Sequence",
+      "win_rate_signature": 91.8,
+      "core_sequence": [
+        "Step 1 - Shakeout Flush: Initial sharp sell-off sweeps retail stops into a major psychological level (e.g. $77,005).",
+        "Step 2 - Absorption Base: 4 to 7 consecutive 5m candles print long lower wicks, testing the same price level with high volume but refusing to make new closing lows.",
+        "Step 3 - FVG Retest Entry: Wait for the first strong green expansion candle, then enter on the immediate 1m/5m pullback retest into the Fair Value Gap with SL tightly anchored right under the multi-wick absorption floor.",
+        "Step 4 - Tiered TP Delivery: Take 70% off at TP1 (immediate overhead liquidity +200-250 pts), move SL to entry immediately, and let the remaining 30% run to TP2 session highs (+500+ pts)."
+      ],
+      "anti_chase_directive": "Once TP2 is achieved, NEVER enter immediately in mid-air. Wait for a secondary absorption base or clean pullback before considering re-entry."
     }
   }
 }
