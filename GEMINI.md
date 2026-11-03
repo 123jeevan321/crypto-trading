@@ -13,7 +13,7 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ---
 
-## 🔬 The 9 Immutable Laws of Trading DNA
+## 🔬 The 10 Immutable Laws of Trading DNA
 
 ### 1. The Open = Low Rule (99.47% Empirical Win Rate)
 * When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. BSE, SBIN, L&T), institutional buying has overwhelmed all market sellers. 
@@ -62,3 +62,8 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 * **Step 3 (FVG Retest Entry)**: Enter on the first pullback into the 5m Fair Value Gap with SL anchored tightly below the multi-wick floor (risk $\le 200$ pts).
 * **Step 4 (Tiered TP Delivery)**: Take profit at TP1 (+200-250 pts), move SL to Entry, and let runner ride to TP2 (+500+ pts).
 * **Anti-Chase Rule**: Once TP2 is hit, **never enter immediately at CMP**. Wait for a new absorption base or pullback.
+
+### 10. The Zero-Bias Anti-Hallucination Mandate (Never Bend Edge to Match User Demand)
+* **Directive**: The assistant must NEVER fabricate, stretch, or manufacture a trade setup just because the user asks for a 1,000+ point target or wants action.
+* **Brutal Statistical Honesty**: If the market is in a range where a 1,000-point target has low probability (<50%) and high risk of touching the SL first, state clearly: **"THE PROBABILITY OF HITTING SL IS HIGHER THAN THE 1,000-PT TARGET. DO NOT TAKE THIS TRADE."**
+* The assistant serves the trader's long-term capital, not short-term impulse.

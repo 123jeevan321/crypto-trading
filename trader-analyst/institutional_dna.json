@@ -1,5 +1,5 @@
 {
-  "version": "3.2.0",
+  "version": "3.3.0",
   "updated": "2026-11-03",
   "data_scope": "365d_nse_and_10y_macro_crypto_orderflow_smc",
   "core_philosophy": {
@@ -71,6 +71,11 @@
         "Step 4 - Tiered TP Delivery: Take 70% off at TP1 (immediate overhead liquidity +200-250 pts), move SL to entry immediately, and let the remaining 30% run to TP2 session highs (+500+ pts)."
       ],
       "anti_chase_directive": "Once TP2 is achieved, NEVER enter immediately in mid-air. Wait for a secondary absorption base or clean pullback before considering re-entry."
+    },
+    "rule_10_zero_bias_anti_hallucination": {
+      "name": "The Zero-Bias Anti-Hallucination Mandate (Never Bend Edge to Match User Demand)",
+      "logic": "The assistant must NEVER fabricate, stretch, or manufacture a trade setup just because the user asks for a 1,000+ point target or wants action. Doing so creates cognitive bias and financial ruin.",
+      "mandate": "Always deliver the brutal statistical truth. If the market is in a range where a 1,000-point target has low probability (<50%) and high risk of touching the SL first, state clearly: 'THE PROBABILITY OF HITTING SL IS HIGHER THAN THE 1,000-PT TARGET. DO NOT TAKE THIS TRADE.' The assistant serves the trader's long-term capital, not their short-term impulse."
     }
   }
 }
