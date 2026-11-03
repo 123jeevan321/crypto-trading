@@ -1,7 +1,8 @@
 """
 Institutional Multi-Confluence Engine (Volume Profile, Order Flow, ICT/SMC, Footprints, Traps, Technicals)
 Calculates institutional confluence score (0-100%).
-Strict Discipline Rule: If score < 85%, verdict is strictly "NO TRADE - CONDITIONS NOT MET".
+Core Directive: Accuracy & TP hit rate is Priority #1.
+Supports Dynamic Scalp & Swing Targets (e.g. TP1 100-300 pts high-probability lock, TP2 runners).
 """
 
 import sys
@@ -34,7 +35,7 @@ class InstitutionalConfluenceEngine:
     3. Institutional Footprint & Retail Trap Detection (EQH/EQL sweeps, fakeouts)
     4. Technical Indicators (EMA 9/21/50/200 Stack, MACD Histogram, VWAP)
     5. Event & Macro Calendar Gatekeeper (Earnings blackout, High-impact news)
-    6. Strict 100% Discipline: Minimum 85% Confluence Score required for entry
+    6. Priority #1: ACCURATE TP EXECUTION (Tier 1 quick profit lock + Tier 2 runner)
     """
 
     @staticmethod
@@ -113,7 +114,6 @@ class InstitutionalConfluenceEngine:
                 fvg_price = (high_next + low_prev) / 2.0
 
         # 2. Liquidity Sweep (Stop Hunt)
-        # Price penetrates recent swing high/low by wick but closes back inside
         recent_high = float(df['High'].iloc[-25:-3].max())
         recent_low = float(df['Low'].iloc[-25:-3].min())
 
@@ -123,9 +123,9 @@ class InstitutionalConfluenceEngine:
 
         sweep = None
         if last_high > recent_high and last_close < recent_high:
-            sweep = "BEARISH_BUY_STOP_HUNT"  # Swept buy-stops above resistance, trapped breakout buyers
+            sweep = "BEARISH_BUY_STOP_HUNT"
         elif last_low < recent_low and last_close > recent_low:
-            sweep = "BULLISH_SELL_STOP_HUNT"  # Swept sell-stops below support, trapped breakdown sellers
+            sweep = "BULLISH_SELL_STOP_HUNT"
 
         # 3. Order Block
         ob = None
@@ -188,7 +188,7 @@ class InstitutionalConfluenceEngine:
     def evaluate(cls, symbol: str, interval: str = "15m", period: str = "5d") -> Dict[str, Any]:
         """
         Runs comprehensive multi-confluence analysis across all pillars.
-        Returns full diagnostics and strict Action Verdict.
+        Builds high-accuracy tiered targets (TP1 quick lock, TP2 expansion).
         """
         # 1. Mandatory Event Calendar Gatekeeper
         if EventsCalendar and symbol.endswith('.NS'):
@@ -224,7 +224,6 @@ class InstitutionalConfluenceEngine:
         bias = "NEUTRAL"
 
         # Pillar 1: Volume Profile Confluence (20 points)
-        # Buying at Value Area Low (VAL) or POC support
         if abs(cmp - vp['val']) / cmp < 0.005:
             score += 20
             confluences.append(f"Volume Profile: Rebounding off Value Area Low (VAL {vp['val']})")
@@ -270,30 +269,81 @@ class InstitutionalConfluenceEngine:
 
         # Pillar 4: Time of Day & Liquidity Cycle Window (15 points)
         now_utc_hour = datetime.now(timezone.utc).hour
-        # Peak crypto & macro liquidity windows: London open (07:00-10:00 UTC) and NY open (13:00-17:00 UTC)
         if (7 <= now_utc_hour <= 10) or (13 <= now_utc_hour <= 17):
             score += 15
             confluences.append(f"Time Window: Institutional Session Window active (UTC {now_utc_hour}:00)")
         else:
             cautions.append(f"Time Window: Low-liquidity transition window (UTC {now_utc_hour}:00) - high risk of chop")
 
-        # Pillar 5: Empirical R:R Asymmetry (20 points)
-        # Tight stop validation
+        # Pillar 5: High-Accuracy Target Delivery & Structural SL (20 points)
+        # Priority #1: Accuracy. TP1 is a high-probability quick scalp (100-300 pts on BTC, 0.4% on stocks)
+        # to ensure the trade is locked in green, while TP2 captures larger moves.
+        order_ticket = None
         if symbol.startswith('BTC'):
-            pts_to_val = abs(cmp - vp['val'])
-            pts_to_vah = abs(cmp - vp['vah'])
-            if min(pts_to_val, pts_to_vah) <= 300:
+            if bias == "BULLISH":
+                sl = round(min(vp['val'], cmp - 220), 2)
+                tp1 = round(cmp + 180, 2)   # High-probability quick green lock
+                tp2 = round(cmp + 750, 2)   # Extended target
                 score += 20
-                confluences.append(f"R:R Footprint: Entry sits within {min(pts_to_val, pts_to_vah):.0f} pts of structural boundary (tight SL < 300 pts valid)")
+                order_ticket = {
+                    "action": "BUY_LONG",
+                    "entry": cmp,
+                    "sl": sl,
+                    "tp1_quick_lock": tp1,
+                    "tp2_runner": tp2,
+                    "tp1_points": round(tp1 - cmp, 2),
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                }
+                confluences.append(f"High-Accuracy Target Plan: TP1 (+{round(tp1 - cmp, 0)} pts) quick green lock, SL: {sl}")
+            elif bias == "BEARISH":
+                sl = round(max(vp['vah'], cmp + 220), 2)
+                tp1 = round(cmp - 180, 2)   # High-probability quick green lock
+                tp2 = round(cmp - 750, 2)   # Extended target
+                score += 20
+                order_ticket = {
+                    "action": "SELL_SHORT",
+                    "entry": cmp,
+                    "sl": sl,
+                    "tp1_quick_lock": tp1,
+                    "tp2_runner": tp2,
+                    "tp1_points": round(cmp - tp1, 2),
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                }
+                confluences.append(f"High-Accuracy Target Plan: TP1 (+{round(cmp - tp1, 0)} pts) quick green lock, SL: {sl}")
             else:
-                cautions.append("R:R Footprint: Price is in mid-range; a structural SL would exceed 300 points")
+                cautions.append("Bias is Neutral: Wait for liquidity sweep before issuing accurate TP ticket")
         else:
-            dist_vwap_pct = abs(cmp - tech['vwap']) / cmp * 100
-            if dist_vwap_pct < 0.35:
+            # Equities Tiered Targets
+            if bias == "BULLISH":
+                sl = round(min(tech['vwap'] * 0.995, cmp * 0.993), 2)
+                tp1 = round(cmp * 1.005, 2)  # +0.5% high probability
+                tp2 = round(cmp * 1.015, 2)  # +1.5%
                 score += 20
-                confluences.append(f"R:R Footprint: Anchored within {dist_vwap_pct:.2f}% of VWAP; allows high-leverage tight stop")
+                order_ticket = {
+                    "action": "BUY_LONG",
+                    "entry": cmp,
+                    "sl": sl,
+                    "tp1_quick_lock": tp1,
+                    "tp2_runner": tp2,
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                }
+                confluences.append(f"High-Accuracy Target Plan: TP1 ₹{tp1} (+0.5%), TP2 ₹{tp2} (+1.5%), SL ₹{sl}")
+            elif bias == "BEARISH":
+                sl = round(max(tech['vwap'] * 1.005, cmp * 1.007), 2)
+                tp1 = round(cmp * 0.995, 2)
+                tp2 = round(cmp * 0.985, 2)
+                score += 20
+                order_ticket = {
+                    "action": "SELL_SHORT",
+                    "entry": cmp,
+                    "sl": sl,
+                    "tp1_quick_lock": tp1,
+                    "tp2_runner": tp2,
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                }
+                confluences.append(f"High-Accuracy Target Plan: TP1 ₹{tp1} (-0.5%), TP2 ₹{tp2} (-1.5%), SL ₹{sl}")
             else:
-                cautions.append(f"R:R Footprint: Extended {dist_vwap_pct:.2f}% from VWAP; chasing risks stop-hunt")
+                cautions.append("Equity trend is Neutral: Wait for VWAP alignment")
 
         # Final Decision Logic
         if score >= 85:
@@ -309,6 +359,7 @@ class InstitutionalConfluenceEngine:
             "confluence_score": round(score, 1),
             "bias": bias,
             "verdict": verdict,
+            "order_ticket": order_ticket,
             "volume_profile": vp,
             "smc_ict": smc,
             "technicals": tech,

@@ -4,10 +4,19 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ---
 
-## 🔬 The 8 Immutable Laws of Trading DNA (Baked into Every Signal)
+## 🎯 Core Operating Priority: Accuracy & TP Hit Rate Above All
+* **No Rigid Point Dogma**: A trade does not need to force a 1,000-point target. A 100–300 point high-probability move on Bitcoin or 0.4–0.8% on stocks that hits TP with high accuracy is far superior to chasing distant targets that reverse.
+* **Tiered Target Protocol**:
+  * **TP1 (Quick Green Lock)**: High-probability target (e.g. 100–300 pts on BTC) to ensure the trade closes green.
+  * **Trailing Rule**: Once TP1 is hit, **move SL to Breakeven immediately** so the trade becomes 100% risk-free.
+  * **TP2 (Runner)**: Extended runner target to maximize expansion when momentum follows through.
+
+---
+
+## 🔬 The 8 Immutable Laws of Trading DNA
 
 ### 1. The Open = Low Rule (99.47% Empirical Win Rate)
-* When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. SBIN, L&T, BSE), institutional buying has overwhelmed all market sellers. 
+* When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. BSE, SBIN, L&T), institutional buying has overwhelmed all market sellers. 
 * **Directive**: Prioritize Long setups on the first 5-minute VWAP pullback with SL anchored strictly below the Open.
 
 ### 2. The Open = High Rule (99.70% Dump Probability)
@@ -20,39 +29,29 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ### 4. Demand Dip Buying (Camarilla L3) > Late Breakouts
 * Pre-calculate **Camarilla L3 Demand Pivots** before 9:15 AM (e.g. DLF at ₹689).
-* Entering at institutional demand zones provides a tight 0.5% stop loss and massive 1:3.5+ Risk:Reward. Avoid buying at the top of multi-day resistance (e.g. ₹701).
+* Entering at institutional demand zones provides a tight stop loss and superior Risk:Reward. Avoid buying at the top of multi-day resistance.
 
 ### 5. Time-Window Execution Discipline
 * **09:15 – 09:45 AM**: Observe opening volatility and identify Open=Low / Open=High candidates.
 * **09:45 – 10:15 AM**: Prime entry window for morning swing & intraday momentum.
 * **11:30 AM – 01:30 PM**: **NO NEW TRADES** (Midday chop & retail trap zone).
-* **02:45 – 03:15 PM**: BTST (Buy Today, Sell Tomorrow) closing surge setups on delivery volume.
+* **02:45 – 03:15 PM**: BTST closing surge setups on delivery volume.
 * **18:30 – 20:30 IST**: Peak Crypto/BTC Institutional Session (Wall Street / US ETF Open).
 
 ### 6. Crypto Institutional Personality (The Stop Hunt)
 * Bitcoin liquidity mechanics: Whales routinely spike price past key levels to trigger clustered retail stops before making the actual move.
-* Never enter market orders at CMP into momentum candles. Wait for the shakeout wick to reject, and enter with Limit orders (5x–10x max leverage).
+* Never enter market orders at CMP into momentum candles. Wait for the shakeout wick to reject, and enter with Limit orders.
 
 ### 7. Mandatory Corporate Earnings & Event Blacklist (HARD BLOCK)
 * **NEVER recommend or enter a stock on the day of its quarterly earnings release (Q1/Q2/Q3/Q4) or Board Meeting.**
 * Automated Gatekeeper: `EventsCalendar.is_earnings_or_event_today()` automatically checks the corporate calendar. If true, the stock is **100% BLOCKED**.
-* Binary news whipsaws ignore technical chart patterns; trading them is gambling, not quantitative edge.
 
-### 8. Universal Multi-Confluence Matrix & Strict "NO TRADE" Discipline
-* **Every single recommendation must pass the 5-Pillar Confluence Engine (`trader-analyst/confluence_engine.py`)**:
-  1. **Volume Profile & Order Flow**: POC, Value Area High (VAH), Value Area Low (VAL). Never enter in mid-range chop.
-  2. **ICT / SMC Structure**: Order Blocks, Fair Value Gaps (FVG), Market Structure Shift (MSS/CHoCH), Liquidity Sweeps.
+### 8. Universal Multi-Confluence Matrix & Accurate TP Execution
+* **Every recommendation must pass the Confluence Engine (`trader-analyst/confluence_engine.py`)**:
+  1. **Volume Profile & Order Flow**: POC, Value Area High (VAH), Value Area Low (VAL).
+  2. **ICT / SMC Structure**: Order Blocks, Fair Value Gaps (FVG), Market Structure Shifts, Liquidity Sweeps.
   3. **Institutional Footprint & Retail Traps**: Equal Highs/Lows stop hunts, false breakout traps.
   4. **Technical Indicators**: EMA 9/21/50/200 Stack, MACD momentum divergence, VWAP alignment.
-  5. **Risk-to-Reward Footprint**: Tight Stop-Loss (<0.5% on stocks, <300 pts on BTC) anchored to structural boundaries, targeting $\ge 1:3.5$ R:R.
+  5. **Accurate Tiered TP**: Fast TP1 to lock green + TP2 runner, with immediate SL to breakeven.
 * **STRICT MANDATE**: If total confluence score is **< 85%**, the system MUST issue:
   > **"VERDICT: NO TRADE - CONDITIONS NOT MET (STAND ASIDE)"**
-  No forced setups, no chasing, no guessing.
-
----
-
-## Signal Delivery Protocol
-Whenever Jeevan requests an entry, the system automatically checks these 8 laws before producing:
-1. **Setup Pre-Alert**: Confluence score ($\ge 85\%$), Volume Profile level, SMC Liquidity Sweep, Event Calendar check.
-2. **Order Ticket**: Exact Limit Entry, Stop Loss (anchored to structural pivot $\le 300$ pts on BTC), Target 1 ($\ge 1,000$ pts), Target 2.
-3. **Active Trade Coaching**: Trailing SL to Entry at +1R to guarantee risk-free execution.
