@@ -348,16 +348,31 @@ class SkillsPipelineEngine:
         stop_loss: float,
         rr_ratio: float,
         mode: str = "SWING",
-        current_time: Optional[datetime] = None
+        current_time: Optional[datetime] = None,
+        symbol: str = ""
     ) -> Tuple[bool, str]:
         """
         Validates trade against institutional risk rules:
-        1. Stop loss strictly mandatory
-        2. Min R:R >= 1.5
-        3. Market timing rules (14:45 cutoff, 15:15 square-off)
+        1. Mandatory Corporate Earnings & Event Gatekeeper: ZERO trades on earnings day!
+        2. Stop loss strictly mandatory
+        3. Min R:R >= 1.5
+        4. Market timing rules (14:45 cutoff, 15:15 square-off)
         """
         if current_time is None:
             current_time = get_current_ist()
+
+        # Gatekeeper 1: Corporate Earnings & Event Risk Blacklist
+        if symbol:
+            try:
+                from data.events_calendar import EventsCalendar
+                is_event, event_reason = EventsCalendar.is_earnings_or_event_today(
+                    symbol, target_date=current_time.date() if current_time else None
+                )
+                if is_event:
+                    logger.warning("RISK GATE BLOCK: %s blocked due to %s", symbol, event_reason)
+                    return False, f"BLOCK: High-Risk Event Day! {symbol} has {event_reason}. Intraday/Swing trading strictly prohibited to prevent algo whipsaw losses."
+            except Exception as e:
+                logger.debug("EventsCalendar check error for %s: %s", symbol, e)
 
         if stop_loss <= 0 or abs(entry_price - stop_loss) < (entry_price * 0.002):
             return False, "BLOCK: Stop loss is absent or unsustainably tight (<0.2%)"

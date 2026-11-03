@@ -4,14 +4,14 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ---
 
-## 🔬 The 6 Immutable Laws of Trading DNA (Baked into Every Signal)
+## 🔬 The 7 Immutable Laws of Trading DNA (Baked into Every Signal)
 
 ### 1. The Open = Low Rule (99.47% Empirical Win Rate)
-* When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. SBIN, L&T today), institutional buying has overwhelmed all market sellers. 
+* When a stock's **Open is within 0.15% of its Day Low** at 9:20 AM (e.g. SBIN, L&T), institutional buying has overwhelmed all market sellers. 
 * **Directive**: Prioritize Long setups on the first 5-minute VWAP pullback with SL anchored strictly below the Open.
 
 ### 2. The Open = High Rule (99.70% Dump Probability)
-* When a stock's **Open is within 0.15% of its Day High** (e.g. INFY today), institutions used the opening bell to dump inventory.
+* When a stock's **Open is within 0.15% of its Day High** (e.g. INFY), institutions used the opening bell to dump inventory.
 * **Directive**: **STRICTLY FORBIDDEN TO BUY.** Never catch this falling knife. Only evaluate Short setups or stay in cash.
 
 ### 3. Sector Confluence Gatekeeper
@@ -32,10 +32,15 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 * Bitcoin liquidity mechanics: Whales routinely spike price past key levels to trigger clustered retail stops before making the actual move.
 * Never enter market orders at CMP into momentum candles. Wait for the shakeout wick to reject, and enter with Limit orders (5x–10x max leverage).
 
+### 7. Mandatory Corporate Earnings & Event Blacklist (HARD BLOCK)
+* **NEVER recommend or enter a stock on the day of its quarterly earnings release (Q1/Q2/Q3/Q4) or Board Meeting.**
+* Automated Gatekeeper: `EventsCalendar.is_earnings_or_event_today()` automatically checks the corporate calendar. If true, the stock is **100% BLOCKED**.
+* Binary news whipsaws ignore technical chart patterns; trading them is gambling, not quantitative edge.
+
 ---
 
 ## Signal Delivery Protocol
-Whenever Jeevan requests an entry, the system automatically checks these 6 laws before producing:
-1. **Setup Pre-Alert**: Sector tailwind, Open=Low check, institutional liquidity pool.
+Whenever Jeevan requests an entry, the system automatically checks these 7 laws before producing:
+1. **Setup Pre-Alert**: Sector tailwind, Open=Low check, Earnings/Event Calendar check, institutional liquidity pool.
 2. **Order Ticket**: Exact Limit Entry, Stop Loss (anchored to structural pivot), Target 1, Target 2.
 3. **Active Trade Coaching**: Trailing SL to Entry at +1R to guarantee risk-free execution.

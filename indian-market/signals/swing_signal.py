@@ -190,7 +190,8 @@ class SwingSignalEngine:
 
             # SKILL 5: Risk Manager Gatekeeper (trader-risk)
             risk_pass, risk_reason = self.pipeline.evaluate_risk_gate(
-                plan["trigger_entry"], plan["stop_loss"], plan["risk_reward"], mode="SWING", current_time=current_dt
+                plan["trigger_entry"], plan["stop_loss"], plan["risk_reward"],
+                mode="SWING", current_time=current_dt, symbol=symbol
             )
             if not risk_pass:
                 logger.info("Stock %s rejected by Risk Gate: %s", symbol, risk_reason)

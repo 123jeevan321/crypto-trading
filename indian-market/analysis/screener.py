@@ -225,6 +225,14 @@ class StockScreener:
         }
 
         try:
+            # Event Risk Gatekeeper: Block stock if earnings/board meeting today
+            from data.events_calendar import EventsCalendar
+            is_event, event_reason = EventsCalendar.is_earnings_or_event_today(symbol)
+            if is_event:
+                logger.warning("StockScreener: %s blocked by Event Gatekeeper (%s)", symbol, event_reason)
+                default["reasons"] = [f"BLOCKED: High-Risk Event Day! {event_reason}"]
+                return default
+
             period = "3mo" if mode == "SWING" else "5d"
             interval = "1d" if mode == "SWING" else "15m"
             df = self._fetch_ohlcv(symbol, period=period, interval=interval)

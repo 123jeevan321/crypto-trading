@@ -1,5 +1,5 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "updated": "2026-11-03",
   "data_scope": "365d_nse_and_10y_macro_crypto",
   "golden_rules": {
@@ -36,6 +36,11 @@
     "rule_6_crypto_character": {
       "stop_hunt_rule": "Bitcoin always hunts retail stops below key support before pumping, or above resistance before dumping.",
       "action": "Never short red candle bottoms at CMP. Wait for the fakeout wick to complete, then enter on retest."
+    },
+    "rule_7_earnings_event_gatekeeper": {
+      "name": "Mandatory Corporate Earnings & Event Blacklist",
+      "logic": "Quarterly earnings results trigger binary high-frequency algorithmic whipsaws (e.g. SBIN 15-point swing in 60s). Technical setups become invalid.",
+      "action": "STRICTLY PROHIBITED to enter any stock on the day of its Board Meeting / Earnings announcement. Auto-rejected by Risk Gatekeeper."
     }
   }
 }
