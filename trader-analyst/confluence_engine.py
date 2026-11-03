@@ -366,3 +366,26 @@ class InstitutionalConfluenceEngine:
             "confluences": confluences,
             "cautions": cautions
         }
+
+
+if __name__ == "__main__":
+    test_symbol = sys.argv[1] if len(sys.argv) > 1 else "BTC-USD"
+    res = InstitutionalConfluenceEngine.evaluate(test_symbol)
+    print(f"\n========================================================")
+    print(f"  INSTITUTIONAL MULTI-CONFLUENCE AUDIT: {res['symbol']}")
+    print(f"========================================================")
+    print(f"CMP: {res.get('cmp')}")
+    print(f"Confluence Score: {res['confluence_score']} / 100")
+    print(f"Verdict: {res['verdict']}")
+    print(f"Bias: {res.get('bias')}")
+    if res.get('order_ticket'):
+        print(f"\nOrder Ticket:")
+        for k, v in res['order_ticket'].items():
+            print(f"  {k}: {v}")
+    print(f"\nPositive Confluences ({len(res.get('confluences', []))}):")
+    for c in res.get('confluences', []):
+        print(f"  [+] {c}")
+    print(f"\nCautions & Disqualifiers ({len(res.get('cautions', []))}):")
+    for c in res.get('cautions', []):
+        print(f"  [-] {c}")
+    print(f"========================================================\n")
