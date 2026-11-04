@@ -53,6 +53,20 @@ Run `trader-analyst/confluence_engine.py` or verify:
 
 ---
 
+## 🎯 Phase 4: Institutional Target Calibration & Exit Execution (Law #15)
+
+* **Anti-Round-Number Protocol**:
+  * NEVER set TP at `.00`, `.50`, round ₹10s, or round $100s.
+  * Always **front-run** the retail limit book by 0.15 to 0.35 paisa on NSE equities (e.g., target ₹919.75 instead of ₹920.00) and $30 to $50 on Crypto (e.g., $78,060 instead of $78,100).
+* **Flexible Yield Over Rigid Round ₹1,000**:
+  * Never force an arbitrary ₹1,000 target. Lock in high-probability structural levels (+₹880, +₹940, +₹1,050, +₹1,150) where institutions actually execute.
+* **The +75% Profit Protection Mandate**:
+  * If an open trade reaches $\ge 75\%$ of expected target (e.g. +₹800 to +₹900 on a stock):
+  * **SL MUST be moved up immediately to lock in +₹500 to +₹600 guaranteed profit**.
+  * Under NO circumstances may an ₹800–₹900 gain be allowed to bleed back down to ₹100 or breakeven!
+
+---
+
 ## 📖 Battle-Tested Blueprint Archive
 
 * **RVNL**: Open=Low (+1.8% intraday, +₹1,000 profit).

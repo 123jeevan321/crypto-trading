@@ -39,6 +39,52 @@ class InstitutionalConfluenceEngine:
     """
 
     @staticmethod
+    def calibrate_front_run_target(raw_target: float, is_long: bool, is_crypto: bool = False) -> float:
+        """
+        Law #15 Institutional Front-Running:
+        Prevents targets from sitting exactly at round psychological numbers (.00, .50, whole tens, hundreds, or $100s).
+        Front-runs the retail limit order cluster so orders fill before the liquidity block rejects.
+        """
+        if is_crypto:
+            # For Crypto: avoid round 50s and 100s (e.g. 78,100 -> 78,065; 77,500 -> 77,465)
+            rem = raw_target % 50.0
+            if is_long:
+                if rem >= 30.0:
+                    return round((raw_target - rem + 50.0) - 35.0, 2)
+                elif rem <= 15.0:
+                    return round((raw_target - rem) - 35.0, 2)
+            else:
+                if rem <= 20.0:
+                    return round((raw_target - rem) + 35.0, 2)
+                elif rem >= 35.0:
+                    return round((raw_target - rem + 50.0) + 35.0, 2)
+            return round(raw_target, 2)
+        else:
+            # For Equities: avoid .00, .50, and round numbers (.95 - .05)
+            # Front run by 0.20 to 0.35 paisa
+            cents = round(raw_target % 1.0, 2)
+            if is_long:
+                if 0.90 <= cents:
+                    # e.g. 919.95 -> 919.78
+                    return round(math.floor(raw_target) + 0.78, 2)
+                elif cents <= 0.12:
+                    # e.g. 920.00 or 920.05 -> 919.78 (front-run the 920 wall)
+                    return round(math.floor(raw_target) - 1.0 + 0.78, 2)
+                elif 0.45 <= cents <= 0.55:
+                    # Near .50, front run at .35
+                    return round(math.floor(raw_target) + 0.35, 2)
+            else:
+                if 0.90 <= cents:
+                    # Short target near whole rupee below: e.g. 919.95 -> 920.22
+                    return round(math.floor(raw_target) + 1.22, 2)
+                elif cents <= 0.12:
+                    # Short target near whole rupee: e.g. 920.00 -> 920.22
+                    return round(math.floor(raw_target) + 0.22, 2)
+                elif 0.45 <= cents <= 0.55:
+                    return round(math.floor(raw_target) + 0.65, 2)
+            return round(raw_target, 2)
+
+    @staticmethod
     def calculate_volume_profile(df: pd.DataFrame, num_bins: int = 30) -> Dict[str, float]:
         """Calculates Point of Control (POC), Value Area High (VAH), and Value Area Low (VAL)."""
         if df.empty or len(df) < 5:
@@ -278,12 +324,15 @@ class InstitutionalConfluenceEngine:
         # Pillar 5: High-Accuracy Target Delivery & Structural SL (20 points)
         # Priority #1: Accuracy. TP1 is a high-probability quick scalp (100-300 pts on BTC, 0.4% on stocks)
         # to ensure the trade is locked in green, while TP2 captures larger moves.
+        # Law #15: Institutional Front-Running calibrated (no round numbers).
         order_ticket = None
         if symbol.startswith('BTC'):
             if bias == "BULLISH":
                 sl = round(min(vp['val'], cmp - 220), 2)
-                tp1 = round(cmp + 180, 2)   # High-probability quick green lock
-                tp2 = round(cmp + 750, 2)   # Extended target
+                raw_tp1 = cmp + 180
+                raw_tp2 = cmp + 750
+                tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=True, is_crypto=True)
+                tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=True, is_crypto=True)
                 score += 20
                 order_ticket = {
                     "action": "BUY_LONG",
@@ -292,13 +341,16 @@ class InstitutionalConfluenceEngine:
                     "tp1_quick_lock": tp1,
                     "tp2_runner": tp2,
                     "tp1_points": round(tp1 - cmp, 2),
-                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit.",
+                    "profit_protection": "When profit reaches >= 75% of target (+250-300 pts), trail SL to lock +200 pts guaranteed."
                 }
-                confluences.append(f"High-Accuracy Target Plan: TP1 (+{round(tp1 - cmp, 0)} pts) quick green lock, SL: {sl}")
+                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 (+{round(tp1 - cmp, 0)} pts) quick lock, SL: {sl}")
             elif bias == "BEARISH":
                 sl = round(max(vp['vah'], cmp + 220), 2)
-                tp1 = round(cmp - 180, 2)   # High-probability quick green lock
-                tp2 = round(cmp - 750, 2)   # Extended target
+                raw_tp1 = cmp - 180
+                raw_tp2 = cmp - 750
+                tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=False, is_crypto=True)
+                tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=False, is_crypto=True)
                 score += 20
                 order_ticket = {
                     "action": "SELL_SHORT",
@@ -307,17 +359,20 @@ class InstitutionalConfluenceEngine:
                     "tp1_quick_lock": tp1,
                     "tp2_runner": tp2,
                     "tp1_points": round(cmp - tp1, 2),
-                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit.",
+                    "profit_protection": "When profit reaches >= 75% of target (+250-300 pts), trail SL to lock +200 pts guaranteed."
                 }
-                confluences.append(f"High-Accuracy Target Plan: TP1 (+{round(cmp - tp1, 0)} pts) quick green lock, SL: {sl}")
+                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 (+{round(cmp - tp1, 0)} pts) quick lock, SL: {sl}")
             else:
                 cautions.append("Bias is Neutral: Wait for liquidity sweep before issuing accurate TP ticket")
         else:
-            # Equities Tiered Targets
+            # Equities Tiered Targets with Institutional Front-Running
             if bias == "BULLISH":
                 sl = round(min(tech['vwap'] * 0.995, cmp * 0.993), 2)
-                tp1 = round(cmp * 1.005, 2)  # +0.5% high probability
-                tp2 = round(cmp * 1.015, 2)  # +1.5%
+                raw_tp1 = cmp * 1.005  # +0.5% high probability
+                raw_tp2 = cmp * 1.015  # +1.5%
+                tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=True, is_crypto=False)
+                tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=True, is_crypto=False)
                 score += 20
                 order_ticket = {
                     "action": "BUY_LONG",
@@ -325,13 +380,16 @@ class InstitutionalConfluenceEngine:
                     "sl": sl,
                     "tp1_quick_lock": tp1,
                     "tp2_runner": tp2,
-                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit.",
+                    "profit_protection": "When profit reaches >= 75% of target (+₹750 to +₹900), trail SL to lock +₹500 guaranteed profit."
                 }
-                confluences.append(f"High-Accuracy Target Plan: TP1 ₹{tp1} (+0.5%), TP2 ₹{tp2} (+1.5%), SL ₹{sl}")
+                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 ₹{tp1}, TP2 ₹{tp2}, SL ₹{sl}")
             elif bias == "BEARISH":
                 sl = round(max(tech['vwap'] * 1.005, cmp * 1.007), 2)
-                tp1 = round(cmp * 0.995, 2)
-                tp2 = round(cmp * 0.985, 2)
+                raw_tp1 = cmp * 0.995
+                raw_tp2 = cmp * 0.985
+                tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=False, is_crypto=False)
+                tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=False, is_crypto=False)
                 score += 20
                 order_ticket = {
                     "action": "SELL_SHORT",
@@ -339,9 +397,10 @@ class InstitutionalConfluenceEngine:
                     "sl": sl,
                     "tp1_quick_lock": tp1,
                     "tp2_runner": tp2,
-                    "rule": "Move SL to Breakeven immediately when TP1 is hit."
+                    "rule": "Move SL to Breakeven immediately when TP1 is hit.",
+                    "profit_protection": "When profit reaches >= 75% of target (+₹750 to +₹900), trail SL to lock +₹500 guaranteed profit."
                 }
-                confluences.append(f"High-Accuracy Target Plan: TP1 ₹{tp1} (-0.5%), TP2 ₹{tp2} (-1.5%), SL ₹{sl}")
+                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 ₹{tp1}, TP2 ₹{tp2}, SL ₹{sl}")
             else:
                 cautions.append("Equity trend is Neutral: Wait for VWAP alignment")
 

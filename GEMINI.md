@@ -88,6 +88,22 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 * **Counter-Trend Squeeze Danger**: Top gainers (+4% to +5%) in strong bull trends frequently trigger violent afternoon Short Squeezes when retail tries to short the top.
 * **Filter Rule**: Never short a stock trading above its VWAP and printing Higher Highs. Shorting requires confirmed Market Structure Breakdown (CHoCH/MSB below VWAP + heavy sell volume).
 
+### 15. Institutional Front-Running & The Anti-Round-Number Mandate (Fractal Liquidity Protocol)
+* **Directive**: **NEVER set take-profit targets at round numbers** (e.g. ending in `.00`, `.50`, whole tens, hundreds, or arbitrary ₹1,000 / $100 marks).
+* **The Institutional Front-Running Edge**:
+  * Retail traders and naive algorithms place limit orders precisely at round numbers ($78,100, ₹920.00, ₹395.50).
+  * Institutional desks dump their inventory **5 to 35 paisa early on equities** and **$25 to $50 early on crypto**, creating price reversals right before retail limits are filled.
+  * **Calibration Rules**:
+    * **NSE Equities (Long)**: If structural target is ₹920.00, set order at **₹919.70 – ₹919.80**. If ₹395.50, set at **₹395.30**.
+    * **Crypto (Long)**: If structural target is $78,100, set order at **$78,055 – $78,065**.
+* **Zero Profit Dogma (High-Probability Yield > Rigid ₹1,000)**:
+  * Never stretch or compress a setup to make exactly "₹1,000".
+  * The market delivers based on structural shelves: whether the mathematical edge yields **+₹880, +₹940, +₹1,050, or +₹1,150**, take the exact structural high-probability level.
+* **The +75% Profit Trail Lock ("Never Let an ₹800 Gain Bleed to ₹100")**:
+  * The moment an open position reaches **>= 75% of target** (e.g. +₹800 to +₹900 on an equity trade, or +300 pts on BTC):
+  * **MANDATORY**: Trail Stop Loss to lock in at least **+₹500 to +₹600 guaranteed profit**.
+  * A trader who witnesses +₹900 on screen must NEVER allow that trade to reverse to ₹100 or breakeven.
+
 ---
 
 ## 📚 Real-World Trade Case Studies & Execution Archive (Nov 4, 2026)
