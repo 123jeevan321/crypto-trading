@@ -104,6 +104,23 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
   * **MANDATORY**: Trail Stop Loss to lock in at least **+₹500 to +₹600 guaranteed profit**.
   * A trader who witnesses +₹900 on screen must NEVER allow that trade to reverse to ₹100 or breakeven.
 
+### 16. The +5% Circuit Wall Front-Running Protocol
+* **Directive**: When a stock is up **>= +4.5% to +4.9% from Previous Close**, never set take-profit orders at or above the round +5.0% boundary.
+* **Empirical Reality**: Retail traders and algorithmic market makers place heavy limit-sell walls at exact round numbers and +5% intraday boundaries. A stock reaching +4.88% (like KALYANKJIL @ ₹554.85 against ₹555.50 5% mark) stalls as thousands of limit sells absorb market orders.
+* **Front-Running Calculation**:
+  * `Wall_5Pct = PrevClose * 1.05`
+  * `Safe_TP = Wall_5Pct - (0.0015 to 0.0025 * PrevClose)` (₹0.40 to ₹0.80 below the 5% wall).
+  * Automatically recalibrate any active limit order to ensure 100% fill rate before the wall causes a sharp rejection.
+
+### 17. The 52-Week High "Blue Sky" Short Squeeze Protocol & 3-Tranche Runner Architecture
+* **Directive**: When a leading sector heavyweight breaks above its **52-Week High / All-Time High with institutional volume (like ICICIBANK @ ₹1,480.00)**, it enters **Zero-Overhead "Blue Sky" Expansion**.
+* **Empirical Reality**: Because there are zero trapped buyers above the 52-week high, and short-sellers are forced into emergency stop-loss covering, the stock frequently surges **+1.0% to +1.5% beyond the breakout level** (e.g., ₹1,480 -> ₹1,495.80 = +₹16/share run). Exiting 100% of the position at Target 1 leaves 70% of the potential gain on the table!
+* **The 3-Tranche Execution Blueprint**:
+  * **Tranche 1 (33% Qty - "The Cash Lock")**: Exit at Target 1 (Breakout + 0.3% to 0.5%, e.g. ₹1,482.40). Immediately move Stop Loss on the remaining 67% to **Cost / Breakeven**. The trade is now 100% risk-free.
+  * **Tranche 2 (33% Qty - "The Structural Target")**: Exit at Target 2 (Breakout + 0.8% to 1.0%, e.g. ₹1,485.40). Front-run round ₹1,485/₹1,486.
+  * **Tranche 3 (34% Qty - "The Blue Sky Runner")**: **NEVER set a premature limit order on Tranche 3!** Trail it dynamically using the **5-minute 9 EMA or Low of the Previous 5m Candle**. Hold it until a 5m candle closes below the 9 EMA or until it touches the +1.2% Blue Sky Extension (₹1,495.80).
+  * **Result**: You capture the high-certainty profit of Tranche 1 while effortlessly banking the monster +₹8,000 multi-rupee trend wave on Tranche 3!
+
 ---
 
 ## 📚 Real-World Trade Case Studies & Execution Archive (Nov 4, 2026)

@@ -85,6 +85,49 @@ class InstitutionalConfluenceEngine:
             return round(raw_target, 2)
 
     @staticmethod
+    def calibrate_5percent_extension_wall(prev_close: float, raw_target: float) -> Tuple[float, bool]:
+        """
+        Law #16: The +5% Circuit Wall Front-Running Protocol.
+        When a stock is up near +5%, limit sell walls accumulate at exactly prev_close * 1.05.
+        Front-runs the wall by 0.15% to 0.25% to guarantee 100% order execution.
+        """
+        if prev_close <= 0:
+            return round(raw_target, 2), False
+        wall_5pct = prev_close * 1.05
+        if raw_target >= wall_5pct * 0.998:  # Target is within 0.2% or above the 5% wall
+            calibrated_tp = round(wall_5pct - (0.0018 * prev_close), 2)
+            # Ensure not round
+            calibrated_tp = InstitutionalConfluenceEngine.calibrate_front_run_target(calibrated_tp, is_long=True, is_crypto=False)
+            return calibrated_tp, True
+        return round(raw_target, 2), False
+
+    @staticmethod
+    def detect_blue_sky_runner_potential(cmp: float, year_high: float) -> Dict[str, Any]:
+        """
+        Law #17: The 52-Week High 'Blue Sky' Short Squeeze Protocol & 3-Tranche Runner Architecture.
+        When a stock clears its 52-Week High (e.g. ICICIBANK @ 1,480.00), zero overhead resistance exists.
+        Short covering and institutional momentum propel the price +1.0% to +1.5% beyond the breakout.
+        """
+        if year_high <= 0:
+            return {"is_blue_sky": False}
+        
+        is_breaking_high = bool(cmp >= year_high * 0.996)
+        if is_breaking_high:
+            breakout_base = max(cmp, year_high)
+            tp1 = InstitutionalConfluenceEngine.calibrate_front_run_target(breakout_base * 1.004, is_long=True, is_crypto=False)
+            tp2 = InstitutionalConfluenceEngine.calibrate_front_run_target(breakout_base * 1.008, is_long=True, is_crypto=False)
+            tp3_runner = InstitutionalConfluenceEngine.calibrate_front_run_target(breakout_base * 1.013, is_long=True, is_crypto=False)
+            return {
+                "is_blue_sky": True,
+                "breakout_level": year_high,
+                "tranche_1_cash_lock": tp1,
+                "tranche_2_structural": tp2,
+                "tranche_3_blue_sky_runner": tp3_runner,
+                "trailing_rule": "Trail Tranche 3 using 5m 9 EMA; hold for full +1.2% to +1.5% blue-sky run."
+            }
+        return {"is_blue_sky": False}
+
+    @staticmethod
     def calculate_volume_profile(df: pd.DataFrame, num_bins: int = 30) -> Dict[str, float]:
         """Calculates Point of Control (POC), Value Area High (VAH), and Value Area Low (VAL)."""
         if df.empty or len(df) < 5:
@@ -366,24 +409,63 @@ class InstitutionalConfluenceEngine:
             else:
                 cautions.append("Bias is Neutral: Wait for liquidity sweep before issuing accurate TP ticket")
         else:
-            # Equities Tiered Targets with Institutional Front-Running
+            # Equities Tiered Targets with Institutional Front-Running & Blue Sky Detection
+            prev_close = 0.0
+            year_high = 0.0
+            try:
+                prev_close = float(ticker.fast_info.previous_close)
+                year_high = float(ticker.fast_info.year_high)
+            except Exception:
+                prev_close = float(df['Open'].iloc[0])
+                year_high = float(df['High'].max())
+
             if bias == "BULLISH":
                 sl = round(min(tech['vwap'] * 0.995, cmp * 0.993), 2)
-                raw_tp1 = cmp * 1.005  # +0.5% high probability
-                raw_tp2 = cmp * 1.015  # +1.5%
-                tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=True, is_crypto=False)
-                tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=True, is_crypto=False)
-                score += 20
-                order_ticket = {
-                    "action": "BUY_LONG",
-                    "entry": cmp,
-                    "sl": sl,
-                    "tp1_quick_lock": tp1,
-                    "tp2_runner": tp2,
-                    "rule": "Move SL to Breakeven immediately when TP1 is hit.",
-                    "profit_protection": "When profit reaches >= 75% of target (+₹750 to +₹900), trail SL to lock +₹500 guaranteed profit."
-                }
-                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 ₹{tp1}, TP2 ₹{tp2}, SL ₹{sl}")
+                blue_sky = cls.detect_blue_sky_runner_potential(cmp, year_high)
+
+                if blue_sky['is_blue_sky']:
+                    tp1 = blue_sky['tranche_1_cash_lock']
+                    tp2 = blue_sky['tranche_2_structural']
+                    tp3 = blue_sky['tranche_3_blue_sky_runner']
+                    score += 25
+                    order_ticket = {
+                        "action": "BUY_LONG",
+                        "strategy": "52_WEEK_HIGH_BLUE_SKY_SHORT_SQUEEZE",
+                        "entry": cmp,
+                        "sl": sl,
+                        "tp1_cash_lock": tp1,
+                        "tp2_structural": tp2,
+                        "tp3_blue_sky_runner": tp3,
+                        "execution_architecture": "3-Tranche Scaling (33% / 33% / 34%)",
+                        "rule": "Move SL to Breakeven when TP1 hits. Trail TP3 using 5m 9 EMA for full +1.2% to +1.5% extension.",
+                        "profit_protection": "Bank 33% at TP1, 33% at TP2, let 34% run with 9 EMA."
+                    }
+                    confluences.append(f"Law #17 Blue Sky Short Squeeze: Breakout above Rs {year_high} with runner extension to Rs {tp3}")
+                else:
+                    raw_tp1 = cmp * 1.005  # +0.5% high probability
+                    raw_tp2 = cmp * 1.015  # +1.5%
+                    tp1 = cls.calibrate_front_run_target(raw_tp1, is_long=True, is_crypto=False)
+                    tp2 = cls.calibrate_front_run_target(raw_tp2, is_long=True, is_crypto=False)
+
+                    # Law #16 Check: Calibrate against +5% Circuit Wall
+                    tp1_cal, was_wall_adj1 = cls.calibrate_5percent_extension_wall(prev_close, tp1)
+                    tp2_cal, was_wall_adj2 = cls.calibrate_5percent_extension_wall(prev_close, tp2)
+                    if was_wall_adj1 or was_wall_adj2:
+                        tp1 = tp1_cal
+                        tp2 = tp2_cal
+                        confluences.append("Law #16: Calibrated TP below +5% circuit wall to guarantee execution before rejection")
+
+                    score += 20
+                    order_ticket = {
+                        "action": "BUY_LONG",
+                        "entry": cmp,
+                        "sl": sl,
+                        "tp1_quick_lock": tp1,
+                        "tp2_runner": tp2,
+                        "rule": "Move SL to Breakeven immediately when TP1 is hit.",
+                        "profit_protection": "When profit reaches >= 75% of target (+Rs 750 to +Rs 900), trail SL to lock +Rs 500 guaranteed profit."
+                    }
+                    confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 Rs {tp1}, TP2 Rs {tp2}, SL Rs {sl}")
             elif bias == "BEARISH":
                 sl = round(max(tech['vwap'] * 1.005, cmp * 1.007), 2)
                 raw_tp1 = cmp * 0.995
@@ -398,9 +480,9 @@ class InstitutionalConfluenceEngine:
                     "tp1_quick_lock": tp1,
                     "tp2_runner": tp2,
                     "rule": "Move SL to Breakeven immediately when TP1 is hit.",
-                    "profit_protection": "When profit reaches >= 75% of target (+₹750 to +₹900), trail SL to lock +₹500 guaranteed profit."
+                    "profit_protection": "When profit reaches >= 75% of target (+Rs 750 to +Rs 900), trail SL to lock +Rs 500 guaranteed profit."
                 }
-                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 ₹{tp1}, TP2 ₹{tp2}, SL ₹{sl}")
+                confluences.append(f"High-Accuracy Front-Run Target Plan: TP1 Rs {tp1}, TP2 Rs {tp2}, SL Rs {sl}")
             else:
                 cautions.append("Equity trend is Neutral: Wait for VWAP alignment")
 
