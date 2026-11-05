@@ -121,9 +121,63 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
   * **Tranche 3 (34% Qty - "The Blue Sky Runner")**: **NEVER set a premature limit order on Tranche 3!** Trail it dynamically using the **5-minute 9 EMA or Low of the Previous 5m Candle**. Hold it until a 5m candle closes below the 9 EMA or until it touches the +1.2% Blue Sky Extension (₹1,495.80).
   * **Result**: You capture the high-certainty profit of Tranche 1 while effortlessly banking the monster +₹8,000 multi-rupee trend wave on Tranche 3!
 
+### 18. The Morning Momentum Failure & Trend Inversion Short Protocol (The "Delhivery Lesson")
+* **Directive**: When an Open=Low stock surges in the morning (e.g. ₹425 -> ₹435) but fails to sustain Higher Highs and breaks **below VWAP on heavy sell volume**, the Long thesis is officially DEAD. **NEVER average down, hold hope, or fight the tape**.
+* **The Institutional Inversion Trigger (How to Make +₹5,000+ on the Short Side)**:
+  * Retail traders get trapped buying the pullback at ₹431–₹432 hoping for a bounce back to ₹435.
+  * When price breaks below VWAP (₹431.00) with volume spikes (>25,000 shares/min) and prints a Lower High at ₹430.50:
+  * **THE REVERSAL SHORT SETUP**:
+    * **Action**: Enter **SELL SHORT (MIS)** @ ₹430.50.
+    * **Stop Loss**: Just above VWAP @ ₹431.80 (tight ₹1.30 risk).
+    * **Target**: Morning Day Low / Liquidity Floor @ ₹425.70 (+₹4.80 gain).
+    * **Outcome**: Shorting 1,000 shares yields **+₹4,800 clean profit**, completely flipping a losing buy trade into a monster winning short trade!
+
+### 19. The ₹20k Daily Asymmetric Scaling Framework (The 70/30 Trend Capture Mandate)
+* **Directive**: Scalping ₹500 to ₹1,000 is vital for defensive risk recovery, but generating **₹15,000 to ₹20,000 daily profits** requires asymmetric position architecture and trend retention.
+* **The Three Pillars of the ₹20k/Day System**:
+  1. **Asymmetric Risk Allocation (The 2% Margin Rule)**:
+     * Position size: Allocate 400 to 1,000 shares on high-conviction Grade-A setups (e.g. ICICI 52W High Breakout, DLF Sector Momentum).
+     * Hard Stop: Never exceed ₹1.50 to ₹4.00 per share (₹1,500 to ₹2,500 max risk per setup).
+  2. **The Multi-Tranche Profit Engine**:
+     * **Tranche 1 (30% Qty - "The Cash Lock")**: Scalp +₹2,000 to +₹3,000 to eliminate all trade anxiety and instantly move Stop Loss to Breakeven.
+     * **Tranche 2 (30% Qty - "The Structural Bank")**: Capture +₹4,000 to +₹5,000 at the major structural resistance / liquidity level.
+     * **Tranche 3 (40% Qty - "The Trend Monster")**: **Do NOT exit on small targets!** Trail via the 5m 9 EMA. A single +₹15 to +₹20/share runner like ICICIBANK on 400–600 shares delivers **+₹8,000 to +₹12,000 on that tranche alone!**
+  3. **Daily Asymmetric Equation**:
+     * 1 Core Trend Runner (Tranche 3): **+₹10,000 to +₹14,000**
+     * 2 Tactical Momentum Scalps (Tranches 1 & 2): **+₹4,000 to +₹6,000**
+     * **Total Daily Harvest**: **₹15,000 to ₹20,000 Net Profit** with zero overnight risk.
+
 ---
 
-## 📚 Real-World Trade Case Studies & Execution Archive (Nov 4, 2026)
+## 📚 Real-World Trade Case Studies & Execution Archive
+
+### Session Audit: Nov 5, 2026 (The Masterclass Comeback Session)
+
+#### Trade 1: DELHIVERY (1,000 Qty Long) - The Trap & Risk Management Discipline
+* **Setup**: Open=Low at ₹425.70, morning spike to ₹435.05. User re-entered Long @ ₹431.84.
+* **Failure Analysis**: Stock lost VWAP (₹431.20) and entered a midday volume lull. Sell blocks absorbed bids.
+* **Execution**: Price dropped toward ₹427.50. User strictly executed an exit under their ₹4k planned boundary @ ₹429.15 (-₹3,977.25), preventing a drop to Day Low (-₹6,000+ loss).
+* **Key Lesson (Law #18)**: When Open=Low fails to reclaim VWAP, do not hold longs. Shorting ₹430.50 to ₹425.70 was the true +₹5,000 profit move.
+
+#### Trade 2: ICICIBANK (400 Qty Long) - The 52-Week High Breakout (+₹3,000+ Banked)
+* **Setup**: Banking sector leading Nifty +450 pts. Stock broke 52-Week High @ ₹1,480.00 with 500k+ volume.
+* **Execution**: Entered @ ₹1,475.80. Scalped targets @ ₹1,482.40 and ₹1,484.50 (+₹3,000+ clean profit).
+* **Extended Run**: Stock entered Law #17 "Blue Sky Expansion", surging all the way to **₹1,495.80 (+₹20.00/share run = +₹8,000 potential on full runner)**!
+* **Key Lesson (Law #17 & #19)**: Always hold Tranche 3 with 9 EMA trailing to capture the massive ₹1,495 runner.
+
+#### Trade 3: KALYANKJIL (500 Qty Long) - The +5% Circuit Wall Front-Run (+₹500 Banked)
+* **Setup**: Stock broke morning highs @ ₹553.50, rallying toward +5% circuit mark (₹555.50).
+* **Execution**: User caught move from ₹553.50 to ₹555.95. Exited cleanly near ₹554.80 (+₹500 banked).
+* **Key Lesson (Law #16)**: Front-running the +5% psychological wall protected gains before sellers dumped the round ₹556 barrier.
+
+#### Trade 4: DLF (400 Qty Long) - The Closing Power-Hour Breakout (+₹750 Banked)
+* **Setup**: Nifty Realty leading sector (+2.5%). Stock coiled at ₹744.75 and broke to fresh Day Highs.
+* **Execution**: Entered @ ₹744.75, rode the 2:35 PM volume surge to hit the exact target zone @ **₹748.00** (+₹750 to +₹1,000 banked).
+* **Key Lesson**: Taking quick profits in target zone before the 3:15 PM broker auto-square-off avoids late-day slippage.
+
+---
+
+### Archive: Nov 4, 2026 Session
 
 ### Trade 1: RVNL (Rail Vikas Nigam Ltd) - The Open=Low Perfect Execution
 * **Setup**: Law #1 Open=Low trigger at Rs 182.62. Heavy PSU railway sector momentum.
