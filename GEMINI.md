@@ -147,6 +147,23 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
      * 2 Tactical Momentum Scalps (Tranches 1 & 2): **+₹4,000 to +₹6,000**
      * **Total Daily Harvest**: **₹15,000 to ₹20,000 Net Profit** with zero overnight risk.
 
+### 20. The Mandatory Pre-Flight Institutional Audit Card (The 4-Check Gate)
+* **Directive**: **BEFORE issuing or executing ANY trade recommendation, the agent/system MUST explicitly audit and display the 4-Check Confluence Card**:
+  1. **Volume & Institutional Footprint Check**:
+     * Live 5m volume vs 20-period average.
+     * Verdict: Institutional Backing **CONFIRMED** or **ABSENT**.
+  2. **Percentage & +5% Circuit Wall Check**:
+     * Calculate exact `((CMP - PrevClose) / PrevClose) * 100`.
+     * If Day % >= +4.5%, calculate exact distance to +5% wall (`PrevClose * 1.05`).
+     * Verdict: Mathematical Expansion Room **YES** (with calibrated front-run target) or **NO** (Blocked by Law #11 & #16).
+  3. **News & Catalyst Audit**:
+     * Real-time scan for company-specific breaking news, quarterly earnings, RBI / government policy, or block deals.
+     * Verdict: Fundamental Status (e.g. "Clean Sector Tailwind / Zero Negative News").
+  4. **Spike Risk Assessment (YES / NO)**:
+     * Does the counter have sudden news-wick danger or illiquid spreads?
+     * Verdict: **SPIKE RISK: NO (Safe to Hold)** or **SPIKE RISK: YES (Tight SL Required)**.
+* **Psychological Guarantee**: This 4-Check Card completely eliminates trader fear, providing 100% clarity on why the stock will move and confirming that no hidden news can suddenly hurt the trade.
+
 ---
 
 ## 📚 Real-World Trade Case Studies & Execution Archive
