@@ -618,6 +618,40 @@ class InstitutionalConfluenceEngine:
             "trader_confidence_guarantee": "100% CLEAR - No news danger to hurt trade or prediction"
         }
 
+        # Law #22: 09:15 - 09:25 AM Opening Session Scalp Engine
+        opening_scalp_card = None
+        try:
+            from opening_scalp_strategy import OpeningSessionScalper
+            scalper = OpeningSessionScalper()
+            df_opening = ticker.history(period="1d", interval="1m")
+            if len(df_opening) >= 2:
+                c1_bar = {
+                    'open': float(df_opening['Open'].iloc[0]),
+                    'high': float(df_opening['High'].iloc[0]),
+                    'low': float(df_opening['Low'].iloc[0]),
+                    'close': float(df_opening['Close'].iloc[0]),
+                    'volume': float(df_opening['Volume'].iloc[0])
+                }
+                c2_bar = {
+                    'open': float(df_opening['Open'].iloc[1]),
+                    'high': float(df_opening['High'].iloc[1]),
+                    'low': float(df_opening['Low'].iloc[1]),
+                    'close': float(df_opening['Close'].iloc[1]),
+                    'volume': float(df_opening['Volume'].iloc[1])
+                }
+                candles = [c1_bar, c2_bar]
+                if len(df_opening) >= 3:
+                    candles.append({
+                        'open': float(df_opening['Open'].iloc[2]),
+                        'high': float(df_opening['High'].iloc[2]),
+                        'low': float(df_opening['Low'].iloc[2]),
+                        'close': float(df_opening['Close'].iloc[2]),
+                        'volume': float(df_opening['Volume'].iloc[2])
+                    })
+                opening_scalp_card = scalper.generate_opening_signal(candles, symbol, "09:17:00")
+        except Exception:
+            pass
+
         # Final Decision Logic
         if score >= 85:
             verdict = f"GRADE_A_{bias}_ENTRY"
@@ -633,6 +667,7 @@ class InstitutionalConfluenceEngine:
             "bias": bias,
             "verdict": verdict,
             "pre_flight_audit_card": pre_flight_card,
+            "opening_scalp_card": opening_scalp_card,
             "order_ticket": order_ticket,
             "volume_profile": vp,
             "smc_ict": smc,

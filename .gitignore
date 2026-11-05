@@ -4,3 +4,6 @@ trader/
 .vscode/
 .env
 *.env
+data/intraday_1m/
+*.pkl
+
