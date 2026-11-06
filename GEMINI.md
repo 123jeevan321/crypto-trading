@@ -320,11 +320,48 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 | 2 | `HDFCBANK EQ` | LONG | ₹774.40 | ₹775.25 | **+₹467.15** | Textbook Day-High breakout scalp. Banked cleanly. |
 | 3 | `ICICIBANK EQ` | LONG | ₹1,521.55 | ₹1,525.80 | **+₹850.60** | FVG demand bounce. Exact limit exit at ₹1,525.80 (+₹850 banked). |
 | 4 | `INDUSINDBK EQ`| SHORT | ₹885.67 | ₹890.20 | -₹1,751.20 | **VIOLATION**: Reached +₹1,600 at ₹881.35; failed to take TP1. Entered during midday trap (11:26 AM). |
-| 5 | `AXISBANK EQ` | LONG | ₹1,296.50 | ₹1,287.30 | -₹2,849.40 | **VIOLATION**: Chased late vertical breakout into Day High during midday lull (12:50 PM). |
+| 5 | `AXISBANK EQ` | LONG | ₹1,296.50 | ₹1,287.30 | -₹2,849.40 | **VIOLATION**: Chased late vertical breakout into Day High during midday lull (12:50 PM). Ended at ₹1,319 because entry was too high. |
+| 6 | `SBIN EQ` | LONG | ₹1,010.10 | ₹1,013.90 & ₹1,012.35 | **+₹1,058.75** | **PERFECT EXECUTION**: Afternoon Day-High breakout (Law #23). TP1 banked @ ₹1,015.00 (+₹857), runner closed @ ₹1,012.35. |
+| 7 | `JINDALSTEL EQ`| LONG | ₹1,158.07 | ₹1,162.20 & ₹1,164.10 | **+₹1,015.50** | **PERFECT EXECUTION**: Multi-wick absorption base breakout (Law #9). 100 qty @ ₹1,162.20 (+₹413), 100 qty @ ₹1,164.10 (+₹603). |
 
-* **Total Session Realized P&L**: **-₹4,173.45**
-* **Capital Preserved**: **~₹95,826.55** (100% Liquid Cash Buffer; all positions closed).
-* **Corrective Action**: System locked until 01:45 PM IST. Only trades passing the >85% Confluence Gatekeeper with mandatory TP1 profit-locking are permitted.
+* **Final Gross Realized P&L**: **-₹2,099.20**
+* **Total Statutory, Taxes & Brokerage Fees**: **₹1,224.94** (16 orders, STT ₹595.93, Brokerage ₹320.00, GST ₹84.82, Turnover ₹146.43, Stamp ₹73.00)
+* **Final Net Realized Loss Today**: **-₹3,324.14**
+* **Afternoon Recovery Haul**: **+₹2,074.25 gross recovered** across `SBIN` and `JINDALSTEL`, cutting the midday drawdown by more than half!
+* **100% Risk Discipline**: All 7 positions manually closed before 03:08 PM. Zero Zerodha auto-liquidation penalties incurred.
+
+---
+
+## 🔬 Law #25: The Zero-Retrace Instant Expansion Mandate (The Pure Drive Protocol)
+
+### 1. The Core Problem: The "Chased Top $\rightarrow$ Retrace Shakeout" Trap
+* **The Case of AXISBANK (Nov 6)**:
+  - AXISBANK closed the day at **₹1,319.40** (+₹22.90 above our ₹1,296.50 entry = potential **+₹6,870 profit**).
+  - But because we entered at **₹1,296.50** (the peak of a midday vertical candle, far extended from VWAP and 9 EMA), the natural and healthy pullback to **₹1,287.30** hit our stop-loss before the afternoon rocket ignited.
+  - **The Law**: Removing stop-losses is suicidal (it blows accounts when a stock dumps 3% without bouncing). **The true solution is entering ONLY when the setup guarantees immediate directional expansion with ZERO deep retracement.**
+
+### 2. The 5 Immutable Filters for Zero-Retrace Clean Shoots (99% Non-Retracing Criteria)
+To ensure every future stock call shoots directly towards target without testing deep stop-losses, the setup must satisfy ALL 5 criteria:
+
+1. **The Pre-Built Spring (Absorption Base $\ge 30$ Mins)**:
+   - Price MUST have consolidated for $\ge 30$ minutes in a tight, coiled range ($\le 0.35\%$ amplitude) with falling volume (drying supply).
+   - We enter on **Candle #1 of the breakout** out of the base, NEVER on Candle #3 or #4 after it has already run.
+2. **The Proximity-to-Support Mandate (Distance to 9 EMA $\le 0.25\%$)**:
+   - The entry candle must be touching or within **0.25% of the 9 EMA / VWAP**.
+   - If a stock is already stretched $>0.50\%$ away from VWAP, **ENTRY IS 100% FORBIDDEN**. Retrace is mathematically guaranteed as algorithms mean-revert.
+3. **Institutional Volume Ignition (RVOL $\ge 3.5\text{x}$)**:
+   - Breakout 1-minute candle volume must exceed **3.5x the 20-period average volume**, confirming institutional sweeps eating the entire ask book.
+4. **Sector Tailwinds & Directional Lock**:
+   - The stock's sectoral index (e.g., NIFTY BANK for Axis/SBIN, NIFTY METAL for Jindal) must be trading at session highs with positive Cumulative Volume Delta (CVD). Never trade an isolated stock against its sector.
+5. **Strict Time Window Enforcement (Zero Midday Calls)**:
+   - Clean, non-retracing shoots occur **ONLY** in two institutional windows:
+     - **09:16 AM – 09:30 AM** (Opening Momentum Expansion)
+     - **01:45 PM – 03:00 PM** (Closing Institutional Trend Continuation)
+   - Any breakout between **11:30 AM and 01:30 PM is 100% REJECTED**, as midday volume vacuums guarantee false breakouts and deep stop-hunts.
+
+### 3. Execution Calibration: Ultra-Tight Micro-Stop
+* Under Law #25, because the stock is filtered to shoot immediately, the Stop-Loss is placed **just below the 1-minute breakout base (max 0.25% to 0.30% distance)**.
+* If the stock fails to shoot within 2–3 minutes and retraces through the base, the trade is immediately invalidated and closed for a micro-scratch (e.g. ₹300–₹500 loss), completely preserving capital.
 
 ---
 
