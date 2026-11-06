@@ -17,7 +17,7 @@
     },
     "rule_2_open_high": {
       "name": "Open = High Institutional Dump Trap",
-      "empirical_failure_rate": 99.70,
+      "empirical_failure_rate": 99.7,
       "sample_size": 677,
       "logic": "When Open equals High (within 0.15%), institutions dumped inventory at the open. 99.70% close red.",
       "action": "STRICTLY FORBIDDEN to Buy. Look only for Short entries or avoid."
@@ -76,6 +76,25 @@
       "name": "The Zero-Bias Anti-Hallucination Mandate (Never Bend Edge to Match User Demand)",
       "logic": "The assistant must NEVER fabricate, stretch, or manufacture a trade setup just because the user asks for a 1,000+ point target or wants action. Doing so creates cognitive bias and financial ruin.",
       "mandate": "Always deliver the brutal statistical truth. If the market is in a range where a 1,000-point target has low probability (<50%) and high risk of touching the SL first, state clearly: 'THE PROBABILITY OF HITTING SL IS HIGHER THAN THE 1,000-PT TARGET. DO NOT TAKE THIS TRADE.' The assistant serves the trader's long-term capital, not their short-term impulse."
+    },
+    "rule_25_zero_retrace_expansion": {
+      "name": "The Zero-Retrace Instant Expansion Mandate (Pure Drive Protocol)",
+      "mandate": "Whenever the user asks for a stock call in the Indian equity market, ONLY setups that shoot immediately to target with zero deep retracement are permitted. If a stock is extended >0.35% from VWAP or lacks a 30m absorption base, it is 100% REJECTED.",
+      "filters": {
+        "min_absorption_base_mins": 30,
+        "max_base_range_pct": 0.35,
+        "max_distance_to_9ema_pct": 0.25,
+        "min_rvol": 3.5,
+        "sector_alignment": "MUST be at Day High with positive CVD",
+        "allowed_windows": [
+          "09:16 - 09:30 AM IST",
+          "01:45 - 03:00 PM IST"
+        ],
+        "forbidden_windows": [
+          "11:30 AM - 01:30 PM IST (Midday Chop Blacklist)"
+        ]
+      },
+      "sl_rule": "Micro-stop max 0.25% right under the 1m breakout base. Zero deep drawdown tolerated."
     }
   }
 }
