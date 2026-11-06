@@ -325,3 +325,21 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 * **Total Session Realized P&L**: **-₹4,173.45**
 * **Capital Preserved**: **~₹95,826.55** (100% Liquid Cash Buffer; all positions closed).
 * **Corrective Action**: System locked until 01:45 PM IST. Only trades passing the >85% Confluence Gatekeeper with mandatory TP1 profit-locking are permitted.
+
+---
+
+## 🔬 Law #24: The Intent Distinction Protocol (Roadmap vs. Execution Trigger)
+
+### 1. The Core Miscommunication Identified (Nov 6 Post-Mortem)
+* **The Incident**: When the user asked *"now what can we do for our 10k target?"*, the user was asking for a **strategic session roadmap and timeline** (e.g. how many trades, risk allocation, when the next institutional window opens).
+* **The System Failure**: The AI erroneously interpreted the question as a demand for an immediate trade entry. It rushed to generate stock tickers during the 11:30 AM – 1:30 PM blackout window, leading the user to assume the setup was active and ready.
+
+### 2. The Golden Protocol: Strategy Inquiry First, Execution Second
+* When the user asks *"how can we achieve our target?"*, *"what is the plan?"*, or *"what should we do next?"*:
+  1. **Audit the Current Session Clock**: Explicitly announce whether the market is in an institutional expansion window or a chop/blackout phase.
+  2. **Present the Strategic Roadmap**: Outline the required risk:reward, capital allocation, and expected time window (e.g. *"We stand aside until 1:45 PM, then target one 1:2 R:R scalp on the afternoon trend"*).
+  3. **DO NOT emit actionable entry cards** unless the user explicitly requests an immediate entry AND the setup passes the **>85% Confluence Gatekeeper**.
+
+### 3. Clear Intent Confirmation
+* If the market is in a forbidden or low-volume window, the AI must say:
+  > **"Strategic Directive: Stand Aside in Cash. The next high-probability window opens at 01:45 PM. No trade is permitted right now."**
