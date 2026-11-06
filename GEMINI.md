@@ -293,3 +293,35 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 * **Action**: Assistant strongly advised against both Buying (distribution trap) and Shorting (short squeeze danger).
 * **Key Lesson**: Protecting banked gains (+Rs 2,500) by rejecting extended trades is what separates consistently profitable traders from gamblers.
 
+
+---
+
+## 🔬 Law #23: The Midday Invalidation & Profit Lock Protocol (Nov 6 Session Audit)
+
+### 1. The Strict 11:30 AM – 01:45 PM Blackout Window
+* **Empirical Reality**: Between 11:30 AM and 01:45 PM, institutional volume on the NSE contracts by >65%. Price action becomes random, choppy, and dominated by algorithmic retail stop hunts in both directions.
+* **Mandate**: **ZERO NEW TRADES.** Even if a stock appears to be breaking out or breaking down, no order may be placed until the 01:45 PM institutional afternoon trend expansion window opens. Never force a trade to "hit a target."
+
+### 2. The Mandatory ₹1,000 TP1 Lock (Zero-Greed Rule)
+* **The Violation**: On Nov 6, `INDUSINDBK` short moved into +₹1,600 floating profit upon flushing to Day Low (`₹881.35`). Holding full size hoping for the final paisa (`₹878.12`) during midday chop allowed the trade to reverse into a -₹1,751 loss.
+* **The Rule**: When any intraday position reaches **+₹1,000** or tests a major technical boundary (Day Low / Day High / FVG), **at least 50% to 100% of the position MUST be banked immediately (TP1)**, and the remaining stop loss moved strictly to Cost. A +₹1,000 winner is NEVER permitted to turn into a red trade.
+
+### 3. Anti-Chasing Mandate (Law #4 Enforcement)
+* **The Violation**: On Nov 6, `AXISBANK` was bought after surging vertically by +₹7.50 in 15 minutes directly into Day High resistance, resulting in an immediate liquidation trap (-₹2,849).
+* **The Rule**: Never buy at the top of an extended vertical green candle or short at the bottom of an extended red candle. Require a minimum 3-candle consolidation base before entering.
+
+---
+
+## 📋 Nov 6, 2026 Session Trade Audit Log
+
+| Trade # | Instrument | Direction | Entry | Exit | Gross P&L | Key Lesson & Rule Violated |
+|---|---|---|---|---|---|---|
+| 1 | `RELIANCE EQ` | LONG | ₹1,301.93 | ₹1,298.37 | -₹890.60 | 09:25 Time-Stop executed with strict discipline. Stock rallied to ₹1,311 on wave 2. |
+| 2 | `HDFCBANK EQ` | LONG | ₹774.40 | ₹775.25 | **+₹467.15** | Textbook Day-High breakout scalp. Banked cleanly. |
+| 3 | `ICICIBANK EQ` | LONG | ₹1,521.55 | ₹1,525.80 | **+₹850.60** | FVG demand bounce. Exact limit exit at ₹1,525.80 (+₹850 banked). |
+| 4 | `INDUSINDBK EQ`| SHORT | ₹885.67 | ₹890.20 | -₹1,751.20 | **VIOLATION**: Reached +₹1,600 at ₹881.35; failed to take TP1. Entered during midday trap (11:26 AM). |
+| 5 | `AXISBANK EQ` | LONG | ₹1,296.50 | ₹1,287.30 | -₹2,849.40 | **VIOLATION**: Chased late vertical breakout into Day High during midday lull (12:50 PM). |
+
+* **Total Session Realized P&L**: **-₹4,173.45**
+* **Capital Preserved**: **~₹95,826.55** (100% Liquid Cash Buffer; all positions closed).
+* **Corrective Action**: System locked until 01:45 PM IST. Only trades passing the >85% Confluence Gatekeeper with mandatory TP1 profit-locking are permitted.
