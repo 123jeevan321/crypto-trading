@@ -222,6 +222,24 @@ This workspace enforces institutional-grade quantitative discipline backed by a 
 
 ## 📚 Real-World Trade Case Studies & Execution Archive
 
+### Session Audit: Nov 6, 2026 Morning (The Full Drawdown Comeback)
+
+#### Trade 1: RELIANCE (250 Qty Long) - Law #22 Scalp Time Stop Discipline
+* **Setup**: Open=Low at ₹1,295.60. Entered Long @ ₹1,301.93 on 9:17 candle.
+* **Outcome**: Momentum hit ₹1,304.10 (+₹500+), but volume tapered off into 09:25 AM. Exited at market @ ₹1,298.37 (-₹890.60) per strict 09:25 time-stop rule, preserving 99% of capital. (Stock later pushed to ₹1,311.00 on wave 2, confirming structural direction).
+
+#### Trade 2: HDFCBANK (550 Qty Long) - Day-High Breakout Surge (+₹467.15 Banked)
+* **Setup**: Stock broke morning Day High (₹773.50) on 650k+ volume.
+* **Execution**: Entered @ ₹774.40. Surged to ₹776.50 on 877k volume candle. Exited cleanly @ ₹775.25. **Banked +₹467.15 profit!**
+
+#### Trade 3: ICICIBANK (200 Qty Long) - FVG Demand Absorption & Exact Front-Run Target (+₹850.60 Banked)
+* **Setup**: Stock pulled back to 15m FVG / VWAP demand base (₹1,518.50). Institutional buyers loaded 296k shares.
+* **Execution**: Entered 200 shares @ ₹1,521.55. Placed Limit Sell @ ₹1,525.80 (Law #15 front-running Day High ₹1,526.00). 
+* **Outcome**: Price launched straight to ₹1,525.80 at 11:15:27 AM, auto-filling the Sell Limit to the exact paisa! **Banked +₹850.60 clean profit!**
+* **Session Result**: **2 consecutive winning trades back-to-back**, completely wiping out the morning deficit and finishing the morning session at **+₹427.15 NET GREEN**!
+
+---
+
 ### Session Audit: Nov 5, 2026 (The Masterclass Comeback Session)
 
 #### Trade 1: DELHIVERY (1,000 Qty Long) - The Trap & Risk Management Discipline
